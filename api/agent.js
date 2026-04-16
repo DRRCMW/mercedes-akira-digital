@@ -49,8 +49,8 @@ export default async function handler(req, res) {
   const hour = now.getUTCHours(); // GitHub Actions runs in UTC
   // Shift: 8am–5pm EST = 13:00–22:00 UTC (adjust if in different timezone)
   // Change these numbers to match YOUR timezone offset
-  const shiftStart = parseInt(process.env.SHIFT_START_UTC || '13'); // 8am EST
-  const shiftEnd   = parseInt(process.env.SHIFT_END_UTC   || '22'); // 5pm EST
+  const shiftStart = parseInt(process.env.SHIFT_START_UTC || '0'); // 8am EST
+  const shiftEnd   = parseInt(process.env.SHIFT_END_UTC   || '24'); // 5pm EST
   const dayOfWeek  = now.getUTCDay(); // 0=Sun, 6=Sat
 
   if (dayOfWeek === 0 || dayOfWeek === 6) {
