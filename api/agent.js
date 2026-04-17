@@ -62,10 +62,13 @@ export default async function handler(req, res) {
 
   // ── LOAD DATA FROM REDIS ─────────────────────────────────────
   const today = new Date().toDateString();
-  const pipeline    = (await redisGet('akira_pipeline'))       || [];
-  const workedToday = (await redisGet(`worked_${today}`))      || [];
-  let   queue       = (await redisGet('mercedes_queue'))       || [];
-  const logEntries  = (await redisGet('mercedes_log'))         || [];
+  // Safely parse Redis data — always ensure arrays even if Redis returns object/null
+  function toArray(val) { return Array.isArray(val) ? val : (val && typeof val === 'object' ? Object.values(val) : []); }
+
+  const pipeline    = toArray(await redisGet('akira_pipeline'));
+  const workedToday = toArray(await redisGet(`worked_${today}`));
+  let   queue       = toArray(await redisGet('mercedes_queue'));
+  const logEntries  = toArray(await redisGet('mercedes_log'));
 
   function log(msg) {
     const ts = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
