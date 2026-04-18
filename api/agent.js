@@ -396,6 +396,57 @@ You think like a closer. You write like a human. You perform like a machine.`,
       results.worked++;
       log(`✅ ${lead.name} — ${isFollowUp ? '📨 ' + followUpStage.toUpperCase() : '🆕 INITIAL'} | ${(parsed.leadScore || leadScore).toUpperCase()} | ${parsed.recommendedPackage || 'Starter'} | ${parsed.closePct || '?'}% close | "${parsed.subject}"`);
 
+      // ── SMS VIA TWILIO (Make.com webhook) ─────────────────────
+      const SMS_WEBHOOK = process.env.TWILIO_SMS_WEBHOOK;
+      const smsText = parsed.sms || '';
+      const leadPhone = lead.phone || '';
+
+      // Send SMS on Day 7 warm follow-up OR initial contact for hot leads
+      const shouldSendSms = SMS_WEBHOOK && leadPhone && smsText && (
+        followUpStage === 'day7_stat' ||
+        (!isFollowUp && leadScore === 'hot')
+      );
+
+      if (shouldSendSms) {
+        try {
+          const smsPayload = {
+            leadName:     lead.name,
+            phone:        leadPhone,
+            message:      smsText,
+            leadScore:    parsed.leadScore || leadScore,
+            followUpStage: followUpStage,
+            agentId:      'mercedes'
+          };
+          const smsResp = await fetch(SMS_WEBHOOK, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(smsPayload)
+          });
+          if (smsResp.ok) {
+            log(`📱 SMS sent to ${lead.name} (${leadPhone}) — "${smsText.slice(0, 60)}..."`);
+            // Record the SMS touchpoint
+            if (pIdx !== -1) {
+              pipeline[pIdx].touchpoints.push({
+                type: 'sms',
+                outcome: 'sent',
+                note: `📱 Mercedes SMS (${followUpStage}): "${smsText.slice(0, 100)}"`,
+                date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                timestamp: Date.now()
+              });
+              pipeline[pIdx].smsSentAt = new Date().toISOString();
+            }
+          } else {
+            log(`⚠️ SMS webhook responded ${smsResp.status} for ${lead.name} — check Make.com scenario 07`);
+          }
+        } catch (smsErr) {
+          log(`⚠️ SMS trigger failed for ${lead.name}: ${smsErr.message}`);
+        }
+      } else if (SMS_WEBHOOK && leadPhone && !smsText) {
+        log(`⏭ No SMS for ${lead.name} — SMS message not generated`);
+      } else if (SMS_WEBHOOK && !leadPhone) {
+        log(`⏭ No SMS for ${lead.name} — no phone number on file`);
+      }
+
     } catch (err) {
       results.errors.push(`${lead.name}: ${err.message}`);
       log(`❌ Error on ${lead.name}: ${err.message}`);
