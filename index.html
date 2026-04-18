@@ -9036,6 +9036,36 @@ function notionTest(token) {
             </div>
           </div>
 
+          <!-- SMS / Twilio Panel -->
+          <div style="background:rgba(139,92,246,.05);border:1px solid rgba(139,92,246,.2);border-radius:12px;padding:1rem 1.1rem;margin-top:.85rem;" id="smsTwilioPanel">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.65rem;">
+              <div style="font-size:11px;font-weight:600;color:#a78bfa;letter-spacing:.08em;text-transform:uppercase;">📱 SMS via Twilio</div>
+              <div style="display:flex;align-items:center;gap:.4rem;">
+                <div id="smsDot" style="width:7px;height:7px;border-radius:50%;background:var(--gray);flex-shrink:0;"></div>
+                <span id="smsStatusText" style="font-size:10px;color:var(--gray);">Not configured</span>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:.65rem;margin-bottom:.65rem;padding:.5rem .65rem;background:rgba(255,255,255,.03);border-radius:7px;">
+              <div style="flex:1;"><div style="font-size:11px;font-weight:600;color:var(--white);">Auto-SMS</div><div style="font-size:10px;color:var(--gray);margin-top:.1rem;">Send Day 7 SMS to warm leads · Hot leads on first contact</div></div>
+              <label style="position:relative;display:inline-block;width:38px;height:20px;flex-shrink:0;">
+                <input type="checkbox" id="smsEnabled" onchange="saveSmsSettings()" style="opacity:0;width:0;height:0;">
+                <span onclick="document.getElementById('smsEnabled').click()" style="position:absolute;cursor:pointer;inset:0;background:rgba(255,255,255,.1);border-radius:20px;transition:.3s;" id="smsToggleTrack">
+                  <span style="position:absolute;height:14px;width:14px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;" id="smsToggleThumb"></span>
+                </span>
+              </label>
+            </div>
+            <div style="margin-bottom:.65rem;">
+              <div style="font-size:10px;color:rgba(255,255,255,.3);margin-bottom:3px;">Make.com SMS Webhook URL</div>
+              <input id="smsWebhookUrl" type="url" placeholder="https://hook.us2.make.com/..." style="width:100%;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:5px;padding:5px 8px;font-size:11px;color:var(--white);outline:none;font-family:monospace;" oninput="saveSmsSettings()">
+            </div>
+            <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.65rem;">
+              <button onclick="testSmsWebhook()" style="font-size:11px;font-weight:600;padding:5px 10px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3);border-radius:5px;color:#a78bfa;cursor:pointer;font-family:'DM Sans',sans-serif;">🔌 Test Webhook</button>
+              <button onclick="viewSmsLog()" style="font-size:11px;font-weight:600;padding:5px 10px;background:rgba(59,158,221,.12);border:1px solid rgba(59,158,221,.25);border-radius:5px;color:#3b9edd;cursor:pointer;font-family:'DM Sans',sans-serif;">📋 View SMS Log</button>
+              <a href="https://make.com" target="_blank" style="font-size:11px;font-weight:600;padding:5px 10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:5px;color:var(--light);text-decoration:none;">↗ Open Make.com</a>
+            </div>
+            <div id="smsLog" style="font-size:10px;color:rgba(255,255,255,.3);line-height:1.6;min-height:20px;max-height:80px;overflow-y:auto;"></div>
+          </div>
+
         </div>
       </div>
     </div><!-- end agentView -->
@@ -9058,9 +9088,13 @@ function notionTest(token) {
           </button>
         </div>
 
-        <!-- Agent Cards Grid -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.85rem;margin-bottom:1.5rem;" id="agentCardsGrid">
-          <!-- Cards injected by JS -->
+        <!-- Agent Runner Table -->
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:1.25rem;">
+          <div style="padding:.75rem 1.1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--white);">All Agents</span>
+            <span style="font-size:10px;color:var(--gray);">Click ▶ Run Now to execute · Click agent name to open its view</span>
+          </div>
+          <div id="agentRunnerTable" style="display:flex;flex-direction:column;"></div>
         </div>
 
         <!-- Activity Feed -->
@@ -10299,59 +10333,81 @@ var AGENTS = [
   }
 ];
 
+// ── AGENT CONFIG ──
+var AGENT_TABLE_DATA = [
+  { id:'mercedes', name:'Mercedes', subtitle:'Sales Agent', icon:'✦', color:'#a78bfa', bg:'linear-gradient(135deg,rgba(139,92,246,.25),rgba(59,158,221,.15))', schedule:'Every 15 min · GitHub Actions', makeUrl:'https://github.com/DRRCMW/mercedes-akira-digital/actions', notionUrl:'https://www.notion.so/a3d2c021b2cc4aed983b10886908824a', webhookUrl:null, viewFn:"showAgent()", type:'github' },
+  { id:'web-builder', name:'Web Builder', subtitle:'Agent 02', icon:'🏗️', color:'#3b9edd', bg:'rgba(59,158,221,.15)', schedule:'Instant webhook on new client', makeUrl:'https://us2.make.com/2153645/scenarios/4786356/edit', notionUrl:'https://www.notion.so/45a529f23db74df29e6287dc0843f0d7', webhookUrl:'https://hook.us2.make.com/t4u4pskcvsdnw5jvq5nyxikwizfbia', viewFn:"showAgentView('web-builder')", type:'webhook' },
+  { id:'client-success', name:'Client Success', subtitle:'Agent 03', icon:'💌', color:'#22c55e', bg:'rgba(34,197,94,.15)', schedule:'Instant · fires after Web Builder', makeUrl:'https://us2.make.com/2153645/scenarios/4786320/edit', notionUrl:'https://www.notion.so/9bf24d82460c4f6ca3d9c0442ce3501b', webhookUrl:'https://hook.us2.make.com/5e3221wbb0f4y6jp9mk09g2tji62', viewFn:"showAgentView('client-success')", type:'webhook' },
+  { id:'ops-finance', name:'Ops & Finance', subtitle:'Agent 05', icon:'📊', color:'#c9941a', bg:'rgba(201,148,26,.12)', schedule:'Every Monday · 7:00 AM', makeUrl:'https://us2.make.com/2153645/scenarios/4786137/edit', notionUrl:'https://www.notion.so/c9bf66bb80ea48bba6408a858ee99b13', webhookUrl:null, viewFn:"showAgentView('ops-finance')", type:'scheduled' },
+  { id:'growth', name:'Growth Agent', subtitle:'Agent 04', icon:'📈', color:'#8b5cf6', bg:'rgba(139,92,246,.15)', schedule:'Every Monday · 8:00 AM', makeUrl:'https://us2.make.com/2153645/scenarios/4786443/edit', notionUrl:'https://www.notion.so/45a529f23db74df29e6287dc0843f0d7', webhookUrl:null, viewFn:"showAgentView('growth')", type:'scheduled' },
+  { id:'seo', name:'SEO Agent', subtitle:'Agent 06', icon:'🔍', color:'#ef4444', bg:'rgba(239,68,68,.12)', schedule:'1st of every month · 6:00 AM', makeUrl:'https://us2.make.com/2153645/scenarios/4786482/edit', notionUrl:'https://www.notion.so/33c64950aee3806e8e46e383a01266f3', webhookUrl:null, viewFn:"showAgentView('seo')", type:'scheduled' }
+];
+
 function showAgentControl() {
   hideAllViews();
   document.getElementById('agentControlView').classList.add('active');
-  document.querySelectorAll('.nav-item, .nav-home').forEach(function(el){ el.classList.remove('active'); });
+  document.querySelectorAll('.nav-item,.nav-home').forEach(function(el){ el.classList.remove('active'); });
   var navEl = document.getElementById('nav-agents');
   if (navEl) navEl.classList.add('active');
-  setTopBar('⚡', 'Agent Control', 'rgba(139,92,246,.15)', '#a78bfa', 'LIVE', 'rgba(34,197,94,.12)', 'var(--green)', 'Activate agents for their shift. Each agent runs automatically on schedule — use Make.com links to toggle on/off. Activity feed pulls from Notion in real time.');
-  renderAgentCards();
-  refreshAgentFeed();
-  // Show the LIVE badge
+  setTopBar('⚡','Agent Control','rgba(139,92,246,.15)','#a78bfa','LIVE','rgba(34,197,94,.12)','var(--green)','Launch any agent instantly. Webhook agents (⚡) execute immediately. Scheduled agents (🕐) open in Make.com.');
   var badge = document.getElementById('agentActiveBadge');
   if (badge) badge.style.display = 'flex';
+  renderAgentTable();
+  refreshAgentFeed();
   currentTool = -99;
 }
 
-function renderAgentCards() {
-  var grid = document.getElementById('agentCardsGrid');
-  if (!grid) return;
-  grid.innerHTML = AGENTS.map(function(a) {
-    var statusHtml = a.status === 'active'
-      ? '<span class="agent-status-pill active"><span class="dot"></span>Active</span>'
-      : '<span class="agent-status-pill inactive"><span class="dot"></span>Inactive</span>';
-    var runsHtml = a.runs > 0
-      ? '<span style="font-size:10px;color:var(--gray);">' + a.runs + ' runs</span>'
-      : '<span style="font-size:10px;color:var(--gray);">No runs yet</span>';
-    return '<div class="agent-card" style="--card-accent:' + a.accent + ';">'
-      + '<div class="agent-card-header">'
-      + '<div class="agent-icon" style="background:' + a.bg + ';font-size:17px;">' + a.icon + '</div>'
-      + '<div><div class="agent-name">' + a.name + '</div><div class="agent-schedule">' + a.subtitle + ' · ' + a.schedule + '</div></div>'
-      + '</div>'
-      + '<div style="font-size:11px;color:var(--gray);margin-bottom:.65rem;line-height:1.5;">' + a.desc + '</div>'
-      + '<div class="agent-status-row">' + statusHtml + runsHtml + '</div>'
-      + '<div class="agent-actions">'
-      + '<a href="' + a.makeUrl + '" target="_blank" class="agent-btn agent-btn-primary">'
-      + '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
-      + (a.makeId ? 'Open in Make.com' : 'View on GitHub') + '</a>'
-      + '<a href="' + a.notionUrl + '" target="_blank" class="agent-btn agent-btn-secondary">'
-      + '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
-      + 'View Output</a>'
-      + (a.makeId ? '<button onclick="runAgentNow(\'' + a.makeId + '\',\'' + a.name + '\')" class="agent-btn agent-btn-run">▶ Run Now</button>' : '')
-      + '</div>'
-      + '</div>';
+function renderAgentTable() {
+  var table = document.getElementById('agentRunnerTable');
+  if (!table) return;
+  var TL = { webhook:'⚡ Webhook', scheduled:'🕐 Scheduled', github:'⚙️ GitHub' };
+  var TC = { webhook:'#22c55e', scheduled:'#f59e0b', github:'#a78bfa' };
+  table.innerHTML = AGENT_TABLE_DATA.map(function(a, idx) {
+    var last = idx === AGENT_TABLE_DATA.length - 1;
+    var tc = TC[a.type] || 'var(--gray)';
+    var tcb = tc.startsWith('#') ? tc+'33' : tc;
+    var rb = a.webhookUrl
+      ? '<button onclick="triggerWebhookAgent(\'' + a.id + '\',this)" style="padding:.3rem .75rem;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;border:none;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;white-space:nowrap;">▶ Run Now</button>'
+      : (a.type === 'github'
+        ? '<button onclick="showAgent()" style="padding:.3rem .75rem;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;border:none;background:linear-gradient(135deg,#a78bfa,#8b5cf6);color:#fff;white-space:nowrap;">✦ Open Agent</button>'
+        : '<a href="' + a.makeUrl + '" target="_blank" style="padding:.3rem .75rem;border-radius:7px;font-size:11px;font-weight:700;border:none;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;display:inline-flex;white-space:nowrap;text-decoration:none;">▶ Run in Make.com</a>');
+    return '<div style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1.1rem;' + (last?'':'border-bottom:1px solid var(--border);') + '">'
+      + '<div style="width:34px;height:34px;border-radius:9px;background:' + a.bg + ';display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">' + a.icon + '</div>'
+      + '<div style="flex:1;min-width:0;"><div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">'
+      + '<span onclick="' + a.viewFn + '" style="font-size:13px;font-weight:700;color:' + a.color + ';cursor:pointer;">' + a.name + '</span>'
+      + '<span style="font-size:10px;color:var(--gray);">' + a.subtitle + '</span>'
+      + '<span style="font-size:10px;padding:.1rem .4rem;border-radius:4px;background:rgba(255,255,255,.05);color:' + tc + ';border:1px solid ' + tcb + ';">' + (TL[a.type]||a.type) + '</span>'
+      + '</div><div style="font-size:11px;color:var(--gray);margin-top:.1rem;">' + a.schedule + '</div></div>'
+      + '<div style="display:flex;align-items:center;gap:.4rem;flex-shrink:0;flex-wrap:wrap;">'
+      + rb
+      + '<a href="' + a.makeUrl + '" target="_blank" style="padding:.3rem .65rem;border-radius:7px;font-size:11px;font-weight:600;border:1px solid rgba(139,92,246,.25);background:rgba(139,92,246,.1);color:#a78bfa;text-decoration:none;white-space:nowrap;">Open Make.com</a>'
+      + '<a href="' + a.notionUrl + '" target="_blank" style="padding:.3rem .65rem;border-radius:7px;font-size:11px;font-weight:600;border:1px solid var(--border);background:var(--bg3);color:var(--light);text-decoration:none;white-space:nowrap;">View Output</a>'
+      + '</div></div>';
   }).join('');
 }
 
-function runAgentNow(makeId, agentName) {
-  // Open Make.com run interface
-  var url = 'https://us2.make.com/2153645/scenarios/' + makeId + '/edit';
-  window.open(url, '_blank');
-  // Show a toast
-  showAgentToast('Opening ' + agentName + ' in Make.com — click Run Once to start a shift', '#a78bfa');
+function triggerWebhookAgent(agentId, btn) {
+  var agent = AGENT_TABLE_DATA.find(function(a){ return a.id === agentId; });
+  if (!agent || !agent.webhookUrl) return;
+  var orig = btn ? btn.innerHTML : '';
+  if (btn) { btn.innerHTML = '⏳ Running...'; btn.disabled = true; btn.style.opacity = '0.7'; }
+  fetch(agent.webhookUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ source:'command_center', triggered_at:new Date().toISOString(), agent:agentId }) })
+  .then(function(r) {
+    if (btn) { btn.innerHTML = r.ok ? '✅ Triggered!' : '⚠️ Sent'; }
+    showAgentToast((r.ok ? '✅ ' : '⚠️ ') + agent.name + (r.ok ? ' is now running!' : ' — check Make.com'), r.ok ? '#22c55e' : '#f59e0b');
+    setTimeout(function(){ if(btn){btn.innerHTML=orig;btn.disabled=false;btn.style.opacity='1';btn.style.background='';} }, 4000);
+  })
+  .catch(function() {
+    if (btn) { btn.innerHTML = '↗ Sent'; setTimeout(function(){ btn.innerHTML=orig;btn.disabled=false;btn.style.opacity='1';},3000); }
+    showAgentToast('Trigger sent — opens in Make.com if blocked', '#f59e0b');
+  });
 }
 
+function runAgentNow(makeId, agentName) {
+  var agent = AGENT_TABLE_DATA.find(function(a){ return a.makeUrl && a.makeUrl.includes(makeId); });
+  if (agent && agent.webhookUrl) { triggerWebhookAgent(agent.id, null); }
+  else { window.open('https://us2.make.com/2153645/scenarios/' + makeId + '/edit', '_blank'); showAgentToast('Opening ' + agentName + ' in Make.com', '#a78bfa'); }
+}
 function showAgentToast(msg, color) {
   var t = document.getElementById('agentToast');
   if (!t) {
@@ -10970,6 +11026,7 @@ function showAgent() {
   agentRefreshUI();
   checkAgentApiKey();
   try { loadCloudSettingsUI(); } catch(e) {}
+  try { loadSmsSettingsUI(); } catch(e) {}
 }
 
 // ── Goal Tracker ──────────────────────────────────────────────
@@ -11056,6 +11113,7 @@ function showAgent() {
   agentRefreshUI();
   checkAgentApiKey();
   try { loadCloudSettingsUI(); } catch(e) {}
+  try { loadSmsSettingsUI(); } catch(e) {}
 }
 
 function checkAgentApiKey() {
@@ -11818,6 +11876,57 @@ async function pullFromCloud() {
 
 // Cloud settings are loaded when the Mercedes panel is opened
 // (loadCloudSettingsUI is called directly from the Cloud panel HTML onload)
+
+// ═══════════════════════════════════
+// SMS / TWILIO FUNCTIONS
+// ═══════════════════════════════════
+
+function getSmsSettings() {
+  return { enabled: localStorage.getItem('mercedes_sms_enabled') === 'true', webhookUrl: localStorage.getItem('mercedes_sms_webhook') || '' };
+}
+function saveSmsSettings() {
+  var e = document.getElementById('smsEnabled'), w = document.getElementById('smsWebhookUrl');
+  if (e) localStorage.setItem('mercedes_sms_enabled', e.checked ? 'true' : 'false');
+  if (w) localStorage.setItem('mercedes_sms_webhook', w.value.trim());
+  updateSmsStatusUI();
+}
+function loadSmsSettingsUI() {
+  var s = getSmsSettings();
+  var e = document.getElementById('smsEnabled'), w = document.getElementById('smsWebhookUrl');
+  if (e) { e.checked = s.enabled; updateSmsToggleStyle(s.enabled); }
+  if (w && s.webhookUrl) w.value = s.webhookUrl;
+  updateSmsStatusUI();
+}
+function updateSmsToggleStyle(on) {
+  var t = document.getElementById('smsToggleTrack'), h = document.getElementById('smsToggleThumb');
+  if (t) t.style.background = on ? 'rgba(139,92,246,.6)' : 'rgba(255,255,255,.1)';
+  if (h) h.style.transform = on ? 'translateX(18px)' : 'translateX(0)';
+}
+function updateSmsStatusUI() {
+  var s = getSmsSettings(), d = document.getElementById('smsDot'), t = document.getElementById('smsStatusText');
+  updateSmsToggleStyle(s.enabled);
+  var active = s.webhookUrl && s.enabled;
+  if (d) { d.style.background = active ? '#a78bfa' : 'var(--gray)'; d.style.boxShadow = active ? '0 0 6px #a78bfa' : 'none'; }
+  if (t) { t.textContent = !s.webhookUrl ? 'Not configured' : s.enabled ? 'Active' : 'Webhook set, SMS off'; t.style.color = active ? '#a78bfa' : 'var(--gray)'; }
+}
+function smsLog(msg, type) {
+  var el = document.getElementById('smsLog'); if (!el) return;
+  el.innerHTML = '<span style="color:' + (type==='ok'?'#a78bfa':type==='err'?'#ef4444':'rgba(255,255,255,.35)') + ';">' + msg + '</span>';
+}
+async function testSmsWebhook() {
+  var s = getSmsSettings();
+  if (!s.webhookUrl) { smsLog('⚠ Paste your Make.com webhook URL first.', 'err'); return; }
+  smsLog('Sending test payload...', 'info');
+  try {
+    var r = await fetch(s.webhookUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ leadName:'Test Lead', phone:'+10000000000', message:'Test SMS from Mercedes — Akira Digital.', leadScore:'warm', followUpStage:'day7_stat', agentId:'mercedes-test' }) });
+    smsLog(r.ok ? '✅ Webhook accepted! Check Make.com scenario 07.' : '⚠ Responded ' + r.status + ' — check scenario is active.', r.ok ? 'ok' : 'err');
+  } catch(e) { smsLog('⚠ Could not reach webhook: ' + e.message, 'err'); }
+}
+function viewSmsLog() {
+  var pl = JSON.parse(localStorage.getItem('akira_pipeline') || '[]'), st = [];
+  pl.forEach(function(l){ (l.touchpoints||[]).forEach(function(t){ if(t.type==='sms') st.push(l.name+' ('+t.date+')'); }); });
+  smsLog(st.length ? 'Last SMS: ' + st.slice(-3).reverse().join(' · ') : 'No SMS sent yet — Mercedes sends Day 7 + hot lead SMS.', st.length ? 'ok' : 'info');
+}
 
 // Auto-sync pipeline to cloud whenever leads are saved (safe version)
 var _cloudSyncTimeout = null;
