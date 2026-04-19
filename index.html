@@ -557,27 +557,27 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
       </div>
       <div class="nav-item" id="nav-web-builder" onclick="showAgentView('web-builder')">
         <div class="ni-icon" style="background:rgba(59,158,221,.15);color:#3b9edd;font-size:13px;">🏗️</div>
-        <div class="ni-info"><div class="ni-name">Web Builder</div><div class="ni-desc">Generates site copy</div></div>
+        <div class="ni-info"><div class="ni-name">Web Builder</div><div class="ni-desc">Writes full website copy</div></div>
         <div class="ni-badge" style="background:rgba(59,158,221,.12);color:#3b9edd;">02</div>
       </div>
       <div class="nav-item" id="nav-client-success" onclick="showAgentView('client-success')">
         <div class="ni-icon" style="background:rgba(34,197,94,.15);color:#22c55e;font-size:13px;">💌</div>
-        <div class="ni-info"><div class="ni-name">Client Success</div><div class="ni-desc">Sends welcome emails</div></div>
+        <div class="ni-info"><div class="ni-name">Client Success</div><div class="ni-desc">Onboards &amp; upsells clients</div></div>
         <div class="ni-badge" style="background:rgba(34,197,94,.12);color:#22c55e;">03</div>
       </div>
       <div class="nav-item" id="nav-ops-finance" onclick="showAgentView('ops-finance')">
         <div class="ni-icon" style="background:rgba(201,148,26,.12);color:#c9941a;font-size:13px;">📊</div>
-        <div class="ni-info"><div class="ni-name">Ops &amp; Finance</div><div class="ni-desc">Weekly reports</div></div>
+        <div class="ni-info"><div class="ni-name">Ops &amp; Finance</div><div class="ni-desc">Monday founder briefing</div></div>
         <div class="ni-badge" style="background:rgba(201,148,26,.1);color:#c9941a;">05</div>
       </div>
       <div class="nav-item" id="nav-growth" onclick="showAgentView('growth')">
         <div class="ni-icon" style="background:rgba(139,92,246,.15);color:#8b5cf6;font-size:13px;">📈</div>
-        <div class="ni-info"><div class="ni-name">Growth Agent</div><div class="ni-desc">Weekly content batch</div></div>
+        <div class="ni-info"><div class="ni-name">Growth Agent</div><div class="ni-desc">Monday content + outreach</div></div>
         <div class="ni-badge" style="background:rgba(139,92,246,.12);color:#8b5cf6;">04</div>
       </div>
       <div class="nav-item" id="nav-seo" onclick="showAgentView('seo')">
         <div class="ni-icon" style="background:rgba(239,68,68,.12);color:#ef4444;font-size:13px;">🔍</div>
-        <div class="ni-info"><div class="ni-name">SEO Agent</div><div class="ni-desc">Monthly SEO reports</div></div>
+        <div class="ni-info"><div class="ni-name">SEO Agent</div><div class="ni-desc">Monthly client SEO reports</div></div>
         <div class="ni-badge" style="background:rgba(239,68,68,.1);color:#ef4444;">06</div>
       </div>
     </div>
@@ -8854,14 +8854,14 @@ function notionTest(token) {
           <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#8b5cf6,#3b9edd);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;box-shadow:0 0 24px rgba(139,92,246,.4);">✦</div>
           <div>
             <div style="font-family:Syne,sans-serif;font-size:1.3rem;font-weight:800;color:#fff;line-height:1.1;">Mercedes <span style="color:#a78bfa;">— AI Revenue Agent</span></div>
-            <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;">Senior Account Executive · 5-Channel Outreach · Powered by Claude</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;">AI Sales Agent · Outbound Prospecting + Follow-ups · Powered by Claude</div>
           </div>
           <div id="agentShiftIndicator" style="margin-left:auto;display:flex;align-items:center;gap:.5rem;padding:.4rem 1rem;border-radius:99px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.25);font-size:11px;font-weight:600;color:#a78bfa;">
             <div id="agentDot" style="width:8px;height:8px;border-radius:50%;background:#6b21a8;flex-shrink:0;"></div>
             <span id="agentShiftText">Off Shift</span>
           </div>
         </div>
-        <div style="font-size:13px;color:rgba(255,255,255,.45);line-height:1.7;max-width:700px;">Mercedes works your pipeline from 8am–5pm. Each shift she generates a full 5-touch email sequence, LinkedIn message, SMS script, call opener, proposal hook, and objection rebuttals — all personalized to each lead's industry and situation.</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.45);line-height:1.7;max-width:700px;">Mercedes works your pipeline every weekday from 8am–5pm. For every lead she works, she researches the business, scores it as Hot / Warm / Cold, then generates: a personalized cold email + subject line, a 4-stage follow-up cadence (Day 3, 7, 14 &amp; 30), a LinkedIn DM, an SMS script, a 30-second call opener, a proposal hook, and objection rebuttals — all tailored to that lead's industry, location, rating, and website situation. Hot and Day 7 warm leads also receive an automatic SMS via Twilio.</div>
         <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:.65rem;margin-top:1.25rem;">
           <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:.65rem .85rem;text-align:center;"><div style="font-family:Syne,sans-serif;font-size:1.2rem;font-weight:800;color:#a78bfa;" id="agentStatLeads">0</div><div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;">In Queue</div></div>
           <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:.65rem .85rem;text-align:center;"><div style="font-family:Syne,sans-serif;font-size:1.2rem;font-weight:800;color:#22c55e;" id="agentStatWorked">0</div><div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;">Worked Today</div></div>
