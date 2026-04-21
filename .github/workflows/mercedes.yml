@@ -1,0 +1,33 @@
+name: Mercedes — AI Sales Agent
+
+on:
+  schedule:
+    - cron: '0,15,30,45 15,16,17,18,19,20,21,22,23,0 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  run-mercedes:
+    name: Run Mercedes Agent
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Call Mercedes API
+        env:
+          MERCEDES_SECRET: ${{ secrets.MERCEDES_SECRET }}
+          VERCEL_URL: ${{ secrets.VERCEL_URL }}
+        run: |
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST \
+            -H "x-mercedes-key: ${MERCEDES_SECRET}" \
+            -H "Content-Type: application/json" \
+            "${VERCEL_URL}/api/agent")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response: $BODY"
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "Mercedes returned HTTP $HTTP_CODE"
+            exit 1
+          fi
+          echo "Mercedes run complete"
