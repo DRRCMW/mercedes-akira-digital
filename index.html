@@ -10350,7 +10350,7 @@ var AGENTS = [
     id: 'mercedes', name: 'Mercedes', subtitle: 'Sales Agent',
     icon: '🤖', color: '#f0b429', bg: 'rgba(240,180,41,.12)',
     accent: '#f0b429',
-    desc: 'Prospects leads, writes outreach packages, qualifies pipeline.',
+    desc: 'Robyn's AI revenue agent. Runs every 15 min Mon–Fri. Scans new leads, scores them Hot/Warm/Cold, triggers automated follow-up cadences on Days 3/7/14, writes objection rebuttals, and logs all activity to Notion. Every lead in your pipeline is actively worked.',
     schedule: 'Every 15 min (GitHub Actions)',
     makeId: null,
     makeUrl: 'https://github.com/DRRCMW/mercedes-akira-digital/actions',
@@ -10362,7 +10362,7 @@ var AGENTS = [
     id: 'web-builder', name: 'Web Builder', subtitle: 'Agent 02',
     icon: '🏗️', color: '#3b9edd', bg: 'rgba(59,158,221,.12)',
     accent: '#3b9edd',
-    desc: 'Generates full website copy package for every new client.',
+    desc: 'Fires the moment a new client signs. Webhook delivers their business name, niche, city, and package. Claude Sonnet generates the complete website content package: hero headline, about section, 3 services, 3 reviews, FAQ, GMB description, 10 local SEO keywords, and welcome email. Project + client pages saved to Notion instantly. SMS to Robyn.',
     schedule: 'Instant — fires on new client',
     makeId: '4786356',
     makeUrl: 'https://us2.make.com/2153645/scenarios/4786356/edit',
@@ -10374,7 +10374,7 @@ var AGENTS = [
     id: 'client-success', name: 'Client Success', subtitle: 'Agent 03',
     icon: '💌', color: '#22c55e', bg: 'rgba(34,197,94,.12)',
     accent: '#22c55e',
-    desc: 'Writes welcome emails, asset requests, and Care Plan upsells.',
+    desc: 'Fires on any client lifecycle trigger: post-launch, 30-day check-in, upsell opportunity, or renewal. Claude Sonnet generates a full action package — personalized email (150-180 words), SMS message, upsell recommendation with pitch and timing, care plan talking points, and a 3-step follow-up sequence. Logs to Notion CRM + SMS to Robyn with priority level.',
     schedule: 'Instant — fires after Web Builder',
     makeId: '4786320',
     makeUrl: 'https://us2.make.com/2153645/scenarios/4786320/edit',
@@ -10386,7 +10386,7 @@ var AGENTS = [
     id: 'ops-finance', name: 'Ops & Finance', subtitle: 'Agent 05',
     icon: '📊', color: '#c9941a', bg: 'rgba(201,148,26,.12)',
     accent: '#c9941a',
-    desc: 'Weekly founder report: revenue, projects, pipeline, focus areas.',
+    desc: 'Every Monday at 7:00 AM PST, Mercedes pulls active pipeline, clients, and unpaid invoices from Notion. Claude Sonnet writes Robyn’s briefing: Revenue Snapshot (MRR + invoice totals + monthly pace vs $83K target), Pipeline Heat Map (hot/warm/cold rankings), Top 3 Money Moves for the week, and 2 Quick Wins to do before 9am. Saved to Notion + SMS to Robyn.',
     schedule: 'Every Monday at 7:00 AM',
     makeId: '4786137',
     makeUrl: 'https://us2.make.com/2153645/scenarios/4786137/edit',
@@ -10398,7 +10398,7 @@ var AGENTS = [
     id: 'growth', name: 'Growth Agent', subtitle: 'Agent 04',
     icon: '📈', color: '#8b5cf6', bg: 'rgba(139,92,246,.12)',
     accent: '#8b5cf6',
-    desc: 'LinkedIn post, Instagram caption, blog outline + outreach angle.',
+    desc: 'Every Monday at 8:00 AM PST. Pulls active clients for context. Claude Sonnet generates the full weekly growth batch: bold week theme, LinkedIn post (200-250 words with dollar amounts), cold email subject + body, IG Reel hook, TikTok hook, 15-second cold call opener, 3 LA outreach targets with talking points, and a Mon–Fri content calendar. All saved to Notion.',
     schedule: 'Every Monday at 8:00 AM',
     makeId: '4786443',
     makeUrl: 'https://us2.make.com/2153645/scenarios/4786443/edit',
@@ -10410,7 +10410,7 @@ var AGENTS = [
     id: 'seo', name: 'SEO Agent', subtitle: 'Agent 06',
     icon: '🔍', color: '#ef4444', bg: 'rgba(239,68,68,.12)',
     accent: '#ef4444',
-    desc: 'Monthly SEO health report for every active Care Plan client.',
+    desc: 'Every 1st of the month at 6:00 AM PST. Pulls all active clients from Notion. Claude Sonnet generates per-client SEO plans: 5 priority keywords, 2 GMB posts (Monday + Friday), 3 technical SEO tasks, a content recommendation, 3 backlink targets, and a review request script. Also generates 3 tasks for akiradigital.net itself. Full report saved to Notion + SMS to Robyn.',
     schedule: '1st of every month at 6:00 AM',
     makeId: '4786482',
     makeUrl: 'https://us2.make.com/2153645/scenarios/4786482/edit',
@@ -10421,7 +10421,7 @@ var AGENTS = [
   {
     id: 'social-media', name: 'Social Media Agent', subtitle: 'Agent 07',
     icon: '📱', color: '#ec4899', bg: 'rgba(236,72,153,.12)', accent: '#ec4899',
-    desc: 'Generates & queues daily posts for IG, TikTok, LinkedIn, Facebook, and Google Business. Mon–Fri.',
+    desc: 'Mon–Fri at 8:00 AM PST. Claude Sonnet generates 5 platform-specific posts daily. Pillars rotate by day (Mon=Education, Tue=Services, Wed=Hot Take, Thu=Social Proof, Fri=Behind Scenes). Outputs: Instagram Reel caption, TikTok script with CapCut overlays, LinkedIn post with engagement question, Facebook post, and Google Business Profile post. All 5 saved to Notion content calendar + SMS to Robyn.',
     schedule: 'Mon–Fri · 8:00 AM PST',
     makeId: '4908666', makeUrl: 'https://us2.make.com/2153645/scenarios/4908666/edit', webhookUrl: null, viewFn: "showAgentView('social-media')", type: 'scheduled'
   }
@@ -10434,7 +10434,8 @@ var AGENT_TABLE_DATA = [
   { id:'client-success', name:'Client Success', subtitle:'Agent 03', icon:'💌', color:'#22c55e', bg:'rgba(34,197,94,.15)', schedule:'Instant · fires after Web Builder', makeUrl:'https://us2.make.com/2153645/scenarios/4786320/edit', notionUrl:'https://www.notion.so/9bf24d82460c4f6ca3d9c0442ce3501b', webhookUrl:'https://hook.us2.make.com/5e3221wbb0f4y6jp9mk09g2tji62', viewFn:"showAgentView('client-success')", type:'webhook' },
   { id:'ops-finance', name:'Ops & Finance', subtitle:'Agent 05', icon:'📊', color:'#c9941a', bg:'rgba(201,148,26,.12)', schedule:'Every Monday · 7:00 AM', makeUrl:'https://us2.make.com/2153645/scenarios/4786137/edit', notionUrl:'https://www.notion.so/c9bf66bb80ea48bba6408a858ee99b13', webhookUrl:null, viewFn:"showAgentView('ops-finance')", type:'scheduled' },
   { id:'growth', name:'Growth Agent', subtitle:'Agent 04', icon:'📈', color:'#8b5cf6', bg:'rgba(139,92,246,.15)', schedule:'Every Monday · 8:00 AM', makeUrl:'https://us2.make.com/2153645/scenarios/4786443/edit', notionUrl:'https://www.notion.so/45a529f23db74df29e6287dc0843f0d7', webhookUrl:null, viewFn:"showAgentView('growth')", type:'scheduled' },
-  { id:'seo', name:'SEO Agent', subtitle:'Agent 06', icon:'🔍', color:'#ef4444', bg:'rgba(239,68,68,.12)', schedule:'1st of every month · 6:00 AM', makeUrl:'https://us2.make.com/2153645/scenarios/4786482/edit', notionUrl:'https://www.notion.so/33c64950aee3806e8e46e383a01266f3', webhookUrl:null, viewFn:"showAgentView('seo')", type:'scheduled' }
+  { id:'seo', name:'SEO Agent', subtitle:'Agent 06', icon:'🔍', color:'#ef4444', bg:'rgba(239,68,68,.12)', schedule:'1st of every month · 6:00 AM', makeUrl:'https://us2.make.com/2153645/scenarios/4786482/edit', notionUrl:'https://www.notion.so/33c64950aee3806e8e46e383a01266f3', webhookUrl:null, viewFn:"showAgentView('seo')", type:'scheduled' },
+  { id:'social-media', name:'Social Media', subtitle:'Agent 07', icon:'📱', color:'#8b5cf6', bg:'rgba(139,92,246,.12)', schedule:'Mon–Fri · 8:00 AM PST', makeUrl:'https://us2.make.com/2153645/scenarios/4908666/edit', notionUrl:'', webhookUrl: null, viewFn: "showAgentView('social-media')", type:'scheduled' }
 ];
 
 function showAgentControl() {
@@ -10471,7 +10472,7 @@ function renderAgentTable() {
       + '<span onclick="' + a.viewFn + '" style="font-size:13px;font-weight:700;color:' + a.color + ';cursor:pointer;">' + a.name + '</span>'
       + '<span style="font-size:10px;color:var(--gray);">' + a.subtitle + '</span>'
       + '<span style="font-size:10px;padding:.1rem .4rem;border-radius:4px;background:rgba(255,255,255,.05);color:' + tc + ';border:1px solid ' + tcb + ';">' + (TL[a.type]||a.type) + '</span>'
-      + '</div><div style="font-size:11px;color:var(--gray);margin-top:.1rem;">' + a.schedule + '</div></div>'
+      + '</div><div style="font-size:11px;color:var(--gray);margin-top:.1rem;">' + a.schedule + '</div>' + '<div style="font-size:11px;line-height:1.55;color:var(--gray);margin:.4rem 0 0;padding:.4rem .5rem;background:rgba(255,255,255,.05);border-radius:5px;border-left:2px solid ' + (a.color||'#888') + ';">' + ((window.AGENTS||[]).find(function(x){return x.id===a.id})||{desc:''}).desc + '</div></div>'
       + '<div style="display:flex;align-items:center;gap:.4rem;flex-shrink:0;flex-wrap:wrap;">'
       + rb
       + '<a href="' + a.makeUrl + '" target="_blank" style="padding:.3rem .65rem;border-radius:7px;font-size:11px;font-weight:600;border:1px solid rgba(139,92,246,.25);background:rgba(139,92,246,.1);color:#a78bfa;text-decoration:none;white-space:nowrap;">Open Make.com</a>'
