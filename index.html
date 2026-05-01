@@ -1792,7 +1792,7 @@ window.onload = function() {
   document.getElementById('tpDate').value = new Date().toISOString().split('T')[0];
   updateGoal();
   renderPipe();
-  checkAgentApiKey();
+  setTimeout(function(){ checkAgentApiKey(); updateKeyStatusSummary(); }, 200);
 };
 
 // ═══════════════════════════════════════════════
@@ -11013,6 +11013,8 @@ function saveAllKeys() {
     st.textContent = 'No keys entered — nothing saved.';
   }
 }
+
+function broadcastKeys() { /* stub: keys stored in localStorage */ }
 
 function broadcastToFrames(key, value) {
   var frames = document.querySelectorAll('iframe');
