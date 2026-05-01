@@ -12554,5 +12554,15 @@ function smSave(){var post={platform:document.getElementById("sm-res-plat").text
 function smUpdateSaved(){var cnt=smSaved.length,cntEl=document.getElementById("sm-saved-cnt");if(cntEl)cntEl.textContent=cnt;var sec=document.getElementById("sm-saved-sec");if(!sec)return;sec.style.display=cnt>0?"block":"none";var list=document.getElementById("sm-saved-list");if(list)list.innerHTML=smSaved.slice(0,5).map(function(p,i){return'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;"><div><div style="font-size:10px;font-weight:700;color:var(--gold);margin-bottom:3px;">'+(p.platform||"")+' - '+(p.date||"")+'</div><div style="font-size:12px;color:var(--lightgray);">'+(p.hook||p.caption||"").slice(0,80)+'</div></div><button onclick="smCopySaved('  +i+')" style="background:var(--bg2);border:1px solid var(--border);color:var(--gray);padding:3px 8px;border-radius:4px;font-size:10px;cursor:pointer;flex-shrink:0;">Copy</button></div>';}).join("");}
 function smCopySaved(i){var p=smSaved[i];if(!p)return;var text=(p.hook||"")+"\n\n"+(p.caption||"")+"\n\n"+(p.hashtags||"")+"\n\n"+(p.cta||"");navigator.clipboard.writeText(text).then(function(){smAddLog("Saved post copied");}).catch(function(){});}
 </script>
+<script>
+// Init: update API key pill status after all scripts have loaded
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    if (typeof checkAgentApiKey === 'function') {
+      checkAgentApiKey();
+    }
+  }, 300);
+});
+</script>
 </body>
 </html>
