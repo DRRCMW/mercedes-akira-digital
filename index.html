@@ -11239,6 +11239,16 @@ function checkAgentApiKey() {
     if(dot){ dot.style.background = 'var(--red)'; }
     if(txt){ txt.textContent = '⚠ Anthropic API key not set — go to Settings'; txt.style.color = 'var(--red)'; }
   }
+  // Update top-level API pill
+  var pill = document.getElementById('apiPillText');
+  var pillWrap = pill ? pill.parentElement : null;
+  if (key && key.startsWith('sk-ant')) {
+    if (pill) { pill.textContent = '✓ ' + key.substring(0,12) + '...'; }
+    if (pillWrap) { pillWrap.className = pillWrap.className.replace('disconnected','connected'); }
+  } else {
+    if (pill) { pill.textContent = 'API key not set'; }
+    if (pillWrap) { pillWrap.className = pillWrap.className.replace('connected','disconnected'); }
+  }
 }
 
 function agentRefreshUI() {
