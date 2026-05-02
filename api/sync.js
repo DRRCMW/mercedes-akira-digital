@@ -258,8 +258,28 @@ export default async function handler(req, res) {
       const addedAt = record.created_time || new Date().toISOString();
       return { place_id: 'notion-' + record.id.replace(/-/g, ''), name, phone, email, address: city + ', ' + state + ', USA', city, state, rating, reviews, score, tier, stage, niche, website: null, reason: websiteStatus, angle: niche + ' in ' + city + ' — no website', touchpoints: [], nextFollowup: null, addedAt, uid: new Date(addedAt).getTime() + i };
     });
+    if (pipeline.length === 0) return res.json({ ok: false, count: 0, pages: page, error: 'Notion returned 0 records — pipeline not overwritten for safety', notionToken: importToken?.slice(0,20) });
     await redisSet('akira_pipeline', pipeline);
     return res.json({ ok: true, count: pipeline.length, pages: page, sample: pipeline.slice(0, 3).map(l => l.name), message: 'Imported ' + pipeline.length + ' leads from Notion Prospect Finder.' });
   }
+
+  // ---- NOTION DEBUG: Test Notion connection ----
+  if (action === 'notion-debug' && req.method === 'GET') {
+    const testToken = req.query.token || req.headers['x-notion-token'] || activeNotionToken;
+    try {
+      const r1 = await fetch('https://api.notion.com/v1/users/me', {
+        headers: { 'Authorization': 'Bearer ' + testToken, 'Notion-Version': '2022-06-28' }
+      });
+      const userRaw = await r1.json();
+      const r2 = await fetch('https://api.notion.com/v1/databases/a3d2c021b2cc4aed983b10886908824a/query', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + testToken, 'Notion-Version': '2022-06-28', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ page_size: 5 })
+      });
+      const dbRaw = await r2.json();
+      return res.json({ tokenUsed: testToken?.slice(0,20), userStatus: r1.status, userResponse: userRaw, dbStatus: r2.status, dbResultsCount: dbRaw?.results?.length, dbError: dbRaw?.message, dbObject: dbRaw?.object });
+    } catch(e) { return res.json({ error: e.message }); }
+  }
+
 return res.status(400).json({ error: 'Unknown action', available: ['push-pipeline','pull-all','clear-queue','get-log','status','sync-to-notion','sync-notion-packages','notion-status'] });
 }
