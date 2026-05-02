@@ -223,5 +223,43 @@ export default async function handler(req, res) {
     return res.json({ log: log.slice(0, 100) });
   }
 
-  return res.status(400).json({ error: 'Unknown action', available: ['push-pipeline','pull-all','clear-queue','get-log','status','sync-to-notion','sync-notion-packages','notion-status'] });
+  
+  // ---- NOTION IMPORT: Pull ALL leads from Notion → Redis ----
+  if (action === 'notion-import' && req.method === 'POST') {
+    const importToken = process.env.NOTION_TOKEN || NOTION_TOKEN || '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';
+    const allRecords = [];
+    let cursor;
+    let page = 0;
+    do {
+      const body = { page_size: 100 };
+      if (cursor) body.start_cursor = cursor;
+      const data = await notionPost('databases/' + NOTION_OUTBOUND_DB + '/query', body, importToken);
+      if (!data || data.object === 'error') break;
+      allRecords.push(...(data.results || []));
+      cursor = data.has_more ? data.next_cursor : null;
+      page++;
+    } while (cursor && page < 10);
+    const pipeline = allRecords.map((record, i) => {
+      const p = record.properties || {};
+      const name = p['Business Name']?.title?.[0]?.plain_text || 'Unknown';
+      const phone = p['Phone']?.phone_number || '';
+      const email = p['Email']?.email || '';
+      const city = p['City']?.rich_text?.[0]?.plain_text || 'Los Angeles';
+      const state = p['State']?.rich_text?.[0]?.plain_text || 'CA';
+      const rating = p['Google Rating']?.number || 4.5;
+      const reviews = p['Review Count']?.number || 10;
+      const tier = p['Lead Score']?.select?.name || 'Hot';
+      const s = p['Outreach Status']?.select?.name;
+      const stageMap = {'Not Started':'new','Day 1 Sent':'contacted','Day 3 Sent':'contacted','Day 7 Sent':'contacted','Day 14 Sent':'contacted','Day 21 Sent':'contacted','Responded':'responded','Meeting Booked':'meeting','Proposal Sent':'proposal','Closed Won':'won','Closed Lost':'lost','Unsubscribed':'lost'};
+      const stage = stageMap[s] || 'new';
+      const niche = p['Niche']?.select?.name || 'Other';
+      const websiteStatus = p['Website Status']?.select?.name || 'No Website';
+      const score = Math.round(rating * 10 + (reviews > 20 ? 10 : 0));
+      const addedAt = record.created_time || new Date().toISOString();
+      return { place_id: 'notion-' + record.id.replace(/-/g, ''), name, phone, email, address: city + ', ' + state + ', USA', city, state, rating, reviews, score, tier, stage, niche, website: null, reason: websiteStatus, angle: niche + ' in ' + city + ' — no website', touchpoints: [], nextFollowup: null, addedAt, uid: new Date(addedAt).getTime() + i };
+    });
+    await redisSet('akira_pipeline', pipeline);
+    return res.json({ ok: true, count: pipeline.length, pages: page, sample: pipeline.slice(0, 3).map(l => l.name), message: 'Imported ' + pipeline.length + ' leads from Notion Prospect Finder.' });
+  }
+return res.status(400).json({ error: 'Unknown action', available: ['push-pipeline','pull-all','clear-queue','get-log','status','sync-to-notion','sync-notion-packages','notion-status'] });
 }
