@@ -325,6 +325,49 @@ export default async function handler(req, res) {
       return res.json({ tokenUsed: testToken?.slice(0,20), userStatus: r1.status, userResponse: userRaw, dbStatus: r2.status, dbResultsCount: dbRaw?.results?.length, dbError: dbRaw?.message, dbObject: dbRaw?.object });
     } catch(e) { return res.json({ error: e.message }); }
   }
+  if (action === 'notion-pull') {
+    try {
+      const NT = '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';
+      const DID = 'a3d2c021b2cc4aed983b10886908824a';
+      const all = [];
+      let cursor = null;
+      let page = 0;
+      do {
+        const body = { page_size: 100 };
+        if (cursor) body.start_cursor = cursor;
+        const nr = await fetch('https://api.notion.com/v1/databases/' + DID + '/query', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + NT, 'Notion-Version': '2022-06-28', 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const nd = await nr.json();
+        all.push(...(nd.results || []));
+        cursor = nd.has_more ? nd.next_cursor : null;
+        page++;
+      } while (cursor && page < 20);
+      const leads = all.map((rec, i) => {
+        const p = rec.properties || {};
+        const name = (p['Business Name']?.title || [])[0]?.plain_text || 'Unknown';
+        const phone = p['Phone']?.phone_number || '';
+        const city = (p['City']?.rich_text || [])[0]?.plain_text || 'Los Angeles';
+        const state = (p['State']?.rich_text || [])[0]?.plain_text || 'CA';
+        const rating = p['Google Rating']?.number || 4.5;
+        const reviews = p['Review Count']?.number || 0;
+        const tier = p['Lead Score']?.select?.name || 'Hot';
+        const outreach = p['Outreach Status']?.select?.name || 'Not Started';
+        const website = p['Website Status']?.select?.name || 'No Website';
+        const addedAt = p['Added']?.created_time || rec.created_time || '';
+        let stage = 'new';
+        if (['Day 1 Sent','Day 3 Sent','Day 7 Sent','Day 14 Sent','Day 21 Sent'].includes(outreach)) stage = 'contacted';
+        else if (['Responded','Meeting Booked'].includes(outreach)) stage = 'meeting';
+        else if (outreach === 'Closed Won') stage = 'won';
+        else if (outreach === 'Closed Lost') stage = 'lost';
+        return { place_id: 'notion-' + rec.id.replace(/-/g,''), notion_id: rec.id, name, phone, address: city + ', ' + state + ', USA', rating, reviews, score: Math.min(100, Math.round(rating*10+(reviews>20?10:0))), tier, reason: website, angle: 'Notion Prospect Finder', stage, touchpoints: [], nextFollowup: null, addedAt, uid: new Date(addedAt).getTime() + i };
+      });
+      return res.json({ total: leads.length, pages: page, leads });
+    } catch(e) { return res.status(500).json({ error: e.message }); }
+  }
+
 
 return res.status(400).json({ error: 'Unknown action', available: ['push-pipeline','pull-all','clear-queue','get-log','status','sync-to-notion','sync-notion-packages','notion-status'] });
 }
