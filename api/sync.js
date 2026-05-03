@@ -312,53 +312,37 @@ export default async function handler(req, res) {
     } catch(e){return res.status(500).json({error:e.message});}
   }
 
-  // merge-leads: accepts {leads:[]} and merges (dedup by name) into existing pipeline
-  if (action === 'merge-leads' && req.method === 'POST') {
-    const body = await req.json().catch(() => ({}));
-    const newLeads = ensureArr(body.leads);
-    if (newLeads.length === 0) return res.status(400).json({error:'No leads provided'});
-    const kv = await getKV(env);
-    const raw = await kv.get('pipeline');
-    const existing = ensureArr(raw ? JSON.parse(raw) : []);
-    const existingNames = new Set(existing.map(l => (l.name||'').toLowerCase().trim()));
-    const toAdd = newLeads.filter(l => l.name && !existingNames.has(l.name.toLowerCase().trim()));
-    const merged = [...existing, ...toAdd];
-    await kv.set('pipeline', JSON.stringify(merged));
-    return res.status(200).json({added: toAdd.length, total: merged.length, existing: existing.length});
-  }
-
-  // notion-batch: accepts {results:[]} from Notion API response, transforms and merges
+  // notion-batch: accepts {results:[]} from Notion API, transforms + merges into pipeline
   if (action === 'notion-batch' && req.method === 'POST') {
-    const body = await req.json().catch(() => ({}));
-    const recs = ensureArr(body.results);
-    const leads = recs.map((rec, i) => {
-      const p = rec.properties || {};
-      const name = ((p['Business Name']||{}).title||[])[0]?.plain_text || 'Unknown';
-      const phone = (p['Phone']||{}).phone_number || '';
-      const city = ((p['City']||{}).rich_text||[])[0]?.plain_text || 'Los Angeles';
-      const state = ((p['State']||{}).rich_text||[])[0]?.plain_text || 'CA';
-      const rating = (p['Google Rating']||{}).number || 4.5;
-      const reviews = (p['Review Count']||{}).number || 0;
-      const tier = ((p['Lead Score']||{}).select||{}).name || 'Hot';
-      const outreach = ((p['Outreach Status']||{}).select||{}).name || 'Not Started';
-      const website = ((p['Website Status']||{}).select||{}).name || 'No Website';
-      const niche = ((p['Niche']||{}).select||{}).name || 'Other';
-      const addedAt = (p['Added']||{}).created_time || rec.created_time || '';
-      let stage = 'new';
-      if(['Day 1 Sent','Day 3 Sent','Day 7 Sent','Day 14 Sent','Day 21 Sent'].includes(outreach)) stage='contacted';
-      else if(outreach==='Responded'||outreach==='Meeting Booked') stage='meeting';
-      else if(outreach==='Closed Won') stage='won';
-      else if(outreach==='Closed Lost') stage='lost';
-      return {place_id:'notion-'+rec.id.replace(/-/g,''),notion_id:rec.id,name,phone,address:city+', '+state+', USA',city,state,rating,reviews,score:Math.min(100,Math.round(rating*10+(reviews>20?10:0))),tier,niche,reason:website,angle:'Notion Prospect Finder',stage,touchpoints:[],nextFollowup:null,addedAt,uid:new Date(addedAt).getTime()+i};
+    const recs = ensureArr(req.body && req.body.results ? req.body.results : []);
+    if (recs.length === 0) return res.json({ added: 0, total: 0, note: 'no results' });
+    const leads = recs.map(function(rec, i) {
+      var p = rec.properties || {};
+      var name = ((p['Business Name'] || {}).title || [])[0] ? ((p['Business Name'] || {}).title || [])[0].plain_text : 'Unknown';
+      var phone = (p['Phone'] || {}).phone_number || '';
+      var city = ((p['City'] || {}).rich_text || [])[0] ? ((p['City'] || {}).rich_text || [])[0].plain_text : 'Los Angeles';
+      var state = ((p['State'] || {}).rich_text || [])[0] ? ((p['State'] || {}).rich_text || [])[0].plain_text : 'CA';
+      var rating = (p['Google Rating'] || {}).number || 4.5;
+      var reviews = (p['Review Count'] || {}).number || 0;
+      var tier = ((p['Lead Score'] || {}).select || {}).name || 'Hot';
+      var outreach = ((p['Outreach Status'] || {}).select || {}).name || 'Not Started';
+      var website = ((p['Website Status'] || {}).select || {}).name || 'No Website';
+      var niche = ((p['Niche'] || {}).select || {}).name || 'Other';
+      var addedAt = (p['Added'] || {}).created_time || rec.created_time || '';
+      var stage = 'new';
+      if (['Day 1 Sent','Day 3 Sent','Day 7 Sent','Day 14 Sent','Day 21 Sent'].indexOf(outreach) >= 0) stage = 'contacted';
+      else if (outreach === 'Responded' || outreach === 'Meeting Booked') stage = 'meeting';
+      else if (outreach === 'Closed Won') stage = 'won';
+      else if (outreach === 'Closed Lost') stage = 'lost';
+      return { place_id: 'notion-' + rec.id.replace(/-/g, ''), notion_id: rec.id, name: name, phone: phone, address: city + ', ' + state + ', USA', city: city, state: state, rating: rating, reviews: reviews, score: Math.min(100, Math.round(rating * 10 + (reviews > 20 ? 10 : 0))), tier: tier, niche: niche, reason: website, angle: 'Notion Prospect Finder', stage: stage, touchpoints: [], nextFollowup: null, addedAt: addedAt, uid: new Date(addedAt).getTime() + i };
     });
-    const kv = await getKV(env);
-    const raw = await kv.get('pipeline');
+    const raw = await redisGet('akira_pipeline');
     const existing = ensureArr(raw ? JSON.parse(raw) : []);
-    const existingNames = new Set(existing.map(l => (l.name||'').toLowerCase().trim()));
-    const toAdd = leads.filter(l => l.name && !existingNames.has(l.name.toLowerCase().trim()));
-    const merged = [...existing, ...toAdd];
-    await kv.set('pipeline', JSON.stringify(merged));
-    return res.status(200).json({added:toAdd.length,total:merged.length,batch:leads.length});
+    const existingNames = new Set(existing.map(function(l) { return (l.name || '').toLowerCase().trim(); }));
+    const toAdd = leads.filter(function(l) { return l.name && !existingNames.has(l.name.toLowerCase().trim()); });
+    const merged = existing.concat(toAdd);
+    await redisSet('akira_pipeline', JSON.stringify(merged));
+    return res.json({ added: toAdd.length, total: merged.length, batch: leads.length });
   }
 
   return res.status(400).json({ error: 'Unknown action', available: ['push-pipeline','pull-all','clear-queue','get-log','status','sync-to-notion','sync-notion-packages','notion-status'] });
