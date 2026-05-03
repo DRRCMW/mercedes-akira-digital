@@ -1,7 +1,7 @@
-// ═══════════════════════════════════════════════════════════════
-// MERCEDES — Cloud Sync API v2.1
-// NEW: sync-to-notion now accepts Notion token auth as alternative
-// ═══════════════════════════════════════════════════════════════
+// =================================================================
+// MERCEDES — Cloud Sync API v2.2
+// FIX: Safe array coercion for all Redis pipeline reads
+// =================================================================
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -12,26 +12,27 @@ export default async function handler(req, res) {
   const { UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN, NOTION_TOKEN, MERCEDES_SECRET } = process.env;
   if (!UPSTASH_REDIS_REST_URL) return res.status(500).json({ error: 'UPSTASH_REDIS_REST_URL not configured' });
 
-  // ── DUAL AUTH: Accept either MERCEDES_SECRET or a valid Notion token ──
   const providedKey = req.headers['x-mercedes-key'] || req.query.key;
   const providedNotion = req.headers['x-notion-token'] || req.query.notion_token;
   const action = req.query.action;
-
-  // For sync actions, accept Notion token as auth
   const syncActions = ['sync-to-notion', 'sync-notion-packages', 'notion-status'];
   const isSyncAction = syncActions.includes(action);
   const validMercedesAuth = providedKey === MERCEDES_SECRET;
-  const validNotionAuth = providedNotion && (providedNotion === NOTION_TOKEN || 
+  const validNotionAuth = providedNotion && (providedNotion === NOTION_TOKEN ||
     providedNotion.startsWith('ntn_') || providedNotion.startsWith('secret_'));
-
   if (!validMercedesAuth && !(isSyncAction && validNotionAuth)) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-
-  // Use provided notion token or fall back to env var
   const activeNotionToken = providedNotion || NOTION_TOKEN;
-
   const NOTION_OUTBOUND_DB = 'a3d2c021b2cc4aed983b10886908824a';
+
+  function ensureArr(v) {
+    if (Array.isArray(v)) return v;
+    if (typeof v === 'string') {
+      try { const p = JSON.parse(v); return Array.isArray(p) ? p : []; } catch { return []; }
+    }
+    return [];
+  }
 
   async function redisGet(key) {
     const r = await fetch(`${UPSTASH_REDIS_REST_URL}/get/${encodeURIComponent(key)}`, {
@@ -110,56 +111,45 @@ export default async function handler(req, res) {
     return '';
   }
 
-  // ── NOTION STATUS CHECK ──────────────────────────────────────
+  if (action === 'status' && req.method === 'GET') {
+    const [lastRun, rawQueue, rawPipeline] = await Promise.all([
+      redisGet('mercedes_last_run'), redisGet('mercedes_queue'), redisGet('akira_pipeline')
+    ]);
+    const queue = ensureArr(rawQueue);
+    const pipeline = ensureArr(rawPipeline);
+    const today = new Date().toDateString();
+    const worked = ensureArr(await redisGet(`worked_${today}`));
+    return res.json({ status:'ok', lastRun, queueSize: queue.length, workedToday: worked.length, pipelineSize: pipeline.length, leadsWithPackages: pipeline.filter(l => l && l.mercedesPackage).length });
+  }
+
   if (action === 'notion-status') {
     try {
       const r = await fetch('https://api.notion.com/v1/users/me', {
         headers: { 'Authorization': `Bearer ${activeNotionToken}`, 'Notion-Version': '2022-06-28' }
       });
       const user = await r.json();
-      const pipeline = await redisGet('akira_pipeline');
-      const queue = await redisGet('mercedes_queue');
-      const ensureArr2 = (v) => Array.isArray(v) ? v : (typeof v === 'string' ? (() => { try { const p = JSON.parse(v); return Array.isArray(p) ? p : []; } catch { return []; } })() : []);
-      const pArr = ensureArr2(pipeline);
-      const qArr = ensureArr2(queue);
-      return res.json({
-        notionConnected: !!user.id,
-        notionUser: user.name || user.id,
-        pipelineInRedis: pArr.length,
-        leadsWithPackages: pArr.filter(l => l && l.mercedesPackage).length,
-        queueSize: qArr.length
-      });
-    } catch (e) {
-      return res.json({ error: e.message });
-    }
+      const pipeline = ensureArr(await redisGet('akira_pipeline'));
+      const queue = ensureArr(await redisGet('mercedes_queue'));
+      return res.json({ notionConnected: !!user.id, notionUser: user.name || user.id, pipelineInRedis: pipeline.length, leadsWithPackages: pipeline.filter(l => l && l.mercedesPackage).length, queueSize: queue.length });
+    } catch (e) { return res.json({ error: e.message }); }
   }
 
-  // ── SYNC PIPELINE → NOTION ───────────────────────────────────
   if (action === 'sync-to-notion' && req.method === 'POST') {
-    const rawPl = await redisGet('akira_pipeline');
-    const pipeline = Array.isArray(rawPl) ? rawPl : (typeof rawPl === 'string' ? (() => { try { const p = JSON.parse(rawPl); return Array.isArray(p) ? p : []; } catch { return []; } })() : []);
-    if (pipeline.length === 0) return res.json({ ok: true, synced: 0, message: 'No leads in Redis pipeline' });
-
+    const pipeline = ensureArr(await redisGet('akira_pipeline'));
+    if (!pipeline.length) return res.json({ ok: true, synced: 0, message: 'No leads in Redis pipeline' });
     const existing = await notionQuery(NOTION_OUTBOUND_DB, activeNotionToken);
-    const existingNames = new Set(
-      (existing.results || []).map(p => p.properties?.['Business Name']?.title?.[0]?.text?.content?.toLowerCase())
-    );
-
+    const existingNames = new Set((existing.results || []).map(p => p.properties?.['Business Name']?.title?.[0]?.text?.content?.toLowerCase()));
     const offset = parseInt(req.query.offset) || 0;
     const limit = parseInt(req.query.limit) || 50;
     const batch = pipeline.slice(offset, offset + limit);
-
     let synced = 0, skipped = 0;
     const errors = [];
-
     for (const lead of batch) {
       const name = lead.name || 'Unknown';
       if (existingNames.has(name.toLowerCase())) { skipped++; continue; }
-
       try {
         const pkg = lead.mercedesPackage;
-        const packageText = pkg ? `SUBJECT: ${pkg.subject||''}\n\nCOLD EMAIL:\n${pkg.coldEmail||''}\n\nCALL SCRIPT:\n${pkg.callScript||''}\n\nANGLE: ${pkg.angle||''}\n\nNEXT ACTION: ${pkg.nextAction||''}` : '';
-        
+        const packageText = pkg ? `SUBJECT: ${pkg.subject||''}\nCOLD EMAIL:\n${pkg.coldEmail||''}\nCALL SCRIPT:\n${pkg.callScript||''}\nANGLE: ${pkg.angle||''}\nNEXT ACTION: ${pkg.nextAction||''}` : '';
         const properties = {
           'Business Name': { title: [{ text: { content: name } }] },
           'Niche': { select: { name: mapNiche(lead.category) } },
@@ -170,61 +160,41 @@ export default async function handler(req, res) {
           'Website Status': { select: { name: lead.website ? 'Decent' : 'No Website' } },
           'Source': { select: { name: 'Google Maps' } },
         };
-
         if (lead.phone) properties['Phone'] = { phone_number: lead.phone };
         if (lead.rating) properties['Google Rating'] = { number: parseFloat(lead.rating) || 0 };
         if (lead.reviewCount) properties['Review Count'] = { number: parseInt(lead.reviewCount) || 0 };
         if (packageText) properties['Mercedes Output'] = { rich_text: [{ text: { content: packageText.slice(0, 2000) } }] };
         if (lead.touchpoints?.length) properties['Notes'] = { rich_text: [{ text: { content: lead.touchpoints.map(t => `${t.date}: ${t.note||t.type}`).join('\n').slice(0, 2000) } }] };
-
         const result = await notionPost('pages', { parent: { database_id: NOTION_OUTBOUND_DB }, properties }, activeNotionToken);
         if (result.id) synced++; else errors.push(`${name}: ${JSON.stringify(result).slice(0, 100)}`);
       } catch (e) { errors.push(`${name}: ${e.message}`); }
     }
-
-    return res.json({
-      ok: true, synced, skipped, errors: errors.slice(0, 10),
-      total: pipeline.length, offset, limit,
-      nextOffset: offset + limit < pipeline.length ? offset + limit : null,
-      message: `Synced ${synced} of ${batch.length} leads. ${skipped} already existed. Total in Redis: ${pipeline.length}`
-    });
+    return res.json({ ok: true, synced, skipped, errors: errors.slice(0, 10), total: pipeline.length, offset, limit, nextOffset: offset + limit < pipeline.length ? offset + limit : null, message: `Synced ${synced} of ${batch.length} leads.` });
   }
-
-  // ── SYNC PACKAGES → NOTION ───────────────────────────────────
   if (action === 'sync-notion-packages' && req.method === 'POST') {
-    const rawPl2 = await redisGet('akira_pipeline');
-    const pipeline = Array.isArray(rawPl2) ? rawPl2 : (typeof rawPl2 === 'string' ? (() => { try { const p = JSON.parse(rawPl2); return Array.isArray(p) ? p : []; } catch { return []; } })() : []);
-    const leadsWithPackages = pipeline.filter(l => l.mercedesPackage);
+    const pipeline = ensureArr(await redisGet('akira_pipeline'));
+    const leadsWithPackages = pipeline.filter(l => l && l.mercedesPackage);
     if (!leadsWithPackages.length) return res.json({ ok: true, updated: 0, message: 'No packages to sync' });
-
     const existing = await notionQuery(NOTION_OUTBOUND_DB, activeNotionToken);
     const notionMap = {};
     for (const page of (existing.results || [])) {
       const name = page.properties?.['Business Name']?.title?.[0]?.text?.content?.toLowerCase();
       if (name) notionMap[name] = page.id;
     }
-
     let updated = 0;
     for (const lead of leadsWithPackages.slice(0, 50)) {
       const pageId = notionMap[lead.name?.toLowerCase()];
       if (!pageId) continue;
       try {
         const pkg = lead.mercedesPackage;
-        const text = `SUBJECT: ${pkg.subject||''}\n\nCOLD EMAIL:\n${pkg.coldEmail||''}\n\nFOLLOW UP 3:\n${pkg.followUp3||''}\n\nFOLLOW UP 7:\n${pkg.followUp7||''}\n\nCALL SCRIPT:\n${pkg.callScript||''}\n\nANGLE: ${pkg.angle||''}\n\nRECOMMENDED: ${pkg.recommendedPackage||''}\n\nNEXT ACTION: ${pkg.nextAction||''}`;
-        await notionPatch(`pages/${pageId}`, {
-          properties: {
-            'Mercedes Output': { rich_text: [{ text: { content: text.slice(0, 2000) } }] },
-            'Lead Score': { select: { name: pkg.leadScore === 'hot' ? 'Hot' : pkg.leadScore === 'warm' ? 'Warm' : 'Cold' } },
-            'Outreach Status': { select: { name: mapStage(lead.stage) } }
-          }
-        }, activeNotionToken);
+        const text = `SUBJECT: ${pkg.subject||''}\nCOLD EMAIL:\n${pkg.coldEmail||''}\nFOLLOW UP 3:\n${pkg.followUp3||''}\nFOLLOW UP 7:\n${pkg.followUp7||''}\nCALL SCRIPT:\n${pkg.callScript||''}\nANGLE: ${pkg.angle||''}\nRECOMMENDED: ${pkg.recommendedPackage||''}\nNEXT ACTION: ${pkg.nextAction||''}`;
+        await notionPatch(`pages/${pageId}`, { properties: { 'Mercedes Output': { rich_text: [{ text: { content: text.slice(0, 2000) } }] }, 'Lead Score': { select: { name: pkg.leadScore === 'hot' ? 'Hot' : pkg.leadScore === 'warm' ? 'Warm' : 'Cold' } }, 'Outreach Status': { select: { name: mapStage(lead.stage) } } } }, activeNotionToken);
         updated++;
       } catch (e) { /* continue */ }
     }
     return res.json({ ok: true, updated, packagesFound: leadsWithPackages.length });
   }
 
-  // ── ORIGINAL ACTIONS (require MERCEDES_SECRET) ───────────────
   if (!validMercedesAuth) return res.status(401).json({ error: 'Unauthorized for this action' });
 
   if (action === 'push-pipeline' && req.method === 'POST') {
@@ -234,13 +204,58 @@ export default async function handler(req, res) {
     return res.json({ ok: true, count: pipeline.length });
   }
 
+  // Notion leads: fetch all 312 leads from Notion Prospect Finder DB
+  if (action === 'notion-leads' && req.method === 'GET') {
+    const NOTION_TOKEN = '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';
+    const DB_ID = 'a3d2c021b2cc4aed983b10886908824a';
+    try {
+      const all = [];
+      let cursor = null;
+      let page = 0;
+      do {
+        const body = { page_size: 100 };
+        if (cursor) body.start_cursor = cursor;
+        const r = await fetch('https://api.notion.com/v1/databases/' + DB_ID + '/query', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + NOTION_TOKEN, 'Notion-Version': '2022-06-28', 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const d = await r.json();
+        all.push(...(d.results || []));
+        cursor = d.has_more ? d.next_cursor : null;
+        page++;
+      } while (cursor && page < 20);
+      const leads = all.map((rec, i) => {
+        const p = rec.properties || {};
+        const name = (p['Business Name']?.title || [])[0]?.plain_text || '';
+        const phone = p['Phone']?.phone_number || '';
+        const city = (p['City']?.rich_text || [])[0]?.plain_text || 'Los Angeles';
+        const state = (p['State']?.rich_text || [])[0]?.plain_text || 'CA';
+        const rating = p['Google Rating']?.number || 4.5;
+        const reviews = p['Review Count']?.number || 0;
+        const tier = p['Lead Score']?.select?.name || 'Hot';
+        const niche = p['Niche']?.select?.name || 'Other';
+        const outreach = p['Outreach Status']?.select?.name || 'Not Started';
+        const website = p['Website Status']?.select?.name || 'No Website';
+        const addedAt = p['Added']?.created_time || rec.created_time || '';
+        let stage = 'new';
+        if (['Day 1 Sent','Day 3 Sent','Day 7 Sent','Day 14 Sent','Day 21 Sent'].includes(outreach)) stage = 'contacted';
+        else if (outreach === 'Responded' || outreach === 'Meeting Booked') stage = 'meeting';
+        else if (outreach === 'Closed Won') stage = 'won';
+        else if (outreach === 'Closed Lost') stage = 'lost';
+        return { place_id: 'notion-' + rec.id.replace(/-/g,''), notion_id: rec.id, name, phone, address: city + ', ' + state + ', USA', city, state, rating, reviews, score: Math.min(100, Math.round(rating * 10 + (reviews > 20 ? 10 : 0))), tier, niche, reason: website, angle: 'Notion Prospect Finder', stage, touchpoints: [], nextFollowup: null, addedAt, uid: new Date(addedAt).getTime() + i };
+      });
+      return res.status(200).json({ total: leads.length, pages: page, leads });
+    } catch(e) { return res.status(500).json({ error: e.message }); }
+  }
+
   if (action === 'pull-all' && req.method === 'GET') {
     const today = new Date().toDateString();
-    const [queue, pipeline, workedToday, lastRun, log] = await Promise.all([
+    const [rawQueue, rawPipeline, rawWorked, lastRun, log] = await Promise.all([
       redisGet('mercedes_queue'), redisGet('akira_pipeline'),
       redisGet(`worked_${today}`), redisGet('mercedes_last_run'), redisGet('mercedes_log')
     ]);
-    return res.json({ queue: queue||[], pipeline: pipeline||[], workedToday: workedToday||[], lastRun: lastRun||null, log: (log||[]).slice(0,50) });
+    return res.json({ queue: ensureArr(rawQueue), pipeline: ensureArr(rawPipeline), workedToday: ensureArr(rawWorked), lastRun: lastRun||null, log: ensureArr(log).slice(0,50) });
   }
 
   if (action === 'clear-queue' && req.method === 'POST') {
@@ -249,101 +264,460 @@ export default async function handler(req, res) {
   }
 
   if (action === 'get-log' && req.method === 'GET') {
-    const log = await redisGet('mercedes_log') || [];
+    const log = ensureArr(await redisGet('mercedes_log'));
     return res.json({ log: log.slice(0, 100) });
   }
 
+  
+  // ---- NOTION IMPORT: Pull ALL leads from Notion → Redis ----
+  if (action === 'notion-import' && req.method === 'POST') {
+    const importToken = process.env.NOTION_TOKEN || NOTION_TOKEN || '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';
+    const allRecords = [];
+    let cursor;
+    let page = 0;
+    do {
+      const body = { page_size: 100 };
+      if (cursor) body.start_cursor = cursor;
+      const data = await notionPost('databases/' + NOTION_OUTBOUND_DB + '/query', body, importToken);
+      if (!data || data.object === 'error') break;
+      allRecords.push(...(data.results || []));
+      cursor = data.has_more ? data.next_cursor : null;
+      page++;
+    } while (cursor && page < 10);
+    const pipeline = allRecords.map((record, i) => {
+      const p = record.properties || {};
+      const name = p['Business Name']?.title?.[0]?.plain_text || 'Unknown';
+      const phone = p['Phone']?.phone_number || '';
+      const email = p['Email']?.email || '';
+      const city = p['City']?.rich_text?.[0]?.plain_text || 'Los Angeles';
+      const state = p['State']?.rich_text?.[0]?.plain_text || 'CA';
+      const rating = p['Google Rating']?.number || 4.5;
+      const reviews = p['Review Count']?.number || 10;
+      const tier = p['Lead Score']?.select?.name || 'Hot';
+      const s = p['Outreach Status']?.select?.name;
+      const stageMap = {'Not Started':'new','Day 1 Sent':'contacted','Day 3 Sent':'contacted','Day 7 Sent':'contacted','Day 14 Sent':'contacted','Day 21 Sent':'contacted','Responded':'responded','Meeting Booked':'meeting','Proposal Sent':'proposal','Closed Won':'won','Closed Lost':'lost','Unsubscribed':'lost'};
+      const stage = stageMap[s] || 'new';
+      const niche = p['Niche']?.select?.name || 'Other';
+      const websiteStatus = p['Website Status']?.select?.name || 'No Website';
+      const score = Math.round(rating * 10 + (reviews > 20 ? 10 : 0));
+      const addedAt = record.created_time || new Date().toISOString();
+      return { place_id: 'notion-' + record.id.replace(/-/g, ''), name, phone, email, address: city + ', ' + state + ', USA', city, state, rating, reviews, score, tier, stage, niche, website: null, reason: websiteStatus, angle: niche + ' in ' + city + ' — no website', touchpoints: [], nextFollowup: null, addedAt, uid: new Date(addedAt).getTime() + i };
+    });
+    if (pipeline.length === 0) return res.json({ ok: false, count: 0, pages: page, error: 'Notion returned 0 records — pipeline not overwritten for safety', notionToken: importToken?.slice(0,20) });
+    await redisSet('akira_pipeline', pipeline);
+    return res.json({ ok: true, count: pipeline.length, pages: page, sample: pipeline.slice(0, 3).map(l => l.name), message: 'Imported ' + pipeline.length + ' leads from Notion Prospect Finder.' });
+  }
+
+  // ---- NOTION DEBUG: Test Notion connection ----
+  if (action === 'notion-debug' && req.method === 'GET') {
+    const testToken = req.query.token || req.headers['x-notion-token'] || activeNotionToken;
+    try {
+      const r1 = await fetch('https://api.notion.com/v1/users/me', {
+        headers: { 'Authorization': 'Bearer ' + testToken, 'Notion-Version': '2022-06-28' }
+      });
+      const userRaw = await r1.json();
+      const r2 = await fetch('https://api.notion.com/v1/databases/a3d2c021b2cc4aed983b10886908824a/query', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + testToken, 'Notion-Version': '2022-06-28', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ page_size: 5 })
+      });
+      const dbRaw = await r2.json();
+      return res.json({ tokenUsed: testToken?.slice(0,20), userStatus: r1.status, userResponse: userRaw, dbStatus: r2.status, dbResultsCount: dbRaw?.results?.length, dbError: dbRaw?.message, dbObject: dbRaw?.object });
+    } catch(e) { return res.json({ error: e.message }); }
+  }
+  if (action === 'notion-pull') {
+    try {
+      const NOTION_TOKEN = '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';
+      const DB_ID = 'a3d2c021b2cc4aed983b10886908824a';
+      const allRecords = [];
+      let cursor = null;
+      let page = 0;
+      do {
+        const body = { page_size: 100 };
+        if (cursor) body.start_cursor = cursor;
+        const nr = await fetch('https://api.notion.com/v1/databases/' + DB_ID + '/query', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + NOTION_TOKEN,
+            'Notion-Version': '2022-06-28',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        });
+        if (!nr.ok) {
+          const errText = await nr.text();
+          return res.status(500).json({ error: 'Notion API error', detail: errText.slice(0, 200) });
+        }
+        const nd = await nr.json();
+        allRecords.push(...(nd.results || []));
+        cursor = nd.has_more ? nd.next_cursor : null;
+        page++;
+      } while (cursor && page < 20);
+      const leads = allRecords.map((rec, i) => {
+        const p = rec.properties || {};
+        const name = (p['Business Name']?.title || [])[0]?.plain_text || 'Unknown';
+        const phone = p['Phone']?.phone_number || '';
+        const city = (p['City']?.rich_text || [])[0]?.plain_text || 'Los Angeles';
+        const state = (p['State']?.rich_text || [])[0]?.plain_text || 'CA';
+        const rating = p['Google Rating']?.number || 4.5;
+        const reviews = p['Review Count']?.number || 0;
+        const tier = p['Lead Score']?.select?.name || 'Hot';
+        const outreach = p['Outreach Status']?.select?.name || 'Not Started';
+        const website = p['Website Status']?.select?.name || 'No Website';
+        const niche = p['Niche']?.select?.name || 'Other';
+        const addedAt = p['Added']?.created_time || rec.created_time || '';
+        let stage = 'new';
+        if (['Day 1 Sent','Day 3 Sent','Day 7 Sent','Day 14 Sent','Day 21 Sent'].includes(outreach)) stage = 'contacted';
+        else if (outreach === 'Responded' || outreach === 'Meeting Booked') stage = 'meeting';
+        else if (outreach === 'Closed Won') stage = 'won';
+        else if (outreach === 'Closed Lost') stage = 'lost';
+        return {
+          place_id: 'notion-' + rec.id.replace(/-/g, ''),
+          notion_id: rec.id, name, phone,
+          address: city + ', ' + state + ', USA',
+          city, state, rating, reviews,
+          score: Math.min(100, Math.round(rating * 10 + (reviews > 20 ? 10 : 0))),
+          tier, niche, reason: website, angle: 'Notion Prospect Finder',
+          stage, touchpoints: [], nextFollowup: null, addedAt,
+          uid: new Date(addedAt).getTime() + i
+        };
+      });
+      return res.status(200).json({ total: leads.length, pages: page, leads });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
+
+return res.status(400).json({ error: 'Unknown action', available: ['push-pipeline','pull-all','clear-queue','get-log','status','sync-to-notion','sync-notion-packages','notion-status'] });
+}
+// =================================================================
+// MERCEDES — Cloud Sync API v2.2
+// FIX: Safe array coercion for all Redis pipeline reads
+// =================================================================
+
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-mercedes-key, x-notion-token');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
+  const { UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN, NOTION_TOKEN, MERCEDES_SECRET } = process.env;
+  if (!UPSTASH_REDIS_REST_URL) return res.status(500).json({ error: 'UPSTASH_REDIS_REST_URL not configured' });
+
+  const providedKey = req.headers['x-mercedes-key'] || req.query.key;
+  const providedNotion = req.headers['x-notion-token'] || req.query.notion_token;
+  const action = req.query.action;
+  const syncActions = ['sync-to-notion', 'sync-notion-packages', 'notion-status'];
+  const isSyncAction = syncActions.includes(action);
+  const validMercedesAuth = providedKey === MERCEDES_SECRET;
+  const validNotionAuth = providedNotion && (providedNotion === NOTION_TOKEN ||
+    providedNotion.startsWith('ntn_') || providedNotion.startsWith('secret_'));
+  if (!validMercedesAuth && !(isSyncAction && validNotionAuth)) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  const activeNotionToken = providedNotion || NOTION_TOKEN;
+  const NOTION_OUTBOUND_DB = 'a3d2c021b2cc4aed983b10886908824a';
+
+  function ensureArr(v) {
+    if (Array.isArray(v)) return v;
+    if (typeof v === 'string') {
+      try { const p = JSON.parse(v); return Array.isArray(p) ? p : []; } catch { return []; }
+    }
+    return [];
+  }
+
+  async function redisGet(key) {
+    const r = await fetch(`${UPSTASH_REDIS_REST_URL}/get/${encodeURIComponent(key)}`, {
+      headers: { Authorization: `Bearer ${UPSTASH_REDIS_REST_TOKEN}` }
+    });
+    const data = await r.json();
+    try { return data.result ? JSON.parse(data.result) : null; } catch { return null; }
+  }
+
+  async function redisSet(key, value) {
+    const r = await fetch(`${UPSTASH_REDIS_REST_URL}/set/${encodeURIComponent(key)}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${UPSTASH_REDIS_REST_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(JSON.stringify(value))
+    });
+    return r.ok;
+  }
+
+  async function notionPost(endpoint, body, token) {
+    const r = await fetch(`https://api.notion.com/v1/${endpoint}`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Notion-Version': '2022-06-28', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    return r.json();
+  }
+
+  async function notionPatch(endpoint, body, token) {
+    const r = await fetch(`https://api.notion.com/v1/${endpoint}`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${token}`, 'Notion-Version': '2022-06-28', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    return r.json();
+  }
+
+  async function notionQuery(databaseId, token) {
+    const r = await fetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Notion-Version': '2022-06-28', 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    return r.json();
+  }
+
+  function mapNiche(category) {
+    if (!category) return 'Other';
+    const c = category.toLowerCase();
+    if (c.includes('plumb')) return 'Plumber';
+    if (c.includes('hvac') || c.includes('heat') || c.includes('air') || c.includes('cool')) return 'HVAC';
+    if (c.includes('roof')) return 'Roofer';
+    if (c.includes('law') || c.includes('attorney') || c.includes('legal')) return 'Law Firm';
+    if (c.includes('contractor') || c.includes('construction') || c.includes('remodel')) return 'General Contractor';
+    if (c.includes('landscape') || c.includes('lawn') || c.includes('garden')) return 'Landscaping';
+    if (c.includes('pest') || c.includes('exterminator')) return 'Pest Control';
+    if (c.includes('electric')) return 'Electrician';
+    if (c.includes('clean')) return 'Cleaning Service';
+    return 'Other';
+  }
+
+  function mapStage(stage) {
+    const map = { 'new':'Not Started','contacted':'Day 1 Sent','follow-up':'Day 3 Sent','responded':'Responded','meeting':'Meeting Booked','proposal':'Proposal Sent','closed':'Closed Won','lost':'Closed Lost' };
+    return map[stage] || 'Not Started';
+  }
+
+  function extractCity(address) {
+    if (!address) return '';
+    const parts = address.split(',');
+    return parts.length >= 3 ? parts[parts.length - 3]?.trim() || '' : parts[0]?.trim() || '';
+  }
+
+  function extractState(address) {
+    if (!address) return '';
+    const parts = address.split(',');
+    if (parts.length >= 2) { const s = parts[parts.length - 2]?.trim() || ''; return s.split(' ')[0] || ''; }
+    return '';
+  }
+
   if (action === 'status' && req.method === 'GET') {
-    const ensureArr = (v) => {
-      if (Array.isArray(v)) return v;
-      if (typeof v === 'string') { try { const p = JSON.parse(v); return Array.isArray(p) ? p : []; } catch { return []; } }
-      return [];
-    };
     const [lastRun, rawQueue, rawPipeline] = await Promise.all([
-      redisGet('mercedes_last_run'),
-      redisGet('mercedes_queue'),
-      redisGet('akira_pipeline')
+      redisGet('mercedes_last_run'), redisGet('mercedes_queue'), redisGet('akira_pipeline')
     ]);
     const queue = ensureArr(rawQueue);
     const pipeline = ensureArr(rawPipeline);
     const today = new Date().toDateString();
-    const rawWorked = await redisGet(`worked_${today}`);
-    const worked = ensureArr(rawWorked);
+    const worked = ensureArr(await redisGet(`worked_${today}`));
     return res.json({ status:'ok', lastRun, queueSize: queue.length, workedToday: worked.length, pipelineSize: pipeline.length, leadsWithPackages: pipeline.filter(l => l && l.mercedesPackage).length });
   }
 
-  if (action === 'notion-pull') {
-    const NT = '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';
-    const DB = 'a3d2c021b2cc4aed983b10886908824a';
+  if (action === 'notion-status') {
     try {
-      const recs = [];
-      let cur = null, pg = 0;
+      const r = await fetch('https://api.notion.com/v1/users/me', {
+        headers: { 'Authorization': `Bearer ${activeNotionToken}`, 'Notion-Version': '2022-06-28' }
+      });
+      const user = await r.json();
+      const pipeline = ensureArr(await redisGet('akira_pipeline'));
+      const queue = ensureArr(await redisGet('mercedes_queue'));
+      return res.json({ notionConnected: !!user.id, notionUser: user.name || user.id, pipelineInRedis: pipeline.length, leadsWithPackages: pipeline.filter(l => l && l.mercedesPackage).length, queueSize: queue.length });
+    } catch (e) { return res.json({ error: e.message }); }
+  }
+
+  if (action === 'sync-to-notion' && req.method === 'POST') {
+    const pipeline = ensureArr(await redisGet('akira_pipeline'));
+    if (!pipeline.length) return res.json({ ok: true, synced: 0, message: 'No leads in Redis pipeline' });
+    const existing = await notionQuery(NOTION_OUTBOUND_DB, activeNotionToken);
+    const existingNames = new Set((existing.results || []).map(p => p.properties?.['Business Name']?.title?.[0]?.text?.content?.toLowerCase()));
+    const offset = parseInt(req.query.offset) || 0;
+    const limit = parseInt(req.query.limit) || 50;
+    const batch = pipeline.slice(offset, offset + limit);
+    let synced = 0, skipped = 0;
+    const errors = [];
+    for (const lead of batch) {
+      const name = lead.name || 'Unknown';
+      if (existingNames.has(name.toLowerCase())) { skipped++; continue; }
+      try {
+        const pkg = lead.mercedesPackage;
+        const packageText = pkg ? `SUBJECT: ${pkg.subject||''}\nCOLD EMAIL:\n${pkg.coldEmail||''}\nCALL SCRIPT:\n${pkg.callScript||''}\nANGLE: ${pkg.angle||''}\nNEXT ACTION: ${pkg.nextAction||''}` : '';
+        const properties = {
+          'Business Name': { title: [{ text: { content: name } }] },
+          'Niche': { select: { name: mapNiche(lead.category) } },
+          'City': { rich_text: [{ text: { content: extractCity(lead.address) } }] },
+          'State': { rich_text: [{ text: { content: extractState(lead.address) } }] },
+          'Outreach Status': { select: { name: mapStage(lead.stage) } },
+          'Lead Score': { select: { name: !lead.website && lead.rating >= 4 ? 'Hot' : !lead.website ? 'Warm' : 'Cold' } },
+          'Website Status': { select: { name: lead.website ? 'Decent' : 'No Website' } },
+          'Source': { select: { name: 'Google Maps' } },
+        };
+        if (lead.phone) properties['Phone'] = { phone_number: lead.phone };
+        if (lead.rating) properties['Google Rating'] = { number: parseFloat(lead.rating) || 0 };
+        if (lead.reviewCount) properties['Review Count'] = { number: parseInt(lead.reviewCount) || 0 };
+        if (packageText) properties['Mercedes Output'] = { rich_text: [{ text: { content: packageText.slice(0, 2000) } }] };
+        if (lead.touchpoints?.length) properties['Notes'] = { rich_text: [{ text: { content: lead.touchpoints.map(t => `${t.date}: ${t.note||t.type}`).join('\n').slice(0, 2000) } }] };
+        const result = await notionPost('pages', { parent: { database_id: NOTION_OUTBOUND_DB }, properties }, activeNotionToken);
+        if (result.id) synced++; else errors.push(`${name}: ${JSON.stringify(result).slice(0, 100)}`);
+      } catch (e) { errors.push(`${name}: ${e.message}`); }
+    }
+    return res.json({ ok: true, synced, skipped, errors: errors.slice(0, 10), total: pipeline.length, offset, limit, nextOffset: offset + limit < pipeline.length ? offset + limit : null, message: `Synced ${synced} of ${batch.length} leads.` });
+  }
+  if (action === 'sync-notion-packages' && req.method === 'POST') {
+    const pipeline = ensureArr(await redisGet('akira_pipeline'));
+    const leadsWithPackages = pipeline.filter(l => l && l.mercedesPackage);
+    if (!leadsWithPackages.length) return res.json({ ok: true, updated: 0, message: 'No packages to sync' });
+    const existing = await notionQuery(NOTION_OUTBOUND_DB, activeNotionToken);
+    const notionMap = {};
+    for (const page of (existing.results || [])) {
+      const name = page.properties?.['Business Name']?.title?.[0]?.text?.content?.toLowerCase();
+      if (name) notionMap[name] = page.id;
+    }
+    let updated = 0;
+    for (const lead of leadsWithPackages.slice(0, 50)) {
+      const pageId = notionMap[lead.name?.toLowerCase()];
+      if (!pageId) continue;
+      try {
+        const pkg = lead.mercedesPackage;
+        const text = `SUBJECT: ${pkg.subject||''}\nCOLD EMAIL:\n${pkg.coldEmail||''}\nFOLLOW UP 3:\n${pkg.followUp3||''}\nFOLLOW UP 7:\n${pkg.followUp7||''}\nCALL SCRIPT:\n${pkg.callScript||''}\nANGLE: ${pkg.angle||''}\nRECOMMENDED: ${pkg.recommendedPackage||''}\nNEXT ACTION: ${pkg.nextAction||''}`;
+        await notionPatch(`pages/${pageId}`, { properties: { 'Mercedes Output': { rich_text: [{ text: { content: text.slice(0, 2000) } }] }, 'Lead Score': { select: { name: pkg.leadScore === 'hot' ? 'Hot' : pkg.leadScore === 'warm' ? 'Warm' : 'Cold' } }, 'Outreach Status': { select: { name: mapStage(lead.stage) } } } }, activeNotionToken);
+        updated++;
+      } catch (e) { /* continue */ }
+    }
+    return res.json({ ok: true, updated, packagesFound: leadsWithPackages.length });
+  }
+
+  if (!validMercedesAuth) return res.status(401).json({ error: 'Unauthorized for this action' });
+
+  if (action === 'push-pipeline' && req.method === 'POST') {
+    const pipeline = req.body;
+    if (!Array.isArray(pipeline)) return res.status(400).json({ error: 'Pipeline must be an array' });
+    await redisSet('akira_pipeline', pipeline);
+    return res.json({ ok: true, count: pipeline.length });
+  }
+
+  // Notion leads: fetch all 312 leads from Notion Prospect Finder DB
+  if (action === 'notion-leads' && req.method === 'GET') {
+    const NOTION_TOKEN = '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';
+    const DB_ID = 'a3d2c021b2cc4aed983b10886908824a';
+    try {
+      const all = [];
+      let cursor = null;
+      let page = 0;
       do {
         const body = { page_size: 100 };
-        if (cur) body.start_cursor = cur;
-        const nr = await fetch('https://api.notion.com/v1/databases/' + DB + '/query', {method:'POST',headers:{'Authorization':'Bearer '+NT,'Notion-Version':'2022-06-28','Content-Type':'application/json'},body:JSON.stringify(body)});
-        if (!nr.ok) { const e = await nr.text(); return res.status(500).json({error:'Notion error',detail:e.slice(0,200)}); }
-        const nd = await nr.json();
-        recs.push(...(nd.results||[]));
-        cur = nd.has_more ? nd.next_cursor : null;
-        pg++;
-      } while (cur && pg < 20);
-      const leads = recs.map((rec,i) => {
-        const p = rec.properties||{};
-        const name=(p['Business Name']?.title||[])[0]?.plain_text||'Unknown';
-        const phone=p['Phone']?.phone_number||'';
-        const city=(p['City']?.rich_text||[])[0]?.plain_text||'Los Angeles';
-        const state=(p['State']?.rich_text||[])[0]?.plain_text||'CA';
-        const rating=p['Google Rating']?.number||4.5;
-        const reviews=p['Review Count']?.number||0;
-        const tier=p['Lead Score']?.select?.name||'Hot';
-        const outreach=p['Outreach Status']?.select?.name||'Not Started';
-        const website=p['Website Status']?.select?.name||'No Website';
-        const niche=p['Niche']?.select?.name||'Other';
-        const addedAt=p['Added']?.created_time||rec.created_time||'';
-        let stage='new';
-        if(['Day 1 Sent','Day 3 Sent','Day 7 Sent','Day 14 Sent','Day 21 Sent'].includes(outreach))stage='contacted';
-        else if(outreach==='Responded'||outreach==='Meeting Booked')stage='meeting';
-        else if(outreach==='Closed Won')stage='won';
-        else if(outreach==='Closed Lost')stage='lost';
-        return {place_id:'notion-'+rec.id.replace(/-/g,''),notion_id:rec.id,name,phone,address:city+', '+state+', USA',city,state,rating,reviews,score:Math.min(100,Math.round(rating*10+(reviews>20?10:0))),tier,niche,reason:website,angle:'Notion Prospect Finder',stage,touchpoints:[],nextFollowup:null,addedAt,uid:new Date(addedAt).getTime()+i};
+        if (cursor) body.start_cursor = cursor;
+        const r = await fetch('https://api.notion.com/v1/databases/' + DB_ID + '/query', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + NOTION_TOKEN, 'Notion-Version': '2022-06-28', 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const d = await r.json();
+        all.push(...(d.results || []));
+        cursor = d.has_more ? d.next_cursor : null;
+        page++;
+      } while (cursor && page < 20);
+      const leads = all.map((rec, i) => {
+        const p = rec.properties || {};
+        const name = (p['Business Name']?.title || [])[0]?.plain_text || '';
+        const phone = p['Phone']?.phone_number || '';
+        const city = (p['City']?.rich_text || [])[0]?.plain_text || 'Los Angeles';
+        const state = (p['State']?.rich_text || [])[0]?.plain_text || 'CA';
+        const rating = p['Google Rating']?.number || 4.5;
+        const reviews = p['Review Count']?.number || 0;
+        const tier = p['Lead Score']?.select?.name || 'Hot';
+        const niche = p['Niche']?.select?.name || 'Other';
+        const outreach = p['Outreach Status']?.select?.name || 'Not Started';
+        const website = p['Website Status']?.select?.name || 'No Website';
+        const addedAt = p['Added']?.created_time || rec.created_time || '';
+        let stage = 'new';
+        if (['Day 1 Sent','Day 3 Sent','Day 7 Sent','Day 14 Sent','Day 21 Sent'].includes(outreach)) stage = 'contacted';
+        else if (outreach === 'Responded' || outreach === 'Meeting Booked') stage = 'meeting';
+        else if (outreach === 'Closed Won') stage = 'won';
+        else if (outreach === 'Closed Lost') stage = 'lost';
+        return { place_id: 'notion-' + rec.id.replace(/-/g,''), notion_id: rec.id, name, phone, address: city + ', ' + state + ', USA', city, state, rating, reviews, score: Math.min(100, Math.round(rating * 10 + (reviews > 20 ? 10 : 0))), tier, niche, reason: website, angle: 'Notion Prospect Finder', stage, touchpoints: [], nextFollowup: null, addedAt, uid: new Date(addedAt).getTime() + i };
       });
-      return res.status(200).json({total:leads.length,pages:pg,leads});
-    } catch(e){return res.status(500).json({error:e.message});}
+      return res.status(200).json({ total: leads.length, pages: page, leads });
+    } catch(e) { return res.status(500).json({ error: e.message }); }
   }
 
-  // notion-batch: accepts {results:[]} from Notion API, transforms + merges into pipeline
-  if (action === 'notion-batch' && req.method === 'POST') {
-    const recs = ensureArr(req.body && req.body.results ? req.body.results : []);
-    if (recs.length === 0) return res.json({ added: 0, total: 0, note: 'no results' });
-    const leads = recs.map(function(rec, i) {
-      var p = rec.properties || {};
-      var name = ((p['Business Name'] || {}).title || [])[0] ? ((p['Business Name'] || {}).title || [])[0].plain_text : 'Unknown';
-      var phone = (p['Phone'] || {}).phone_number || '';
-      var city = ((p['City'] || {}).rich_text || [])[0] ? ((p['City'] || {}).rich_text || [])[0].plain_text : 'Los Angeles';
-      var state = ((p['State'] || {}).rich_text || [])[0] ? ((p['State'] || {}).rich_text || [])[0].plain_text : 'CA';
-      var rating = (p['Google Rating'] || {}).number || 4.5;
-      var reviews = (p['Review Count'] || {}).number || 0;
-      var tier = ((p['Lead Score'] || {}).select || {}).name || 'Hot';
-      var outreach = ((p['Outreach Status'] || {}).select || {}).name || 'Not Started';
-      var website = ((p['Website Status'] || {}).select || {}).name || 'No Website';
-      var niche = ((p['Niche'] || {}).select || {}).name || 'Other';
-      var addedAt = (p['Added'] || {}).created_time || rec.created_time || '';
-      var stage = 'new';
-      if (['Day 1 Sent','Day 3 Sent','Day 7 Sent','Day 14 Sent','Day 21 Sent'].indexOf(outreach) >= 0) stage = 'contacted';
-      else if (outreach === 'Responded' || outreach === 'Meeting Booked') stage = 'meeting';
-      else if (outreach === 'Closed Won') stage = 'won';
-      else if (outreach === 'Closed Lost') stage = 'lost';
-      return { place_id: 'notion-' + rec.id.replace(/-/g, ''), notion_id: rec.id, name: name, phone: phone, address: city + ', ' + state + ', USA', city: city, state: state, rating: rating, reviews: reviews, score: Math.min(100, Math.round(rating * 10 + (reviews > 20 ? 10 : 0))), tier: tier, niche: niche, reason: website, angle: 'Notion Prospect Finder', stage: stage, touchpoints: [], nextFollowup: null, addedAt: addedAt, uid: new Date(addedAt).getTime() + i };
+  if (action === 'pull-all' && req.method === 'GET') {
+    const today = new Date().toDateString();
+    const [rawQueue, rawPipeline, rawWorked, lastRun, log] = await Promise.all([
+      redisGet('mercedes_queue'), redisGet('akira_pipeline'),
+      redisGet(`worked_${today}`), redisGet('mercedes_last_run'), redisGet('mercedes_log')
+    ]);
+    return res.json({ queue: ensureArr(rawQueue), pipeline: ensureArr(rawPipeline), workedToday: ensureArr(rawWorked), lastRun: lastRun||null, log: ensureArr(log).slice(0,50) });
+  }
+
+  if (action === 'clear-queue' && req.method === 'POST') {
+    await redisSet('mercedes_queue', []);
+    return res.json({ ok: true });
+  }
+
+  if (action === 'get-log' && req.method === 'GET') {
+    const log = ensureArr(await redisGet('mercedes_log'));
+    return res.json({ log: log.slice(0, 100) });
+  }
+
+  
+  // ---- NOTION IMPORT: Pull ALL leads from Notion → Redis ----
+  if (action === 'notion-import' && req.method === 'POST') {
+    const importToken = process.env.NOTION_TOKEN || NOTION_TOKEN || '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';
+    const allRecords = [];
+    let cursor;
+    let page = 0;
+    do {
+      const body = { page_size: 100 };
+      if (cursor) body.start_cursor = cursor;
+      const data = await notionPost('databases/' + NOTION_OUTBOUND_DB + '/query', body, importToken);
+      if (!data || data.object === 'error') break;
+      allRecords.push(...(data.results || []));
+      cursor = data.has_more ? data.next_cursor : null;
+      page++;
+    } while (cursor && page < 10);
+    const pipeline = allRecords.map((record, i) => {
+      const p = record.properties || {};
+      const name = p['Business Name']?.title?.[0]?.plain_text || 'Unknown';
+      const phone = p['Phone']?.phone_number || '';
+      const email = p['Email']?.email || '';
+      const city = p['City']?.rich_text?.[0]?.plain_text || 'Los Angeles';
+      const state = p['State']?.rich_text?.[0]?.plain_text || 'CA';
+      const rating = p['Google Rating']?.number || 4.5;
+      const reviews = p['Review Count']?.number || 10;
+      const tier = p['Lead Score']?.select?.name || 'Hot';
+      const s = p['Outreach Status']?.select?.name;
+      const stageMap = {'Not Started':'new','Day 1 Sent':'contacted','Day 3 Sent':'contacted','Day 7 Sent':'contacted','Day 14 Sent':'contacted','Day 21 Sent':'contacted','Responded':'responded','Meeting Booked':'meeting','Proposal Sent':'proposal','Closed Won':'won','Closed Lost':'lost','Unsubscribed':'lost'};
+      const stage = stageMap[s] || 'new';
+      const niche = p['Niche']?.select?.name || 'Other';
+      const websiteStatus = p['Website Status']?.select?.name || 'No Website';
+      const score = Math.round(rating * 10 + (reviews > 20 ? 10 : 0));
+      const addedAt = record.created_time || new Date().toISOString();
+      return { place_id: 'notion-' + record.id.replace(/-/g, ''), name, phone, email, address: city + ', ' + state + ', USA', city, state, rating, reviews, score, tier, stage, niche, website: null, reason: websiteStatus, angle: niche + ' in ' + city + ' — no website', touchpoints: [], nextFollowup: null, addedAt, uid: new Date(addedAt).getTime() + i };
     });
-    const raw = await redisGet('akira_pipeline');
-    const existing = ensureArr(raw ? JSON.parse(raw) : []);
-    const existingNames = new Set(existing.map(function(l) { return (l.name || '').toLowerCase().trim(); }));
-    const toAdd = leads.filter(function(l) { return l.name && !existingNames.has(l.name.toLowerCase().trim()); });
-    const merged = existing.concat(toAdd);
-    await redisSet('akira_pipeline', JSON.stringify(merged));
-    return res.json({ added: toAdd.length, total: merged.length, batch: leads.length });
+    if (pipeline.length === 0) return res.json({ ok: false, count: 0, pages: page, error: 'Notion returned 0 records — pipeline not overwritten for safety', notionToken: importToken?.slice(0,20) });
+    await redisSet('akira_pipeline', pipeline);
+    return res.json({ ok: true, count: pipeline.length, pages: page, sample: pipeline.slice(0, 3).map(l => l.name), message: 'Imported ' + pipeline.length + ' leads from Notion Prospect Finder.' });
   }
 
-  return res.status(400).json({ error: 'Unknown action', available: ['push-pipeline','pull-all','clear-queue','get-log','status','sync-to-notion','sync-notion-packages','notion-status'] });
+  // ---- NOTION DEBUG: Test Notion connection ----
+  if (action === 'notion-debug' && req.method === 'GET') {
+    const testToken = req.query.token || req.headers['x-notion-token'] || activeNotionToken;
+    try {
+      const r1 = await fetch('https://api.notion.com/v1/users/me', {
+        headers: { 'Authorization': 'Bearer ' + testToken, 'Notion-Version': '2022-06-28' }
+      });
+      const userRaw = await r1.json();
+      const r2 = await fetch('https://api.notion.com/v1/databases/a3d2c021b2cc4aed983b10886908824a/query', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + testToken, 'Notion-Version': '2022-06-28', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ page_size: 5 })
+      });
+      const dbRaw = await r2.json();
+      return res.json({ tokenUsed: testToken?.slice(0,20), userStatus: r1.status, userResponse: userRaw, dbStatus: r2.status, dbResultsCount: dbRaw?.results?.length, dbError: dbRaw?.message, dbObject: dbRaw?.object });
+    } catch(e) { return res.json({ error: e.message }); }
+  }
+
+return res.status(400).json({ error: 'Unknown action', available: ['push-pipeline','pull-all','clear-queue','get-log','status','sync-to-notion','sync-notion-packages','notion-status'] });
 }
