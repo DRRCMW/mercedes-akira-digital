@@ -104,7 +104,7 @@ export default async function handler(req, res) {
 
   // notion-pull: all 312 Notion Prospect Finder leads
   if (action === 'notion-pull') {
-    const NT = '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';
+    const NT = process.env.NOTION_TOKEN || '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';
     const DB = 'a3d2c021b2cc4aed983b10886908824a';
     try {
       const all = [];
