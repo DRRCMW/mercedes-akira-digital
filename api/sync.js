@@ -1,4 +1,4 @@
-// =================================================================
+ / =================================================================
 // MERCEDES — Cloud Sync API v2.2
 // FIX: Safe array coercion for all Redis pipeline reads
 // =================================================================
@@ -700,4 +700,75 @@ export default async function handler(req, res) {
   }
 
 return res.status(400).json({ error: 'Unknown action', available: ['push-pipeline','pull-all','clear-queue','get-log','status','sync-to-notion','sync-notion-packages','notion-status'] });
+
+  // Notion leads pull - fetches all records from Prospect Finder with pagination
+  if (action === 'notion-pull' && req.method === 'GET') {
+    const NOTION_TOKEN = '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';
+    const DB_ID = 'a3d2c021b2cc4aed983b10886908824a';
+    try {
+      const allRecords = [];
+      let cursor = null;
+      let page = 0;
+      do {
+        const body = { page_size: 100 };
+        if (cursor) body.start_cursor = cursor;
+        const nr = await fetch('https://api.notion.com/v1/databases/' + DB_ID + '/query', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + NOTION_TOKEN,
+            'Notion-Version': '2022-06-28',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        });
+        if (!nr.ok) {
+          const err = await nr.text();
+          return res.status(500).json({ error: 'Notion error', detail: err.slice(0, 200) });
+        }
+        const nd = await nr.json();
+        allRecords.push(...(nd.results || []));
+        cursor = nd.has_more ? nd.next_cursor : null;
+        page++;
+      } while (cursor && page < 20);
+
+      const leads = allRecords.map((rec, i) => {
+        const p = rec.properties || {};
+        const name = (p['Business Name']?.title || [])[0]?.plain_text || 'Unknown';
+        const phone = p['Phone']?.phone_number || '';
+        const city = (p['City']?.rich_text || [])[0]?.plain_text || 'Los Angeles';
+        const state = (p['State']?.rich_text || [])[0]?.plain_text || 'CA';
+        const rating = p['Google Rating']?.number || 4.5;
+        const reviews = p['Review Count']?.number || 0;
+        const tier = p['Lead Score']?.select?.name || 'Hot';
+        const outreach = p['Outreach Status']?.select?.name || 'Not Started';
+        const website = p['Website Status']?.select?.name || 'No Website';
+        const niche = p['Niche']?.select?.name || 'Other';
+        const addedAt = p['Added']?.created_time || rec.created_time || '';
+        let stage = 'new';
+        if (['Day 1 Sent','Day 3 Sent','Day 7 Sent','Day 14 Sent','Day 21 Sent'].includes(outreach)) stage = 'contacted';
+        else if (outreach === 'Responded' || outreach === 'Meeting Booked') stage = 'meeting';
+        else if (outreach === 'Closed Won') stage = 'won';
+        else if (outreach === 'Closed Lost') stage = 'lost';
+        return {
+          place_id: 'notion-' + rec.id.replace(/-/g, ''),
+          notion_id: rec.id,
+          name, phone,
+          address: city + ', ' + state + ', USA',
+          city, state, rating, reviews,
+          score: Math.min(100, Math.round(rating * 10 + (reviews > 20 ? 10 : 0))),
+          tier, niche,
+          reason: website,
+          angle: 'Notion Prospect Finder',
+          stage, touchpoints: [],
+          nextFollowup: null, addedAt,
+          uid: new Date(addedAt).getTime() + i
+        };
+      });
+
+      return res.status(200).json({ total: leads.length, pages: page, leads });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
 }
