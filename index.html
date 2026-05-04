@@ -634,9 +634,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
     </div>
     <div class="tb-right">
       <button class="btn-icon" onclick="openProgress()" title="Progress tracker"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></button>
-        <button id="btnNotionRestore" onclick="(function(btn){btn.disabled=true;btn.textContent='Fetching from Notion...';window.guardianSyncNotion().then(function(r){if(r.error){btn.textContent='Failed — Try Again';btn.disabled=false;}else{btn.textContent=r.total+' Leads Loaded! ('+r.added+' new)';setTimeout(function(){btn.textContent='Restore All Leads from Notion';btn.disabled=false;},5000);}});}).call(this,this)" style="background:rgba(34,197,94,.15);color:var(--green);border-color:rgba(34,197,94,.3);margin:0;">
-          &#x1F504; Restore All Leads from Notion
-        </button>
+        <button id="btnNotionRestore" onclick="(function(btn){btn.disabled=true;btn.textContent='Syncing from Notion...';window.guardianSyncNotion().then(function(r){btn.textContent=(r&&r.total?r.total+' Leads Loaded':'Done');setTimeout(function(){btn.textContent='Restore All Leads from Notion';btn.disabled=false;},5000);}).catch(function(){btn.textContent='Error - Try Again';btn.disabled=false;});}).call(this,this)" style="background:rgba(34,197,94,.15);color:var(--green);border-color:rgba(34,197,94,.3);margin:0;">&#x1F504; Restore All Leads from Notion</button>
       <button class="btn btn-ghost" id="btnPrev" onclick="prevTool()" style="display:none;">‹ Back</button>
       <button class="btn btn-gold" id="btnNext" onclick="nextTool()" style="display:none;">Next Step ›</button>
     </div>
@@ -12569,166 +12567,95 @@ window.addEventListener('load', function() {
 </script>
 <script>
 // ============================================================
-// LEAD GUARDIAN v2 — Auto-restore + Auto-sync + Notion Pull
+// LEAD GUARDIAN v3 — Notion restore via Make.com webhook
+// Webhook: pulls all 312 Notion leads → converts → pushes to cloud
 // ============================================================
 (function() {
   var SECRET = 'Mercedes2707';
   var PIPELINE_KEY = 'akira_pipeline';
-  var SYNC_KEY = 'guardian_last_sync';
-  var NOTION_DB = 'a3d2c021b2cc4aed983b10886908824a';
-  var NOTION_TOKEN = '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';
+  var MAKE_WEBHOOK = 'https://hook.us2.make.com/ph2stx6ioak52wlx2pq18hb3m5j6akk9';
 
-  // Pull pipeline from cloud Redis
+  // Pull pipeline from cloud Redis and load to dashboard
   function restoreFromCloud() {
     return fetch('/api/sync?action=pull-all', { headers: { 'x-mercedes-key': SECRET } })
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (data.pipeline && data.pipeline.length > 0) {
           localStorage.setItem(PIPELINE_KEY, JSON.stringify(data.pipeline));
+          refreshUI();
           console.log('[Guardian] Restored ' + data.pipeline.length + ' leads from cloud');
-          if (typeof renderPipe === 'function') setTimeout(renderPipe, 200);
-          if (typeof updateStats === 'function') setTimeout(updateStats, 300);
-          if (typeof agentRefreshUI === 'function') setTimeout(agentRefreshUI, 400);
           return data.pipeline.length;
         }
         return 0;
-      }).catch(function(e) { console.warn('[Guardian] Cloud restore failed:', e.message); return 0; });
+      }).catch(function(e) { console.warn('[Guardian] Cloud restore error:', e.message); return 0; });
   }
 
-  // Fetch ALL leads from Notion using parallel page fetches (fast, beats Vercel timeout)
-  function fetchAllFromNotion() {
-    var headers = { 'Authorization': 'Bearer ' + NOTION_TOKEN, 'Notion-Version': '2022-06-28', 'Content-Type': 'application/json' };
-    // First fetch to get cursors, then parallel fetch remaining pages
-    return fetch('https://api.notion.com/v1/databases/' + NOTION_DB + '/query', {
-      method: 'POST', headers: headers, body: JSON.stringify({ page_size: 100 })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(page1) {
-      var allRecords = page1.results || [];
-      if (!page1.has_more) return allRecords;
-      // Fetch remaining pages — collect cursors then fire in parallel
-      var fetches = [];
-      var cursor = page1.next_cursor;
-      for (var i = 0; i < 5 && cursor; i++) {
-        fetches.push(fetch('https://api.notion.com/v1/databases/' + NOTION_DB + '/query', {
-          method: 'POST', headers: headers, body: JSON.stringify({ page_size: 100, start_cursor: cursor })
-        }).then(function(r) { return r.json(); }));
-        cursor = null; // will get from sequential if needed
-      }
-      return Promise.all(fetches).then(function(pages) {
-        pages.forEach(function(p) { allRecords = allRecords.concat(p.results || []); });
-        return allRecords;
-      });
-    });
-  }
-
-  // Convert a Notion record to a pipeline lead object
-  function notionToLead(rec, index) {
-    var p = rec.properties || {};
-    var name = ((p['Business Name'] || {}).title || [])[0];
-    name = name ? name.plain_text : 'Unknown';
-    var phone = (p['Phone'] || {}).phone_number || '';
-    var city = ((p['City'] || {}).rich_text || [])[0];
-    city = city ? city.plain_text : 'Los Angeles';
-    var state = ((p['State'] || {}).rich_text || [])[0];
-    state = state ? state.plain_text : 'CA';
-    var rating = (p['Google Rating'] || {}).number || 4.5;
-    var reviews = (p['Review Count'] || {}).number || 0;
-    var tier = ((p['Lead Score'] || {}).select || {}).name || 'Hot';
-    var outreach = ((p['Outreach Status'] || {}).select || {}).name || 'Not Started';
-    var website = ((p['Website Status'] || {}).select || {}).name || 'No Website';
-    var niche = ((p['Niche'] || {}).select || {}).name || 'Other';
-    var addedAt = rec.created_time || '';
-    var stage = 'new';
-    if (['Day 1 Sent','Day 3 Sent','Day 7 Sent','Day 14 Sent','Day 21 Sent'].indexOf(outreach) >= 0) stage = 'contacted';
-    else if (outreach === 'Responded' || outreach === 'Meeting Booked') stage = 'meeting';
-    else if (outreach === 'Closed Won') stage = 'won';
-    else if (outreach === 'Closed Lost') stage = 'lost';
-    return {
-      place_id: 'notion-' + rec.id.replace(/-/g, ''),
-      notion_id: rec.id, name: name, phone: phone,
-      address: city + ', ' + state + ', USA',
-      city: city, state: state, rating: rating, reviews: reviews,
-      score: Math.min(100, Math.round(rating * 10 + (reviews > 20 ? 10 : 0))),
-      tier: tier, niche: niche, reason: website,
-      angle: 'Notion Prospect Finder',
-      stage: stage, touchpoints: [], nextFollowup: null,
-      addedAt: addedAt, uid: new Date(addedAt).getTime() + index
-    };
-  }
-
-  // Pull ALL leads from Notion and merge with local pipeline
-  window.guardianSyncNotion = function() {
-    console.log('[Guardian] Fetching all leads from Notion...');
-    return fetchAllFromNotion().then(function(records) {
-      var notionLeads = records.map(notionToLead);
-      var existing = [];
-      try { existing = JSON.parse(localStorage.getItem(PIPELINE_KEY) || '[]'); } catch(e) {}
-      var existingIds = {};
-      existing.forEach(function(l) { existingIds[l.place_id] = true; });
-      var newLeads = notionLeads.filter(function(l) { return !existingIds[l.place_id]; });
-      var combined = existing.concat(newLeads);
-      localStorage.setItem(PIPELINE_KEY, JSON.stringify(combined));
-      // Sync to cloud
-      fetch('/api/sync?action=push', {
-        method: 'POST',
-        headers: { 'x-mercedes-key': SECRET, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pipeline: combined, queue: [] })
-      }).catch(function(e) {});
-      console.log('[Guardian] Notion sync: ' + notionLeads.length + ' total, ' + newLeads.length + ' new added. Combined: ' + combined.length);
-      if (typeof renderPipe === 'function') setTimeout(renderPipe, 200);
-      if (typeof updateStats === 'function') setTimeout(updateStats, 300);
-      if (typeof agentRefreshUI === 'function') setTimeout(agentRefreshUI, 400);
-      return { total: combined.length, fromNotion: notionLeads.length, added: newLeads.length };
-    }).catch(function(e) {
-      console.error('[Guardian] Notion sync failed:', e.message);
-      return { error: e.message };
-    });
-  };
-
-  // Auto-sync pipeline to cloud after changes
+  // Sync current local pipeline to cloud
   function syncToCloud() {
-    var now = Date.now();
-    var last = parseInt(localStorage.getItem(SYNC_KEY) || '0');
-    if (now - last < 30000) return;
     var pipeline = [];
     try { pipeline = JSON.parse(localStorage.getItem(PIPELINE_KEY) || '[]'); } catch(e) {}
-    if (pipeline.length === 0) return;
-    localStorage.setItem(SYNC_KEY, String(now));
+    if (!pipeline.length) return;
     fetch('/api/sync?action=push', {
       method: 'POST',
       headers: { 'x-mercedes-key': SECRET, 'Content-Type': 'application/json' },
       body: JSON.stringify({ pipeline: pipeline, queue: [] })
-    }).then(function(r) {
-      if (r.ok) console.log('[Guardian] Synced ' + pipeline.length + ' leads to cloud');
-    }).catch(function(e) {});
+    }).catch(function() {});
   }
 
-  // Intercept localStorage.setItem to auto-sync on pipeline changes
-  var _orig = localStorage.setItem.bind(localStorage);
-  localStorage.setItem = function(key, value) {
-    _orig(key, value);
-    if (key === PIPELINE_KEY) setTimeout(syncToCloud, 1500);
+  // Refresh dashboard UI
+  function refreshUI() {
+    if (typeof renderPipe === 'function') setTimeout(renderPipe, 200);
+    if (typeof updateStats === 'function') setTimeout(updateStats, 300);
+    if (typeof agentRefreshUI === 'function') setTimeout(agentRefreshUI, 400);
+  }
+
+  // Pull ALL 312 Notion leads via Make webhook
+  // Make fetches 4 pages from Notion, converts to leads, pushes to cloud
+  // Then we pull from cloud to get them into dashboard
+  window.guardianSyncNotion = function() {
+    console.log('[Guardian] Triggering Notion sync via Make...');
+    return fetch(MAKE_WEBHOOK, { method: 'GET' })
+      .then(function(r) {
+        if (!r.ok) throw new Error('Make webhook returned ' + r.status);
+        return r.json().catch(function() { return { ok: true }; });
+      })
+      .then(function(result) {
+        console.log('[Guardian] Make finished, pulling from cloud...');
+        // Wait 3 seconds for Make to finish processing, then pull from cloud
+        return new Promise(function(resolve) {
+          setTimeout(function() {
+            restoreFromCloud().then(function(count) {
+              resolve({ total: count, ok: true });
+            });
+          }, 3000);
+        });
+      });
   };
 
-  // Main restore: cloud first, then check if we need Notion
+  // Intercept localStorage writes to auto-sync pipeline changes
+  var _origSet = localStorage.setItem.bind(localStorage);
+  localStorage.setItem = function(key, value) {
+    _origSet(key, value);
+    if (key === PIPELINE_KEY) setTimeout(syncToCloud, 2000);
+  };
+
+  // Auto-restore on load if pipeline is empty
   window.guardianRestore = function() {
     var pipeline = [];
     try { pipeline = JSON.parse(localStorage.getItem(PIPELINE_KEY) || '[]'); } catch(e) {}
     if (pipeline.length === 0) {
-      console.log('[Guardian] Empty pipeline — restoring from cloud...');
+      console.log('[Guardian] Pipeline empty — restoring from cloud...');
       restoreFromCloud();
     }
   };
 
-  // Run on page load
   window.addEventListener('load', function() {
-    setTimeout(window.guardianRestore, 500);
-    setTimeout(syncToCloud, 8000);
-    setInterval(syncToCloud, 300000);
+    setTimeout(window.guardianRestore, 800);
+    setTimeout(syncToCloud, 10000);
+    setInterval(syncToCloud, 300000); // sync every 5 min
   });
 
-  console.log('[Guardian v2] Initialized — auto-restore + auto-sync + Notion pull ready');
+  console.log('[Guardian v3] Ready — Make webhook: ' + MAKE_WEBHOOK.slice(-20));
 })();
 </script>
 </body>
