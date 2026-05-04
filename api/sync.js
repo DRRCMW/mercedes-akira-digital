@@ -102,7 +102,54 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true, pipeline_count: Array.isArray(pipeline) ? pipeline.length : 0, last_run: lastRun, redis_connected: !!RU, message: 'Sync API working' });
   }
 
-  return res.status(400).json({ error: 'Unknown action', action });
+  
+  // notion-import: accepts raw Notion records from Make.com, converts + saves to Redis
+  if (action === 'notion-import' && req.method === 'POST') {
+    try {
+      const body = req.body || {};
+      const pages = [body.page1, body.page2, body.page3, body.page4].filter(p => Array.isArray(p));
+      const allRecords = pages.reduce(function(acc, page) { return acc.concat(page); }, []);
+      const leads = allRecords.map(function(rec, i) {
+        const p = rec.properties || {};
+        const name = ((p['Business Name'] || {}).title || [])[0];
+        const nameStr = name ? name.plain_text : 'Unknown';
+        const phone = (p['Phone'] || {}).phone_number || '';
+        const city = ((p['City'] || {}).rich_text || [])[0];
+        const cityStr = city ? city.plain_text : 'Los Angeles';
+        const state = ((p['State'] || {}).rich_text || [])[0];
+        const stateStr = state ? state.plain_text : 'CA';
+        const rating = (p['Google Rating'] || {}).number || 4.5;
+        const reviews = (p['Review Count'] || {}).number || 0;
+        const tier = ((p['Lead Score'] || {}).select || {}).name || 'Hot';
+        const outreach = ((p['Outreach Status'] || {}).select || {}).name || 'Not Started';
+        const website = ((p['Website Status'] || {}).select || {}).name || 'No Website';
+        const niche = ((p['Niche'] || {}).select || {}).name || 'Other';
+        const addedAt = rec.created_time || '';
+        let stage = 'new';
+        if (['Day 1 Sent','Day 3 Sent','Day 7 Sent','Day 14 Sent','Day 21 Sent'].indexOf(outreach) >= 0) stage = 'contacted';
+        else if (outreach === 'Responded' || outreach === 'Meeting Booked') stage = 'meeting';
+        else if (outreach === 'Closed Won') stage = 'won';
+        else if (outreach === 'Closed Lost') stage = 'lost';
+        return {
+          place_id: 'notion-' + rec.id.replace(/-/g, ''),
+          notion_id: rec.id, name: nameStr, phone: phone,
+          address: cityStr + ', ' + stateStr + ', USA',
+          city: cityStr, state: stateStr, rating: rating, reviews: reviews,
+          score: Math.min(100, Math.round(rating * 10 + (reviews > 20 ? 10 : 0))),
+          tier: tier, niche: niche, reason: website, angle: 'Notion Prospect Finder',
+          stage: stage, touchpoints: [], nextFollowup: null, addedAt: addedAt,
+          uid: new Date(addedAt).getTime() + i
+        };
+      });
+      await rSet('akira_pipeline', leads);
+      await rSet('akira_last_run', new Date().toISOString());
+      return res.status(200).json({ ok: true, total: leads.length });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
+return res.status(400).json({ error: 'Unknown action', action });
 }
 
 // env: notion token updated
