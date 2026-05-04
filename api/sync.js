@@ -1,4 +1,4 @@
-export const config = { maxDuration: 60 };
+    const NT = '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';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -57,7 +57,7 @@ export default async function handler(req, res) {
   if (action === 'get-log') { const log = await rGet('akira_log') || []; return res.status(200).json({ log }); }
 
   if (action === 'notion-pull') {
-    const NT = process.env.NOTION_TOKEN || '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';
+    const NT = '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';
     const DB = 'a3d2c021b2cc4aed983b10886908824a';
     try {
       const all = []; let cursor = null; let page = 0;
