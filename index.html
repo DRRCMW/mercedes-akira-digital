@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -12651,5 +12651,9 @@ window.addEventListener('load', function() {
   console.log('[Guardian] Lead Guardian initialized');
 })();
 </script>
+
+<script>
+(function(){var SECRET='Mercedes2707',KEY='akira_pipeline';function tryRestore(){var e=[];try{e=JSON.parse(localStorage.getItem(KEY)||'[]');}catch(x){}if(e.length>0)return;fetch('/api/sync?action=pull-all',{headers:{'x-mercedes-key':SECRET}}).then(function(r){return r.json();}).then(function(d){if(d.pipeline&&d.pipeline.length>0){localStorage.setItem(KEY,JSON.stringify(d.pipeline));setTimeout(function(){if(typeof renderPipe==='function')renderPipe();if(typeof updateStats==='function')updateStats();},500);}}).catch(function(){});}var _o=localStorage.setItem.bind(localStorage);localStorage.setItem=function(k,v){_o(k,v);if(k===KEY){clearTimeout(window._sT);window._sT=setTimeout(function(){var p=[];try{p=JSON.parse(v||'[]');}catch(e){}if(!p.length)return;fetch('/api/sync?action=push',{method:'POST',headers:{'x-mercedes-key':SECRET,'Content-Type':'application/json'},body:JSON.stringify({pipeline:p,queue:[]})}).catch(function(){});},2000);}};window.restoreLeads=function(){fetch('/api/sync?action=pull-all',{headers:{'x-mercedes-key':SECRET}}).then(function(r){return r.json();}).then(function(d){if(d.pipeline&&d.pipeline.length>0){localStorage.setItem(KEY,JSON.stringify(d.pipeline));if(typeof renderPipe==='function')renderPipe();if(typeof updateStats==='function')updateStats();}});};window.addEventListener('load',function(){setTimeout(tryRestore,800);});setInterval(function(){var p=[];try{p=JSON.parse(localStorage.getItem(KEY)||'[]');}catch(e){}if(!p.length)return;fetch('/api/sync?action=push',{method:'POST',headers:{'x-mercedes-key':SECRET,'Content-Type':'application/json'},body:JSON.stringify({pipeline:p,queue:[]})}).catch(function(){});},300000);console.log('[Guard] Ready');})();
+<\/script>
 </body>
 </html>
