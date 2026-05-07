@@ -12007,12 +12007,12 @@ async function pullFromCloud() {
 // ═══════════════════════════════════
 
 function getSmsSettings() {
-  return { enabled: localStorage.getItem('mercedes_sms_enabled') === 'true', webhookUrl: localStorage.getItem('mercedes_sms_webhook') || '' };
+  return { enabled: localStorage.getItem('mercedes_sms_enabled') === 'true', webhookUrl: localStorage.getItem('mercedes_sms_webhook') || 'https://hook.us2.make.com/xcpcgr8tpb44qs2oyf' };
 }
 function saveSmsSettings() {
   var e = document.getElementById('smsEnabled'), w = document.getElementById('smsWebhookUrl');
   if (e) localStorage.setItem('mercedes_sms_enabled', e.checked ? 'true' : 'false');
-  if (w) localStorage.setItem('mercedes_sms_webhook', w.value.trim());
+  if (w) { var wv = w.value.trim(); if (wv) localStorage.setItem('mercedes_sms_webhook', wv); }
   updateSmsStatusUI();
 }
 function loadSmsSettingsUI() {
