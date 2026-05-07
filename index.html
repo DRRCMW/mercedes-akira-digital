@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -10344,7 +10344,14 @@ function copyOffer() {
 
 // ═══════════════════════════════════════════
 // AGENT CONTROL PANEL
-// ═══════desc: "Robyn's AI revenue agent. Runs every 15 min Mon–Fri. Scans new leads, scores them Hot/Warm/Cold, triggers automated follow-up cadences on Days 3/7/14, writes objection rebuttals, and logs all activity to Notion. Every lead in your pipeline is actively worked.", Scans new leads, scores them Hot/Warm/Cold, triggers automated follow-up cadences on Days 3/7/14, writes objection rebuttals, and logs all activity to Notion. Every lead in your pipeline is actively worked.",
+// ═══════════════════════════════════════════
+
+var AGENTS = [
+  {
+    id: 'mercedes', name: 'Mercedes', subtitle: 'Sales Agent',
+    icon: '🤖', color: '#f0b429', bg: 'rgba(240,180,41,.12)',
+    accent: '#f0b429',
+    desc: "Robyn's AI revenue agent. Runs every 15 min Mon–Fri. Scans new leads, scores them Hot/Warm/Cold, triggers automated follow-up cadences on Days 3/7/14, writes objection rebuttals, and logs all activity to Notion. Every lead in your pipeline is actively worked.",
     schedule: 'Every 15 min (GitHub Actions)',
     makeId: null,
     makeUrl: 'https://github.com/DRRCMW/mercedes-akira-digital/actions',
@@ -11808,13 +11815,20 @@ window.addEventListener('load', function(){
 });
 // Save shift state before page unload
 window.addEventListener('beforeunload', function(){
-  localSturl:    localStorage.getItem('mercedes_cloud_url')    || 'https://mercedes-akira-digital.vercel.app'? 'trusecret: localStorage.getItem('mercedes_cloud_secret') || 'Mercedes2707'd Sync Functions
+  localStorage.setItem('akira_agent_shift_active', agentShiftActive ? 'true' : 'false');
+});
+
+
+</script>
+
+<script>
+// MERCEDES — Cloud Sync Functions
 // ═══════════════════════════════════════════════════════════════
 
 function getCloudSettings() {
   return {
-    url:    localStorage.getItem('mercedes_cloud_url')    || '',
-    secret: localStorage.getItem('mercedes_cloud_secret') || ''
+    url:    localStorage.getItem('mercedes_cloud_url')    || 'https://mercedes-akira-digital.vercel.app',
+    secret: localStorage.getItem('mercedes_cloud_secret') || 'Mercedes2707'
   };
 }
 
@@ -12566,25 +12580,7 @@ window.addEventListener('load', function() {
     return localStorage.getItem(CLOUD_KEY_NAME) || 'Mercedes2707';
   }
 
-  // Auto-restore: if pipeline is empty, pull from cloud immediately
-  function guardianRestore() {
-    var stored = localStorage.getItem(PIPELINE_KEY);
-    var pipeline = [];
-    try { pipeline = JSON.parse(stored || '[]'); } catch(e) {}
-
-    if (!pipeline || pipeline.length === 0) {
-      console.log('[Guardian] Pipeline empty — auto-restoring from cloud...');
-      fetch(SYNC_ENDPOINT + '?action=pull-all', {
-        headers: { 'x-mercedes-key': getSecret() }
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data.pipeline && data.pipeline.length > 0) {
-          localStorage.setItem(PIPELINE_KEY, JSON.stringify(data.pipeline));
-          console.log('[Guardian] Restored ' + data.pipeline.length + ' leads from cloud');
-          // Refresh UI
-          if (typeof renderPipe === 'function') setTimeout(renderPipe, 200);
-      // Push-only-after-restore: never push stale local data before cloud pull completes
+  // Push-only-after-restore: never push stale local data before cloud pull completes
   var _restored = false;
   var _restoredAt = 0;
 
@@ -12655,14 +12651,6 @@ window.addEventListener('load', function() {
   window.guardianRestore = guardianRestore;
   window.guardianSync = guardianSync;
   console.log('[Guardian] Lead Guardian initialized — cloud-first mode');
-})();n load after 5s
-    setInterval(guardianSync, 300000);     // periodic sync every 5 minutes
-  });
-
-  // Expose for manual use
-  window.guardianRestore = guardianRestore;
-  window.guardianSync = guardianSync;
-  console.log('[Guardian] Lead Guardian initialized');
 })();
 </script>
 </body>
