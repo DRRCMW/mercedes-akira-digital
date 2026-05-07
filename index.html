@@ -10344,14 +10344,7 @@ function copyOffer() {
 
 // ═══════════════════════════════════════════
 // AGENT CONTROL PANEL
-// ═══════════════════════════════════════════
-
-var AGENTS = [
-  {
-    id: 'mercedes', name: 'Mercedes', subtitle: 'Sales Agent',
-    icon: '🤖', color: '#f0b429', bg: 'rgba(240,180,41,.12)',
-    accent: '#f0b429',
-    desc: 'Robyn's AI revenue agent. Runs every 15 min Mon–Fri. Scans new leads, scores them Hot/Warm/Cold, triggers automated follow-up cadences on Days 3/7/14, writes objection rebuttals, and logs all activity to Notion. Every lead in your pipeline is actively worked.',
+// ═══════desc: "Robyn's AI revenue agent. Runs every 15 min Mon–Fri. Scans new leads, scores them Hot/Warm/Cold, triggers automated follow-up cadences on Days 3/7/14, writes objection rebuttals, and logs all activity to Notion. Every lead in your pipeline is actively worked.", Scans new leads, scores them Hot/Warm/Cold, triggers automated follow-up cadences on Days 3/7/14, writes objection rebuttals, and logs all activity to Notion. Every lead in your pipeline is actively worked.',
     schedule: 'Every 15 min (GitHub Actions)',
     makeId: null,
     makeUrl: 'https://github.com/DRRCMW/mercedes-akira-digital/actions',
@@ -11815,14 +11808,7 @@ window.addEventListener('load', function(){
 });
 // Save shift state before page unload
 window.addEventListener('beforeunload', function(){
-  localStorage.setItem('akira_agent_shift_active', agentShiftActive ? 'true' : 'false');
-});
-
-
-</script>
-
-<script>
-// MERCEDES — Cloud Sync Functions
+  localSturl:    localStorage.getItem('mercedes_cloud_url')    || 'https://mercedes-akira-digital.vercel.app'? 'trusecret: localStorage.getItem('mercedes_cloud_secret') || 'Mercedes2707'd Sync Functions
 // ═══════════════════════════════════════════════════════════════
 
 function getCloudSettings() {
@@ -12598,50 +12584,78 @@ window.addEventListener('load', function() {
           console.log('[Guardian] Restored ' + data.pipeline.length + ' leads from cloud');
           // Refresh UI
           if (typeof renderPipe === 'function') setTimeout(renderPipe, 200);
-          if (typeof agentRefreshUI === 'function') setTimeout(agentRefreshUI, 300);
-          if (typeof updateStats === 'function') setTimeout(updateStats, 400);
-        }
-      })
-      .catch(function(e) { console.warn('[Guardian] Restore failed:', e); });
-    }
-  }
+      // Push-only-after-restore: never push stale local data before cloud pull completes
+  var _restored = false;
+  var _restoredAt = 0;
 
-  // Auto-sync: push pipeline to cloud after any change
   function guardianSync() {
+    if (!_restored) return;
+    if (Date.now() - _restoredAt < 3000) return;
     var now = Date.now();
     var lastSync = parseInt(localStorage.getItem(LAST_SYNC_KEY) || '0');
-    if (now - lastSync < MIN_SYNC_INTERVAL) return; // throttle
-
+    if (now - lastSync < MIN_SYNC_INTERVAL) return;
     var pipeline = [];
     try { pipeline = JSON.parse(localStorage.getItem(PIPELINE_KEY) || '[]'); } catch(e) {}
     if (pipeline.length === 0) return;
-
     localStorage.setItem(LAST_SYNC_KEY, String(now));
-
     fetch(SYNC_ENDPOINT + '?action=push', {
       method: 'POST',
       headers: { 'x-mercedes-key': getSecret(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ pipeline: pipeline, queue: [] })
-    })
-    .then(function(r) {
+    }).then(function(r) {
       if (r.ok) console.log('[Guardian] Synced ' + pipeline.length + ' leads to cloud');
-    })
-    .catch(function(e) { console.warn('[Guardian] Sync failed:', e); });
+    }).catch(function(e) { console.warn('[Guardian] Sync failed:', e); });
   }
 
-  // Intercept localStorage.setItem to auto-sync when pipeline changes
+  var _baseRestore = guardianRestore;
+  guardianRestore = function() {
+    var stored = localStorage.getItem(PIPELINE_KEY);
+    var localPipeline = [];
+    try { localPipeline = JSON.parse(stored || '[]'); } catch(e) {}
+    console.log('[Guardian] Loading all leads from cloud...');
+    fetch(SYNC_ENDPOINT + '?action=pull-all', {
+      headers: { 'x-mercedes-key': getSecret() }
+    }).then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.pipeline && data.pipeline.length > 0) {
+        var localMap = {};
+        localPipeline.forEach(function(l) {
+          var key = l.place_id || (l.name + '|' + l.address);
+          localMap[key] = l;
+        });
+        var merged = data.pipeline.map(function(cl) {
+          var key = cl.place_id || (cl.name + '|' + cl.address);
+          var local = localMap[key];
+          if (local && (local.stage || local.notes || local.nextContact)) {
+            return Object.assign({}, cl, { stage: local.stage || cl.stage, notes: local.notes || cl.notes, nextContact: local.nextContact || cl.nextContact });
+          }
+          return cl;
+        });
+        _origSetItem(PIPELINE_KEY, JSON.stringify(merged));
+        _restored = true; _restoredAt = Date.now();
+        console.log('[Guardian] Loaded ' + merged.length + ' leads. Restore complete.');
+        if (typeof renderPipe === 'function') setTimeout(renderPipe, 200);
+        if (typeof agentRefreshUI === 'function') setTimeout(agentRefreshUI, 300);
+        if (typeof updateStats === 'function') setTimeout(updateStats, 400);
+      } else { _restored = true; _restoredAt = Date.now(); }
+    }).catch(function(e) { console.warn('[Guardian] Cloud load failed:', e); _restored = true; _restoredAt = Date.now(); });
+  };
+
   var _origSetItem = localStorage.setItem.bind(localStorage);
   localStorage.setItem = function(key, value) {
     _origSetItem(key, value);
-    if (key === PIPELINE_KEY) {
-      setTimeout(guardianSync, 1000); // sync 1 second after pipeline changes
-    }
+    if (key === PIPELINE_KEY) { setTimeout(guardianSync, 2000); }
   };
 
-  // Run on page load
   window.addEventListener('load', function() {
-    setTimeout(guardianRestore, 500);      // restore if empty after 500ms
-    setTimeout(guardianSync, 5000);        // sync on load after 5s
+    setTimeout(guardianRestore, 300);
+    setInterval(guardianSync, 300000);
+  });
+
+  window.guardianRestore = guardianRestore;
+  window.guardianSync = guardianSync;
+  console.log('[Guardian] Lead Guardian initialized — cloud-first mode');
+})();n load after 5s
     setInterval(guardianSync, 300000);     // periodic sync every 5 minutes
   });
 
