@@ -11324,7 +11324,7 @@ function toggleAgentShift() {
 
 function scheduleAgentRun() {
   if (!agentShiftActive) return;
-  var intervalMin = parseInt(document.getElementById('agentInterval').value) || 10;
+  var intervalMin = parseInt(document.getElementById('agentInterval').value) || 2;
   var intervalMs = intervalMin * 60 * 1000;
   var nextEl = document.getElementById('agentStatNext');
   if (nextEl) {
