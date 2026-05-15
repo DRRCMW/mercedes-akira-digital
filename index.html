@@ -11257,7 +11257,7 @@ function checkAgentApiKey() {
 function agentRefreshUI() {
   // Stats
   var pipeline = JSON.parse(localStorage.getItem('akira_pipeline') || '[]');
-  var active = pipeline.filter(function(p){ return p.stage !== 'lost' && p.stage !== 'closed'; });
+  var active = pipeline.filter(function(p){ return p.stage === 'new'; });
   var unworked = active.filter(function(p){ return agentWorkedToday.indexOf(p.name + p.address) === -1; });
   var el;
   el = document.getElementById('agentStatLeads'); if(el) el.textContent = unworked.length;
@@ -11375,7 +11375,7 @@ async function generateAllScripts() {
   }
   var pipeline = JSON.parse(localStorage.getItem('akira_pipeline') || '[]');
   var needScripts = pipeline.filter(function(p) {
-    return p.stage !== 'lost' && p.stage !== 'closed' && !p.mercedesPackage;
+    return p.stage === 'new' && !p.mercedesPackage;
   });
   if (needScripts.length === 0) {
     agentLog('✅ All active leads already have AI Scripts!', 'success');
@@ -11440,7 +11440,7 @@ async function generateAllScripts() {
         }
       }
       // Small delay to avoid rate limits
-      await new Promise(function(res){ setTimeout(res, 800); });
+      await new Promise(function(res){ setTimeout(res, 150); });
     } catch(e) { errors++; }
   }
   // Final pipeline update to Prospect Finder
@@ -11461,7 +11461,7 @@ async function agentRunNow() {
     return;
   }
   var pipeline = JSON.parse(localStorage.getItem('akira_pipeline') || '[]');
-  var active = pipeline.filter(function(p){ return p.stage !== 'lost' && p.stage !== 'closed'; });
+  var active = pipeline.filter(function(p){ return p.stage === 'new'; });
   var unworked = active.filter(function(p){ return agentWorkedToday.indexOf(p.name + p.address) === -1; });
 
   if (unworked.length === 0) {
@@ -11531,6 +11531,12 @@ async function agentRunNow() {
     // Mark lead as worked
     agentWorkedToday.push(lead.name + lead.address);
     localStorage.setItem('akira_agent_worked_' + new Date().toDateString(), JSON.stringify(agentWorkedToday));
+    // Save package to shift log
+    var _sl = JSON.parse(localStorage.getItem('akira_shift_log') || '[]');
+    _sl.unshift({ ts: new Date().toISOString(), lead: (lead && lead.name) ? lead.name : '', id: (lead && lead.place_id) ? lead.place_id : '', pkg: typeof outreachPackage !== 'undefined' ? String(outreachPackage).slice(0, 2000) : '' });
+    localStorage.setItem('akira_shift_log', JSON.stringify(_sl.slice(0, 500)));
+    // Cloud sync after every package
+    fetch('/api/sync?action=push', { method: 'POST', headers: { 'x-mercedes-key': 'Mercedes2707', 'Content-Type': 'application/json' }, body: JSON.stringify({ pipeline: JSON.parse(localStorage.getItem('akira_pipeline') || '[]'), queue: [] }) }).catch(function(){});
 
     // Add touchpoint to lead in pipeline
     var pipelineArr = JSON.parse(localStorage.getItem('akira_pipeline') || '[]');
