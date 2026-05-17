@@ -11531,17 +11531,6 @@ async function agentRunNow() {
     // Mark lead as worked
     agentWorkedToday.push(lead.name + lead.address);
     localStorage.setItem('akira_agent_worked_' + new Date().toDateString(), JSON.stringify(agentWorkedToday));
-    // Save package to shift log
-    var _sl = JSON.parse(localStorage.getItem('akira_shift_log') || '[]');
-    _sl.unshift({ ts: new Date().toISOString(), lead: (lead && lead.name) ? lead.name : '', id: (lead && lead.place_id) ? lead.place_id : '', pkg: typeof parsed !== 'undefined' ? JSON.stringify(parsed).slice(0, 2000) : (typeof raw !== 'undefined' ? String(raw).slice(0, 2000) : '') });
-    localStorage.setItem('akira_shift_log', JSON.stringify(_sl.slice(0, 500)));
-    // Cloud sync after every package
-    fetch('/api/sync?action=push', { method: 'POST', headers: { 'x-mercedes-key': 'Mercedes2707', 'Content-Type': 'application/json' }, body: JSON.stringify({ pipeline: JSON.parse(localStorage.getItem('akira_pipeline') || '[]'), queue: [] }) }).catch(function(){});
-    // Push to agentQueue so Packages Ready count is accurate
-    var _qi = { id: (lead&&lead.place_id)?lead.place_id:String(Date.now()), leadName:(lead&&lead.name)?lead.name:'', leadPhone:(lead&&lead.phone)?lead.phone:'', leadAddress:(lead&&lead.address)?lead.address:'', leadCategory:(lead&&lead.niche)?lead.niche:'', hasWebsite:false, priority:(lead&&lead.tier)?lead.tier:'Hot', subject:(typeof parsed==='object'&&parsed&&parsed.subject)?parsed.subject:'', coldEmail:(typeof parsed==='object'&&parsed)?(parsed.coldEmail||parsed.email||''):'', followUp:(typeof parsed==='object'&&parsed)?JSON.stringify(parsed).slice(0,400):'', callScript:(typeof parsed==='object'&&parsed&&parsed.callScript)?parsed.callScript:'', angle:(lead&&lead.angle)?lead.angle:'', generatedAt:new Date().toISOString(), date:new Date().toLocaleDateString() };
-    agentQueue.unshift(_qi);
-    localStorage.setItem('akira_agent_queue', JSON.stringify(agentQueue.slice(0,500)));
-    if (typeof agentRefreshUI === 'function') setTimeout(agentRefreshUI, 100);
 
     // Add touchpoint to lead in pipeline
     var pipelineArr = JSON.parse(localStorage.getItem('akira_pipeline') || '[]');
@@ -11593,6 +11582,15 @@ async function agentRunNow() {
     };
     agentQueue.unshift(queueItem);
     localStorage.setItem('akira_agent_queue', JSON.stringify(agentQueue.slice(0, 100)));
+    // ── Log every package to shift log with full data ──
+    var _sl = JSON.parse(localStorage.getItem('akira_shift_log') || '[]');
+    _sl.unshift({ ts: new Date().toISOString(), lead: queueItem.leadName, id: queueItem.id, subject: queueItem.subject, coldEmail: queueItem.coldEmail, followUp: queueItem.followUp, callScript: queueItem.callScript, angle: queueItem.angle, priority: queueItem.priority, date: queueItem.date, pkg: JSON.stringify(queueItem) });
+    localStorage.setItem('akira_shift_log', JSON.stringify(_sl.slice(0, 500)));
+    // ── Sync pipeline + queue to cloud ──
+    (function(){ var _pp = JSON.parse(localStorage.getItem('akira_pipeline')||'[]'); var _qq = JSON.parse(localStorage.getItem('akira_agent_queue')||'[]'); fetch('/api/sync?action=push', { method: 'POST', headers: { 'x-mercedes-key': 'Mercedes2707', 'Content-Type': 'application/json' }, body: JSON.stringify({ pipeline: _pp, queue: _qq }) }).catch(function(){}); })();
+    // ── Save package to Notion Agent Messages for permanent record ──
+    (function(){ var _nt = localStorage.getItem('akira_notion_token'); if (!_nt) return; fetch('https://api.notion.com/v1/pages', { method: 'POST', headers: { Authorization: 'Bearer ' + _nt, 'Notion-Version': '2022-06-28', 'Content-Type': 'application/json' }, body: JSON.stringify({ parent: { database_id: '9bf24d82460c4f6ca3d9c0442ce3501b' }, properties: { Message: { title: [{ text: { content: (queueItem.leadName||'') + ' — ' + (queueItem.subject||'Outreach Package') } }] }, Type: { select: { name: 'Outreach' } }, 'From Agent': { select: { name: 'Mercedes' } }, Status: { select: { name: 'Sent' } }, Priority: { select: { name: (queueItem.priority === 'high') ? 'High' : 'Normal' } } } }) }).catch(function(){}); })();
+    if (typeof agentRefreshUI === 'function') setTimeout(agentRefreshUI, 100);
 
     agentLog('✅ <b>' + lead.name + '</b> — outreach package ready! Priority: <b style="color:' + (parsed.priority==='high'?'#22c55e':parsed.priority==='medium'?'#f59e0b':'#64748b') + '">' + (parsed.priority||'medium').toUpperCase() + '</b>', 'success');
     agentLog('📧 Subject: "' + (parsed.subject || '') + '"', 'detail');
