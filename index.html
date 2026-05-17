@@ -11537,6 +11537,11 @@ async function agentRunNow() {
     localStorage.setItem('akira_shift_log', JSON.stringify(_sl.slice(0, 500)));
     // Cloud sync after every package
     fetch('/api/sync?action=push', { method: 'POST', headers: { 'x-mercedes-key': 'Mercedes2707', 'Content-Type': 'application/json' }, body: JSON.stringify({ pipeline: JSON.parse(localStorage.getItem('akira_pipeline') || '[]'), queue: [] }) }).catch(function(){});
+    // Push to agentQueue so Packages Ready count is accurate
+    var _qi = { id: (lead&&lead.place_id)?lead.place_id:String(Date.now()), leadName:(lead&&lead.name)?lead.name:'', leadPhone:(lead&&lead.phone)?lead.phone:'', leadAddress:(lead&&lead.address)?lead.address:'', leadCategory:(lead&&lead.niche)?lead.niche:'', hasWebsite:false, priority:(lead&&lead.tier)?lead.tier:'Hot', subject:(typeof parsed==='object'&&parsed&&parsed.subject)?parsed.subject:'', coldEmail:(typeof parsed==='object'&&parsed)?(parsed.coldEmail||parsed.email||''):'', followUp:(typeof parsed==='object'&&parsed)?JSON.stringify(parsed).slice(0,400):'', callScript:(typeof parsed==='object'&&parsed&&parsed.callScript)?parsed.callScript:'', angle:(lead&&lead.angle)?lead.angle:'', generatedAt:new Date().toISOString(), date:new Date().toLocaleDateString() };
+    agentQueue.unshift(_qi);
+    localStorage.setItem('akira_agent_queue', JSON.stringify(agentQueue.slice(0,500)));
+    if (typeof agentRefreshUI === 'function') setTimeout(agentRefreshUI, 100);
 
     // Add touchpoint to lead in pipeline
     var pipelineArr = JSON.parse(localStorage.getItem('akira_pipeline') || '[]');
