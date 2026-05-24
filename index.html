@@ -593,7 +593,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
         <div class="ni-info"><div class="ni-name">Growth Agent</div><div class="ni-desc">Monday content + outreach</div></div>
         <div class="ni-badge" style="background:rgba(139,92,246,.12);color:#8b5cf6;">04</div>
       </div>
-      <div class="nav-item" id="nav-seo" onclick="showAgentView('seo')">
+      <div class="nav-item" id="nav-seo" onclick="showSeoView()">
         <div class="ni-icon" style="background:rgba(239,68,68,.12);color:#ef4444;font-size:13px;">🔍</div>
         <div class="ni-info"><div class="ni-name">SEO Agent</div><div class="ni-desc">Monthly client SEO reports</div></div>
         <div class="ni-badge" style="background:rgba(239,68,68,.1);color:#ef4444;">06</div>
@@ -10641,7 +10641,114 @@ function fetchLatestWeeklyReport() {
     el.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;">'
       + '<div>'
       + '<div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:.2rem;">' + title + '</div>'
-      + '<div style="font-size:10px;color:var(--gray);">Generated ' + created.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric', year:'numeric'}) + '</div>'
+      + '
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- SEO DASHBOARD — akiradigital.net                   -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div id="seoView" style="display:none;padding:24px;max-width:1100px;margin:0 auto;">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <div style="font-size:18px;font-weight:700;color:var(--text-primary);">🌐 SEO Dashboard</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">akiradigital.net · Weekly SEO tracking & analytics</div>
+      </div>
+      <button onclick="runSeoAnalysis()" id="seoRunBtn" style="background:var(--gold);color:#000;font-weight:700;font-size:12px;padding:8px 16px;border:none;border-radius:6px;cursor:pointer;">🤖 Run SEO Report</button>
+    </div>
+
+    <!-- Quick Links Row -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;">
+      <a href="https://www.akiradigital.net" target="_blank" style="background:rgba(255,255,255,.06);color:var(--text-primary);padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;border:1px solid rgba(255,255,255,.1);">🌐 View Site ↗</a>
+      <a href="https://search.google.com/search-console" target="_blank" style="background:rgba(255,255,255,.06);color:var(--text-primary);padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;border:1px solid rgba(255,255,255,.1);">📊 Google Search Console ↗</a>
+      <a href="https://analytics.google.com" target="_blank" style="background:rgba(255,255,255,.06);color:var(--text-primary);padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;border:1px solid rgba(255,255,255,.1);">📈 Google Analytics ↗</a>
+      <a href="https://vercel.com/akira-digital/akira-digital/analytics" target="_blank" style="background:rgba(255,255,255,.06);color:var(--text-primary);padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;border:1px solid rgba(255,255,255,.1);">⚡ Vercel Analytics ↗</a>
+      <a href="https://app.ahrefs.com/site-explorer/overview/v2/subdomains/live?target=akiradigital.net" target="_blank" style="background:rgba(255,255,255,.06);color:var(--text-primary);padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;border:1px solid rgba(255,255,255,.1);">🔍 Ahrefs ↗</a>
+    </div>
+
+    <!-- Two Column Layout -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+
+      <!-- Site Preview -->
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;overflow:hidden;">
+        <div style="padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:8px;">
+          <span style="font-size:11px;font-weight:600;color:var(--gold);">LIVE SITE</span>
+          <span style="font-size:11px;color:var(--muted);">akiradigital.net</span>
+        </div>
+        <iframe src="https://www.akiradigital.net" style="width:100%;height:340px;border:none;display:block;" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+      </div>
+
+      <!-- SEO Report Panel -->
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;overflow:hidden;">
+        <div style="padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:11px;font-weight:600;color:var(--gold);">SEO ANALYSIS</span>
+          <span id="seoReportDate" style="font-size:10px;color:var(--muted);">Not yet run</span>
+        </div>
+        <div id="seoReportContent" style="padding:14px;height:330px;overflow-y:auto;font-size:12px;color:var(--text-primary);line-height:1.6;">
+          <div style="color:var(--muted);text-align:center;padding-top:60px;">
+            <div style="font-size:32px;margin-bottom:12px;">🤖</div>
+            <div style="font-weight:600;margin-bottom:6px;">No report yet</div>
+            <div style="font-size:11px;">Click "Run SEO Report" to generate<br>your first AI-powered SEO analysis</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEO Metrics Row -->
+    <div id="seoMetricsRow" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:14px;text-align:center;">
+        <div id="seoMetricClicks" style="font-size:22px;font-weight:700;color:var(--gold);">--</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px;">Weekly Clicks</div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:14px;text-align:center;">
+        <div id="seoMetricImpressions" style="font-size:22px;font-weight:700;color:var(--gold);">--</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px;">Impressions</div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:14px;text-align:center;">
+        <div id="seoMetricKeywords" style="font-size:22px;font-weight:700;color:var(--gold);">--</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px;">Ranking Keywords</div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:14px;text-align:center;">
+        <div id="seoMetricPosition" style="font-size:22px;font-weight:700;color:var(--gold);">--</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px;">Avg Position</div>
+      </div>
+    </div>
+
+    <!-- Setup Guide -->
+    <div style="background:rgba(201,148,26,.08);border:1px solid rgba(201,148,26,.25);border-radius:10px;padding:16px;">
+      <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px;">📋 Connect Your SEO Tools (one-time setup)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px;color:var(--text-primary);">
+        <div>
+          <div style="font-weight:600;margin-bottom:4px;">1. Google Search Console</div>
+          <div style="color:var(--muted);line-height:1.5;">Go to search.google.com/search-console → Add property → akiradigital.net → Verify via HTML tag. Paste the verification tag into your site's &lt;head&gt;.</div>
+        </div>
+        <div>
+          <div style="font-weight:600;margin-bottom:4px;">2. Google Analytics 4</div>
+          <div style="color:var(--muted);line-height:1.5;">Go to analytics.google.com → Create property → Get Measurement ID (G-XXXXXXX) → Enter it here to track all visitors automatically.</div>
+        </div>
+        <div>
+          <div style="font-weight:600;margin-bottom:4px;">3. Vercel Analytics</div>
+          <div style="color:var(--muted);line-height:1.5;">Already on Vercel — just enable it at vercel.com/akira-digital/akira-digital/analytics. Zero-config, privacy-first visitor tracking.</div>
+        </div>
+        <div>
+          <div style="font-weight:600;margin-bottom:4px;">4. GA4 Measurement ID</div>
+          <div style="color:var(--muted);line-height:1.5;margin-bottom:6px;">Paste your GA4 ID to activate real-time visitor tracking in the dashboard:</div>
+          <div style="display:flex;gap:6px;">
+            <input id="seoGA4Input" type="text" placeholder="G-XXXXXXXXXX" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:4px;padding:5px 8px;color:var(--text-primary);font-size:11px;">
+            <button onclick="saveSeoGA4()" style="background:var(--gold);color:#000;border:none;border-radius:4px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Weekly Reports History -->
+    <div style="margin-top:16px;">
+      <div style="font-size:12px;font-weight:600;color:var(--gold);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em;">📅 Weekly Report History</div>
+      <div id="seoReportHistory" style="display:flex;flex-direction:column;gap:6px;">
+        <div style="color:var(--muted);font-size:12px;padding:10px;">No reports yet — weekly reports run every Monday at 8AM via Make.com.</div>
+      </div>
+    </div>
+  </div>
+<div style="font-size:10px;color:var(--gray);">Generated ' + created.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric', year:'numeric'}) + '</div>'
       + '</div>'
       + '<a href="' + r.url + '" target="_blank" style="padding:.3rem .7rem;background:var(--gold3);border:1px solid rgba(201,148,26,.2);border-radius:7px;font-size:11px;font-weight:600;color:var(--gold);text-decoration:none;">View Report →</a>'
       + '</div>';
@@ -10663,6 +10770,105 @@ function getTimeAgo(date) {
 // ═══════════════════════════════════════════
 // HELPER: HIDE ALL VIEWS / SET TOP BAR
 // ═══════════════════════════════════════════
+
+
+function showSeoView() {
+  var views = document.querySelectorAll('[id$="View"],[id$="Panel"],[id="seoView"],[id="gvView"],[id="cfView"],[id="salesTrackerView"],[id="agentView"],[id="playbookView"],[id="agentControlView"]');
+  views.forEach(function(v){ v.style.display='none'; });
+  var sv = document.getElementById('seoView');
+  if(sv) sv.style.display='block';
+  // Update active nav
+  document.querySelectorAll('[id^="nav-"]').forEach(function(b){ b.classList.remove('active'); });
+  var seoNav = document.getElementById('nav-seo');
+  if(seoNav) seoNav.classList.add('active');
+  // Load saved report if any
+  loadSeoReport();
+  // Load GA4 if saved
+  var ga4 = localStorage.getItem('akira_ga4_id');
+  var inp = document.getElementById('seoGA4Input');
+  if(inp && ga4) inp.value = ga4;
+}
+
+function loadSeoReport() {
+  var reports = JSON.parse(localStorage.getItem('akira_seo_reports')||'[]');
+  if(reports.length > 0) {
+    var latest = reports[0];
+    var el = document.getElementById('seoReportContent');
+    var dt = document.getElementById('seoReportDate');
+    if(el) el.innerHTML = latest.html || latest.text || '';
+    if(dt) dt.textContent = latest.date || '';
+    // Load history
+    var hist = document.getElementById('seoReportHistory');
+    if(hist) {
+      hist.innerHTML = reports.map(function(r,i){
+        return '<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:6px;padding:8px 12px;cursor:pointer;font-size:12px;" onclick="(function(){var r=JSON.parse(localStorage.getItem('akira_seo_reports')||'[]')['+i+'];var el=document.getElementById('seoReportContent');if(el&&r)el.innerHTML=r.html||r.text||'';})()">'
+          +'<span style="font-weight:600;color:var(--text-primary);">Week of '+r.date+'</span>'
+          +'<span style="color:var(--muted);margin-left:8px;font-size:11px;">'+((r.html||r.text||'').length)+' chars</span>'
+          +'</div>';
+      }).join('');
+    }
+  }
+}
+
+function saveSeoGA4() {
+  var id = document.getElementById('seoGA4Input')?.value?.trim();
+  if(!id) return;
+  localStorage.setItem('akira_ga4_id', id);
+  // Inject GA4 if not already loaded
+  if(!window.dataLayer) {
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', id);
+    var s1 = document.createElement('script');
+    s1.async = true;
+    s1.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
+    document.head.appendChild(s1);
+    var s2 = document.createElement('script');
+    s2.textContent = 'window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","'+id+'");';
+    document.head.appendChild(s2);
+  }
+  alert('GA4 ID saved: ' + id + '. Tracking is now active on this session.');
+}
+
+function runSeoAnalysis() {
+  var btn = document.getElementById('seoRunBtn');
+  var content = document.getElementById('seoReportContent');
+  var dateEl = document.getElementById('seoReportDate');
+  if(btn) { btn.textContent = '⏳ Analyzing...'; btn.disabled = true; }
+  if(content) content.innerHTML = '<div style="padding:20px;color:var(--muted);text-align:center;"><div style="margin-bottom:8px;">🤖 Mercedes is analyzing akiradigital.net...</div><div style="font-size:11px;">Checking SEO health, rankings, and opportunities</div></div>';
+  
+  var apiKey = localStorage.getItem('akira_akey');
+  if(!apiKey) { if(content) content.innerHTML='<div style="color:#ef4444;padding:16px;">No API key found. Set your Anthropic API key in Settings first.</div>'; if(btn){btn.textContent='🤖 Run SEO Report';btn.disabled=false;} return; }
+  
+  var today = new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  
+  fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:2000,
+      system:'You are an expert SEO analyst for Akira Digital, a web design agency in LA. Analyze the agency's own website akiradigital.net and provide a structured weekly SEO report in HTML format (no DOCTYPE, just body content with inline styles matching a dark theme: background #0d0d1a, gold #c9941a, text #e8e8e8). Be specific, actionable, and data-driven.',
+      messages:[{role:'user',content:'Perform a comprehensive SEO analysis of https://www.akiradigital.net for the week of '+today+'. The site: "We Build Websites That Win Business" — web design agency targeting LA local service businesses (home services, law firms, HVAC, plumbers, electricians) at $1,000 starting price, 10-day delivery. Include: 1) Current SEO Health Score (0-100) with breakdown, 2) Top 5 target keywords with estimated current rankings, 3) 3 highest-priority on-page fixes this week, 4) Content opportunities for local LA service business market, 5) Backlink building recommendations, 6) Technical SEO checklist status. Format as clean HTML with gold headers and readable structure.'}]
+    })
+  }).then(function(r){return r.json();}).then(function(d){
+    var html = (d.content&&d.content[0]&&d.content[0].text)||'No response';
+    if(content) content.innerHTML = html;
+    var now = today;
+    if(dateEl) dateEl.textContent = 'Last run: '+now;
+    // Save to localStorage
+    var reports = JSON.parse(localStorage.getItem('akira_seo_reports')||'[]');
+    reports.unshift({date:now, html:html, ts:Date.now()});
+    localStorage.setItem('akira_seo_reports', JSON.stringify(reports.slice(0,12)));
+    // Reload history
+    loadSeoReport();
+    if(btn){btn.textContent='🤖 Run SEO Report';btn.disabled=false;}
+  }).catch(function(e){
+    if(content) content.innerHTML='<div style="color:#ef4444;padding:16px;">Error: '+e.message+'</div>';
+    if(btn){btn.textContent='🤖 Run SEO Report';btn.disabled=false;}
+  });
+}
 
 function showAgentView(agentId) {
   hideAllViews();
