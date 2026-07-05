@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKIRA FORGE — Web Builder Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0D0D11; --panel:#15151B; --panel2:#1B1B22; --line:#26262E;
+  --text:#EDEDF2; --muted:#8B8B98; --dim:#5A5A66;
+  --red:#E5484D; --red-soft:rgba(229,72,77,.14); --gold:#C9A96A;
+  --ok:#4CC38A; --warn:#F0B429; --fail:#E5484D;
+  --radius:12px; --mono:'JetBrains Mono',monospace; --disp:'Space Grotesk',sans-serif; --body:'Inter',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--ink);color:var(--text);font-family:var(--body);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:13px;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 11px;width:100%;outline:none;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--red)}
+label{display:block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 5px}
+::placeholder{color:var(--dim)}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238B8B98' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+
+/* HEADER */
+header{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--panel)}
+.hinomaru{width:14px;height:14px;border-radius:50%;background:var(--red);flex:none;box-shadow:0 0 0 0 rgba(229,72,77,.5)}
+.hinomaru.building{animation:pulse 1.4s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(229,72,77,.55)}100%{box-shadow:0 0 0 14px rgba(229,72,77,0)}}
+.wordmark{font-family:var(--disp);font-weight:700;font-size:16px;letter-spacing:.14em}
+.wordmark span{color:var(--red)}
+.subtitle{font-size:11px;color:var(--muted);letter-spacing:.05em;border-left:1px solid var(--line);padding-left:14px}
+.head-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.key-chip{font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--panel2);border:1px solid var(--line);border-radius:99px;padding:5px 12px;display:flex;align-items:center;gap:7px}
+.key-dot{width:7px;height:7px;border-radius:50%;background:var(--fail)}
+.key-dot.on{background:var(--ok)}
+.ghost-btn{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:12px}
+.ghost-btn:hover{color:var(--text);border-color:var(--muted)}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:400px 1fr;height:calc(100vh - 57px)}
+.rail{border-right:1px solid var(--line);overflow-y:auto;padding:20px;background:var(--panel)}
+.stage-area{display:flex;flex-direction:column;overflow:hidden}
+
+/* INTAKE */
+.section-label{font-family:var(--disp);font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin:0 0 14px;display:flex;align-items:center;gap:8px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--line)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field{margin-bottom:12px}
+.hint{font-size:11px;color:var(--dim);margin-top:4px}
+.pkg-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.pkg{border:1px solid var(--line);border-radius:10px;padding:10px 8px;text-align:center;background:var(--panel2);transition:.15s}
+.pkg.sel{border-color:var(--red);background:var(--red-soft)}
+.pkg .p-name{font-family:var(--disp);font-weight:600;font-size:12px}
+.pkg .p-price{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:2px}
+.pkg .p-scope{font-size:10px;color:var(--dim);margin-top:2px}
+.build-btn{width:100%;background:var(--red);color:#fff;border:none;border-radius:10px;padding:13px;font-family:var(--disp);font-weight:600;font-size:14px;letter-spacing:.05em;margin-top:6px;transition:.15s}
+.build-btn:hover:not(:disabled){filter:brightness(1.1)}
+.build-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* DESIGN MARKET */
+.style-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.style-card{border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:6px;transition:.15s;text-align:center}
+.style-card.sel{border-color:var(--red);background:var(--red-soft)}
+.sc-thumb{height:44px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:5px}
+.sc-name{font-size:10px;font-weight:600;color:var(--muted)}
+.style-card.sel .sc-name{color:var(--text)}
+.sc-agent{background:linear-gradient(135deg,#1B1B22,#2A2A34);color:var(--red);font-family:var(--disp);font-weight:700}
+.sc-luxe{background:#F3EEE6;color:#141210;font-family:Georgia,serif;font-style:italic}
+.sc-bold{background:#0A0A0A;color:#D8FF3E;font-family:var(--disp);font-weight:700;letter-spacing:-1px}
+.sc-moody{background:#191512;color:#C9A96A;font-family:Georgia,serif}
+.sc-organic{background:#EFE3D3;color:#7A4A2B;font-family:Georgia,serif}
+.sc-clinical{background:#F7FAFB;color:#0E7C7B;font-family:var(--body);font-weight:600}
+.sc-vibrant{background:linear-gradient(120deg,#FF5CA8 0 50%,#4D3EF0 50% 100%);color:#fff;font-family:var(--disp);font-weight:700}
+.sc-airy{background:#EDF4F7;color:#3E6C88;font-family:Georgia,serif;font-style:italic}
+.sc-trade{background:#12263A;color:#F5A524;font-family:var(--disp);font-weight:700}
+
+/* PHOTO LIBRARY */
+.photo-bar{display:flex;gap:8px;margin-bottom:10px}
+.photo-bar select{flex:1}
+.upload-btn{background:var(--panel2);border:1px dashed var(--gold);color:var(--gold);border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;white-space:nowrap}
+.upload-btn:hover{background:rgba(201,169,106,.08)}
+.photo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-height:230px;overflow-y:auto;padding-right:2px}
+.ph{position:relative;aspect-ratio:1;border-radius:8px;border:2px solid transparent;background-size:cover;background-position:center;background-color:var(--panel2);padding:0;overflow:hidden;transition:.12s}
+.ph:hover{border-color:var(--gold)}
+.ph.sel{border-color:var(--red)}
+.ph .ph-badge{position:absolute;top:4px;right:4px;background:var(--red);color:#fff;font-family:var(--mono);font-size:10px;font-weight:600;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.ph .ph-up{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.65);color:var(--gold);font-size:8px;font-weight:700;letter-spacing:.08em;text-align:center;padding:2px 0}
+.photo-count{font-size:11px;color:var(--dim);margin:8px 0 0}
+.photo-count b{color:var(--gold)}
+
+/* TEMPLATE LIBRARY */
+.tpl-list{display:flex;flex-direction:column;gap:6px}
+.tpl{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);padding:8px 10px;cursor:pointer;transition:.12s;text-align:left;width:100%}
+.tpl:hover{border-color:var(--gold)}
+.tpl.sel{border-color:var(--red);background:var(--red-soft)}
+.tpl .t-star{color:var(--gold);font-size:13px;flex:none}
+.tpl .t-info{flex:1;min-width:0}
+.tpl .t-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tpl .t-meta{font-size:10px;color:var(--dim);font-family:var(--mono)}
+.tpl .t-del{background:none;border:none;color:var(--dim);font-size:12px;padding:2px 4px;flex:none}
+.tpl .t-del:hover{color:var(--red)}
+
+/* STAGES */
+.stages{margin-top:24px}
+.stage{display:flex;gap:12px;padding:9px 0;align-items:flex-start}
+.stage .s-dot{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:var(--panel2);flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:1px}
+.stage.active .s-dot{border-color:var(--red);color:var(--red)}
+.stage.done .s-dot{background:var(--red);border-color:var(--red);color:#fff}
+.stage .s-name{font-weight:600;font-size:13px;color:var(--dim)}
+.stage.active .s-name,.stage.done .s-name{color:var(--text)}
+.stage .s-note{font-size:11px;color:var(--dim);font-family:var(--mono)}
+.stage.active .s-note{color:var(--muted)}
+
+/* COMPLIANCE */
+.audit{margin-top:22px;display:none}
+.audit.show{display:block}
+.a-item{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+.a-item:last-child{border:none}
+.a-badge{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.08em;border-radius:4px;padding:3px 6px;flex:none;margin-top:1px}
+.a-pass{background:rgba(76,195,138,.15);color:var(--ok)}
+.a-warn{background:rgba(240,180,41,.15);color:var(--warn)}
+.a-fail{background:rgba(229,72,77,.15);color:var(--fail)}
+.a-txt{font-size:12px}
+.a-txt .a-note{color:var(--muted);font-size:11px;display:block}
+
+/* STAGE AREA */
+.toolbar{display:flex;align-items:center;gap:8px;padding:12px 18px;border-bottom:1px solid var(--line)}
+.tab{background:transparent;border:none;color:var(--muted);font-size:13px;font-weight:600;padding:7px 12px;border-radius:8px}
+.tab.on{background:var(--panel2);color:var(--text)}
+.dev-toggle{margin-left:auto;display:flex;gap:4px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:3px}
+.dev{background:transparent;border:none;color:var(--muted);font-size:11px;padding:5px 10px;border-radius:6px}
+.dev.on{background:var(--panel);color:var(--text)}
+.act{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 13px;font-size:12px;font-weight:600}
+.act:hover{border-color:var(--gold);color:var(--gold)}
+.act.primary{background:var(--red);border-color:var(--red);color:#fff}
+.act.primary:hover{color:#fff;filter:brightness(1.1)}
+.canvas{flex:1;overflow:hidden;display:flex;align-items:stretch;justify-content:center;background:radial-gradient(1200px 600px at 50% 0%,#14141a,var(--ink));padding:18px}
+.frame-wrap{width:100%;height:100%;transition:width .25s;background:#fff;border-radius:10px;overflow:hidden;border:1px solid var(--line);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.frame-wrap.mobile{width:390px}
+iframe{width:100%;height:100%;border:none;background:#fff}
+.code-view{flex:1;overflow:auto;display:none;padding:18px}
+.code-view pre{font-family:var(--mono);font-size:11px;line-height:1.6;color:#B8C0D0;white-space:pre-wrap;word-break:break-all}
+.console{font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 18px;border-top:1px solid var(--line);height:32px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.console .c-red{color:var(--red)}
+
+/* EMPTY STATE */
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--dim);text-align:center;padding:40px}
+.empty .e-mark{width:64px;height:64px;border-radius:50%;background:var(--red-soft);display:flex;align-items:center;justify-content:center}
+.empty .e-mark div{width:22px;height:22px;border-radius:50%;background:var(--red)}
+.empty h2{font-family:var(--disp);font-size:18px;color:var(--text);letter-spacing:.04em}
+.empty p{font-size:13px;max-width:420px;color:var(--muted)}
+
+/* REVISION BAR */
+.rev-bar{display:none;gap:10px;padding:12px 18px;border-top:1px solid var(--line);background:var(--panel)}
+.rev-bar.show{display:flex}
+.rev-bar input{flex:1}
+.target-chip{display:flex;align-items:center;gap:8px;background:var(--red-soft);border:1px solid var(--red);color:var(--text);border-radius:8px;padding:6px 10px;font-size:12px;white-space:nowrap}
+.target-chip button{background:none;border:none;color:var(--red);font-size:12px;padding:0}
+.act.editing{border-color:var(--red);color:var(--red)}
+
+/* KEY MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:50}
+.modal-bg.show{display:flex}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px;width:440px;max-width:92vw}
+.modal h3{font-family:var(--disp);font-size:15px;margin-bottom:6px}
+.modal p{font-size:12px;color:var(--muted);margin-bottom:14px}
+.modal .row{display:flex;gap:8px;margin-top:12px}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 18px;font-size:12px;transition:.25s;z-index:60}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr;height:auto}.rail{border-right:none;border-bottom:1px solid var(--line)}.stage-area{min-height:70vh}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hinomaru" id="statusDot"></div>
+  <div class="wordmark">AKIRA <span>FORGE</span></div>
+  <div class="subtitle">Web Builder Agent · v7 · Mercedes bridge + template library · 56 industries</div>
+  <div class="head-right">
+    <div class="key-chip"><div class="key-dot" id="keyDot"></div><span id="keyLabel">No API key</span></div>
+    <button class="ghost-btn" onclick="openKeyModal()">Key</button>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- LEFT RAIL -->
+  <aside class="rail">
+    <div class="section-label">Client Intake</div>
+
+    <div class="field"><label for="bizName">Business name</label><input id="bizName" placeholder="Atlanta Pro Plumbing"></div>
+
+    <div class="grid2">
+      <div class="field"><label for="industry">Industry</label>
+        <select id="industry">
+          <optgroup label="🏠 Home Services (best niche)">
+            <option value="Plumber">Plumbers</option>
+            <option value="HVAC Company">HVAC Companies</option>
+            <option value="Electrician">Electricians</option>
+            <option value="Roofer">Roofers</option>
+            <option value="General Contractor">General Contractors</option>
+            <option value="Landscaping Company">Landscaping</option>
+            <option value="Pest Control Company">Pest Control</option>
+            <option value="Cleaning Service">Cleaning Services</option>
+            <option value="Painting Company">Painters</option>
+            <option value="Pool Service Company">Pool Services</option>
+            <option value="Garage Door Repair Company">Garage Door Repair</option>
+            <option value="Fence Company">Fence Companies</option>
+          </optgroup>
+          <optgroup label="⚖️ Legal">
+            <option value="Law Firm">Law Firms</option>
+            <option value="Personal Injury Law Firm">Personal Injury Attorneys</option>
+            <option value="Family Law Firm">Family Law Attorneys</option>
+            <option value="Criminal Defense Law Firm">Criminal Defense Attorneys</option>
+          </optgroup>
+          <optgroup label="🏥 Health">
+            <option value="Dental Office">Dental Offices</option>
+            <option value="Chiropractor">Chiropractors</option>
+            <option value="Med Spa">Med Spas</option>
+          </optgroup>
+          <optgroup label="🏆 Wellness, Beauty & Wellbeing">
+            <option value="Day Spa">Day Spas</option>
+            <option value="Nail Salon">Nail Salons</option>
+            <option value="Hair Salon">Hair Salons</option>
+            <option value="Barbershop">Barbershops</option>
+            <option value="Lash Studio">Lash Studios / Eyelash Extensions</option>
+            <option value="Eyebrow Threading and Waxing Studio">Eyebrow Threading & Waxing</option>
+            <option value="Massage Therapist">Massage Therapists</option>
+            <option value="Yoga Studio">Yoga Studios</option>
+            <option value="Pilates Studio">Pilates Studios</option>
+            <option value="Personal Trainer">Personal Trainers</option>
+            <option value="Makeup Artist">Makeup Artists</option>
+            <option value="Esthetician">Estheticians / Skin Care</option>
+            <option value="Holistic Health Practice">Holistic & Alternative Health</option>
+            <option value="Therapist and Counselor Practice">Therapists & Counselors</option>
+            <option value="Nutritionist">Nutritionists & Dietitians</option>
+          </optgroup>
+          <optgroup label="🎵 Musicians & Creatives">
+            <option value="Musician or Band">Musicians / Bands</option>
+            <option value="Music Producer or Studio">Music Producers / Studios</option>
+            <option value="Recording Studio">Recording Studios</option>
+            <option value="DJ">DJs</option>
+            <option value="Photographer">Photographers</option>
+            <option value="Videographer">Videographers</option>
+            <option value="Graphic Designer">Graphic Designers</option>
+            <option value="Tattoo Shop">Tattoo Artists / Shops</option>
+            <option value="Art Studio">Art Studios / Artists</option>
+            <option value="Dance Studio">Dance Studios</option>
+          </optgroup>
+          <optgroup label="🏛 Venues & Event Spaces">
+            <option value="Event Venue">Event Venues</option>
+            <option value="Wedding Venue">Wedding Venues</option>
+            <option value="Banquet Hall">Banquet Halls</option>
+            <option value="Concert Venue">Concert Venues / Music Venues</option>
+            <option value="Nightclub">Nightclubs / Bars with Events</option>
+            <option value="Party Rental Company">Party Rental Companies</option>
+            <option value="Catering Company">Catering Companies</option>
+            <option value="Event Planner">Event Planners</option>
+            <option value="Photo Booth Rental Company">Photo Booth Rental</option>
+          </optgroup>
+          <optgroup label="🏢 Other">
+            <option value="Auto Repair Shop">Auto Repair Shops</option>
+            <option value="Insurance Agency">Insurance Agencies</option>
+            <option value="Other Local Service Business">Other</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="field"><label for="city">City / service area</label><input id="city" placeholder="Atlanta, GA"></div>
+    </div>
+
+    <div class="grid2">
+      <div class="field"><label for="phone">Phone</label><input id="phone" placeholder="(404) 555-0134"></div>
+      <div class="field"><label for="email">Email</label><input id="email" placeholder="info@business.com"></div>
+    </div>
+
+    <div class="field"><label for="services">Top services (comma-separated)</label><input id="services" placeholder="Emergency repair, water heaters, drain cleaning"></div>
+
+    <div class="grid2">
+      <div class="field"><label for="license">License # <span style="color:var(--dim);text-transform:none">(if applicable)</span></label><input id="license" placeholder="GA MP-210XXX"></div>
+      <div class="field"><label for="yearFounded">Years in business</label><input id="yearFounded" placeholder="12"></div>
+    </div>
+
+    <div class="field">
+      <label>Design market — pick a look</label>
+      <div class="style-grid" id="styleGrid">
+        <button class="style-card sel" data-style="agent"><div class="sc-thumb sc-agent">Aa</div><div class="sc-name">Agent's Choice</div></button>
+        <button class="style-card" data-style="luxe"><div class="sc-thumb sc-luxe">Aa</div><div class="sc-name">Luxe Editorial</div></button>
+        <button class="style-card" data-style="bold"><div class="sc-thumb sc-bold">Aa</div><div class="sc-name">Bold Impact</div></button>
+        <button class="style-card" data-style="moody"><div class="sc-thumb sc-moody">Aa</div><div class="sc-name">Dark & Moody</div></button>
+        <button class="style-card" data-style="organic"><div class="sc-thumb sc-organic">Aa</div><div class="sc-name">Warm Organic</div></button>
+        <button class="style-card" data-style="clinical"><div class="sc-thumb sc-clinical">Aa</div><div class="sc-name">Clean Clinical</div></button>
+        <button class="style-card" data-style="vibrant"><div class="sc-thumb sc-vibrant">Aa</div><div class="sc-name">Vibrant Creative</div></button>
+        <button class="style-card" data-style="airy"><div class="sc-thumb sc-airy">Aa</div><div class="sc-name">Coastal Airy</div></button>
+        <button class="style-card" data-style="trade"><div class="sc-thumb sc-trade">Aa</div><div class="sc-name">Trade Strong</div></button>
+      </div>
+    </div>
+
+    <div class="field"><label for="vibe">Custom style notes <span style="color:var(--dim);text-transform:none">(optional — overrides/refines the look)</span></label><input id="vibe" placeholder="e.g. blush pink + gold, feminine and airy like a Showit template"></div>
+
+    <div class="field"><label for="refUrl">Reference site <span style="color:var(--dim);text-transform:none">(optional — FORGE studies it & replicates the structure and feel)</span></label><input id="refUrl" type="url" placeholder="https://a-site-you-love.com"><div class="hint">Layout, section order & vibe are replicated — copy is written fresh for your client, never lifted.</div></div>
+
+    <div class="field">
+      <label>Template library <span style="color:var(--dim);text-transform:none">(your saved builds — click one to forge from it)</span></label>
+      <div id="tplList" class="tpl-list"></div>
+      <div class="hint" id="tplHint">After a build you love, hit ★ Save Template in the toolbar — it's stored here for future forges.</div>
+    </div>
+
+    <div class="field">
+      <label>Photo library <span style="color:var(--dim);text-transform:none">(pick shots or upload the client's own)</span></label>
+      <div class="photo-bar">
+        <select id="photoFilter" onchange="renderPhotoGrid()">
+          <option value="auto">Auto — match industry</option>
+          <option value="all">All stock</option>
+          <option value="home">Home Services</option>
+          <option value="legal">Legal</option>
+          <option value="health">Health</option>
+          <option value="beauty">Beauty & Wellness</option>
+          <option value="creative">Creatives & Music</option>
+          <option value="venue">Venues & Events</option>
+          <option value="other">Other Business</option>
+          <option value="universal">Universal</option>
+          <option value="uploads">Client uploads</option>
+        </select>
+        <button class="upload-btn" onclick="document.getElementById('photoUpload').click()">⬆ Upload</button>
+        <input type="file" id="photoUpload" accept="image/*" multiple hidden onchange="handleUploads(this.files)">
+      </div>
+      <div class="photo-grid" id="photoGrid"></div>
+      <div class="photo-count" id="photoCount">No photos selected — the agent will use styled placeholder frames instead.</div>
+    </div>
+
+    <div class="field"><label for="notes">Anything else</label><textarea id="notes" rows="2" placeholder="Awards, guarantees, 24/7 service, financing offered…"></textarea></div>
+
+    <label>Package</label>
+    <div class="pkg-row" id="pkgRow">
+      <button class="pkg sel" data-pkg="starter"><div class="p-name">Starter</div><div class="p-price">$1,000</div><div class="p-scope">Lead-gen one-pager</div></button>
+      <button class="pkg" data-pkg="growth"><div class="p-name">Growth</div><div class="p-price">$2,500</div><div class="p-scope">Full lead system</div></button>
+      <button class="pkg" data-pkg="authority"><div class="p-name">Authority</div><div class="p-price">$5,000+</div><div class="p-scope">Market dominance</div></button>
+    </div>
+
+    <button class="build-btn" id="buildBtn" onclick="runPipeline()">▶ &nbsp;Forge Website</button>
+
+    <div class="stages">
+      <div class="section-label">Pipeline</div>
+      <div class="stage" id="st1"><div class="s-dot">1</div><div><div class="s-name">Creative brief</div><div class="s-note" id="st1n">strategy, positioning, copy angles</div></div></div>
+      <div class="stage" id="st2"><div class="s-dot">2</div><div><div class="s-name">Design system</div><div class="s-note" id="st2n">palette, type, layout signature</div></div></div>
+      <div class="stage" id="st3"><div class="s-dot">3</div><div><div class="s-name">Build</div><div class="s-note" id="st3n">full site, streamed live</div></div></div>
+      <div class="stage" id="st4"><div class="s-dot">4</div><div><div class="s-name">Compliance QA</div><div class="s-note" id="st4n">legal, accessibility, SEO audit</div></div></div>
+    </div>
+
+    <div class="audit" id="auditBox">
+      <div class="section-label">Compliance Report</div>
+      <div id="auditList"></div>
+    </div>
+  </aside>
+
+  <!-- STAGE AREA -->
+  <main class="stage-area">
+    <div class="toolbar">
+      <button class="tab on" id="tabPreview" onclick="showTab('preview')">Preview</button>
+      <button class="tab" id="tabCode" onclick="showTab('code')">Code</button>
+      <button class="act" id="editBtn" onclick="toggleEditMode()" title="Click any section in the preview to target it for revision">✎ Click-to-Edit: Off</button>
+      <div class="dev-toggle">
+        <button class="dev on" id="devDesktop" onclick="setDevice('desktop')">Desktop</button>
+        <button class="dev" id="devMobile" onclick="setDevice('mobile')">Mobile 390</button>
+      </div>
+      <button class="act" onclick="saveTemplate()">★ Save Template</button>
+      <button class="act" onclick="copyCode()">Copy HTML</button>
+      <button class="act primary" onclick="downloadSite()">Download Site</button>
+    </div>
+
+    <div class="empty" id="emptyState">
+      <div class="e-mark"><div></div></div>
+      <h2>READY TO FORGE</h2>
+      <p>Fill in the client intake and hit <strong>Forge Website</strong>. The agent runs the full Akira pipeline — brief, design system, build, and compliance QA — and streams the site into this canvas as it's written.</p>
+    </div>
+
+    <div class="canvas" id="previewCanvas" style="display:none">
+      <div class="frame-wrap" id="frameWrap"><iframe id="previewFrame" title="Generated website preview"></iframe></div>
+    </div>
+
+    <div class="code-view" id="codeView"><pre id="codePre"></pre></div>
+
+    <div class="rev-bar" id="revBar">
+      <span class="target-chip" id="targetChip" style="display:none"><span id="targetLabel"></span><button onclick="clearTarget()" aria-label="Clear target">✕</button></span>
+      <input id="revInput" placeholder='Request a revision — e.g. "make the hero darker, add a financing section, swap headline to…"' onkeydown="if(event.key==='Enter')runRevision()">
+      <button class="act primary" onclick="runRevision()">Revise</button>
+    </div>
+
+    <div class="console" id="consoleLine">idle — awaiting intake</div>
+  </main>
+</div>
+
+<!-- KEY MODAL -->
+<div class="modal-bg" id="keyModal">
+  <div class="modal">
+    <h3>Anthropic API Key</h3>
+    <p>Stored locally in this browser as <code style="font-family:var(--mono);color:var(--gold)">akira_akey</code> — the same key your other command center agents use. It is never sent anywhere except directly to the Anthropic API.</p>
+    <input id="keyInput" type="password" placeholder="sk-ant-…">
+    <div class="row">
+      <button class="act primary" style="flex:1" onclick="saveKey()">Save key</button>
+      <button class="act" onclick="closeKeyModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ STATE & KEY ============ */
+const $ = id => document.getElementById(id);
+let siteHTML = '', brief = null, selectedPkg = 'starter', building = false;
+
+function getKey(){ return localStorage.getItem('akira_akey') || ''; }
+function refreshKeyUI(){
+  const k = getKey();
+  $('keyDot').classList.toggle('on', !!k);
+  $('keyLabel').textContent = k ? 'akira_akey · linked' : 'No API key';
+}
+function openKeyModal(){ $('keyInput').value = getKey(); $('keyModal').classList.add('show'); }
+function closeKeyModal(){ $('keyModal').classList.remove('show'); }
+function saveKey(){
+  const v = $('keyInput').value.trim();
+  if(v) localStorage.setItem('akira_akey', v); else localStorage.removeItem('akira_akey');
+  refreshKeyUI(); closeKeyModal(); toast(v ? 'Key saved' : 'Key removed');
+}
+refreshKeyUI();
+
+/* ============ MERCEDES BRIDGE (deep-link prefill) ============ */
+/* Link format: /akira-forge.html?biz=Name&industry=Plumber&city=Atlanta%2C+GA&phone=...&email=...&services=...&license=...&years=...&notes=...&pkg=growth&style=trade&ref=https%3A%2F%2Fsite.com&auto=1 */
+(function(){
+  const q = new URLSearchParams(location.search);
+  if(![...q.keys()].length) return;
+  setTimeout(()=>{
+    const map = {biz:'bizName', name:'bizName', city:'city', phone:'phone', email:'email', services:'services', license:'license', years:'yearFounded', notes:'notes', vibe:'vibe', ref:'refUrl'};
+    Object.keys(map).forEach(k=>{ if(q.get(k)) $(map[k]).value = q.get(k); });
+    if(q.get('industry')){
+      const want = q.get('industry').toLowerCase();
+      const opt = [...document.querySelectorAll('#industry option')].find(o=>o.value.toLowerCase()===want || o.textContent.toLowerCase().includes(want));
+      if(opt){ $('industry').value = opt.value; renderPhotoGrid(); }
+    }
+    if(q.get('pkg') && document.querySelector('.pkg[data-pkg="'+q.get('pkg')+'"]')) document.querySelector('.pkg[data-pkg="'+q.get('pkg')+'"]').click();
+    if(q.get('style') && document.querySelector('.style-card[data-style="'+q.get('style')+'"]')) document.querySelector('.style-card[data-style="'+q.get('style')+'"]').click();
+    log('lead loaded from link — '+($('bizName').value||'unnamed'));
+    if(q.get('auto')==='1'){
+      setTimeout(()=>{ if(getKey()) runPipeline(); else openKeyModal(); }, 500);
+    }
+  }, 0);
+})();
+
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2400); }
+function log(msg, red){ $('consoleLine').innerHTML = red ? `<span class="c-red">${msg}</span>` : msg; }
+
+/* ============ PACKAGE PICKER ============ */
+document.querySelectorAll('.pkg').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.pkg').forEach(x=>x.classList.remove('sel'));
+  b.classList.add('sel'); selectedPkg = b.dataset.pkg;
+}));
+
+/* ============ DESIGN MARKET ============ */
+let selectedStyle = 'agent';
+const STYLE_BRIEFS = {
+  agent:   `Choose the strongest high-end design direction for this specific industry and client yourself — Showit-template quality, never generic.`,
+  luxe:    `LUXE EDITORIAL: warm cream/ivory canvas, near-black ink text, oversized elegant serif display type (Fraunces/Playfair class), italic accents, generous whitespace, hairline rules, overlapping image frames, magazine-style layout. The look of a premium Showit template for a high-end personal brand.`,
+  bold:    `BOLD IMPACT: near-black canvas, massive tight-tracked grotesque display type, one electric accent (acid green, vermilion, or electric blue — pick what fits the brand), hard edges, big numbers, confident and loud. Streetwear-editorial energy.`,
+  moody:   `DARK & MOODY: deep charcoal/espresso tones, champagne gold or brass accents, refined serif display, candlelit atmosphere, subtle grain/texture via CSS, dramatic and intimate. Perfect for nightlife, tattoo, barbershops, upscale studios.`,
+  organic: `WARM ORGANIC: sand, clay, terracotta, sage palette; soft rounded corners; humanist serif + clean sans pairing; breathing room; hand-crafted warmth. Perfect for spas, yoga, wellness, holistic health.`,
+  clinical:`CLEAN CLINICAL: crisp white canvas, one calm medical teal/blue accent, precise grid, generous whitespace, rounded-but-professional components, high trust and clarity. Perfect for dental, health, therapy, insurance.`,
+  vibrant: `VIBRANT CREATIVE: fearless color-blocking (2-3 saturated hues), playful oversized type with personality, asymmetric layout, marquee/scroll energy, expressive. Perfect for makeup artists, DJs, designers, dance, creatives.`,
+  airy:    `COASTAL AIRY: soft whites and pale blues/blush, light elegant serif, thin letterspaced caps for labels, floating cards, romantic and light-filled. Perfect for wedding venues, event spaces, photographers.`,
+  trade:   `TRADE STRONG: deep navy or graphite base, one safety-bright accent (amber/orange), sturdy bold sans display, strong grid, badge-style trust elements, dependable and premium. Perfect for home services and contractors.`
+};
+document.querySelectorAll('.style-card').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.style-card').forEach(x=>x.classList.remove('sel'));
+  b.classList.add('sel'); selectedStyle = b.dataset.style;
+}));
+
+/* ============ TABS / DEVICE ============ */
+function showTab(t){
+  $('tabPreview').classList.toggle('on', t==='preview');
+  $('tabCode').classList.toggle('on', t==='code');
+  const hasContent = !!siteHTML || building;
+  $('previewCanvas').style.display = (t==='preview' && hasContent) ? 'flex' : 'none';
+  $('codeView').style.display = t==='code' ? 'block' : 'none';
+  $('emptyState').style.display = (t==='preview' && !hasContent) ? 'flex' : 'none';
+  if(t==='code') $('codePre').textContent = siteHTML || '// nothing built yet';
+}
+function setDevice(d){
+  $('devDesktop').classList.toggle('on', d==='desktop');
+  $('devMobile').classList.toggle('on', d==='mobile');
+  $('frameWrap').classList.toggle('mobile', d==='mobile');
+}
+
+/* ============ AKIRA STANDARDS (embedded agency spec) ============ */
+const PKG_SPEC = {
+  starter: `STARTER PACKAGE ($1,000) — high-converting single-page lead-gen site with these sections: sticky nav with click-to-call, hero with lead capture form ABOVE THE FOLD, trust bar (licensed/insured/reviews/years), problem→solution block, top 3-4 services, why-choose-us, social proof/testimonials, service area, final CTA, compliant footer.`,
+  growth: `GROWTH PACKAGE ($2,500) — everything in Starter PLUS: expanded services section (5-6 services each with detail), a dedicated process/how-it-works section, an FAQ section with 5-6 real questions for this industry, a reviews section with 3+ testimonials, a Google-Maps-style service area block, and a secondary lead capture form mid-page. Include a Google Analytics 4 placeholder comment and call-tracking-ready tel: links.`,
+  authority: `AUTHORITY PACKAGE ($5,000+) — premium market-dominance build. Everything in Growth PLUS: an authority-positioning hero (bolder, editorial), an about/team section, a results/case-study style stats section, an awards/credentials strip, a resources/insights teaser section, and richer micro-interactions. The design should feel like the most expensive site in this business's local market.`
+};
+
+const INDUSTRY_COMPLIANCE = (industry) => {
+  const i = industry.toLowerCase();
+  if(i.includes('law')||i.includes('attorney')) return `LAW FIRM COMPLIANCE (required): a clearly visible "ATTORNEY ADVERTISING" notice; a disclaimer that site content is general information and not legal advice; a statement that contacting the firm or submitting the form does NOT create an attorney-client relationship and confidential information should not be sent until a relationship is established; a "prior results do not guarantee a similar outcome" disclaimer near any results/testimonials.`;
+  if(i.includes('dental')||i.includes('chiro')||i.includes('med spa')||i.includes('therapist')||i.includes('counselor')||i.includes('holistic')||i.includes('nutrition')) return `HEALTH COMPLIANCE (required): a disclaimer that content is not medical advice and does not replace professional consultation; a note on the contact form telling visitors NOT to submit personal health information through the form; testimonial disclaimer that results vary. For therapists/counselors: a crisis note directing emergencies to 911 or the 988 lifeline; confidentiality-limits language. For med spas: treatments performed by/under supervision of licensed providers; individual results vary.`;
+  if(i.includes('spa')||i.includes('salon')||i.includes('barber')||i.includes('lash')||i.includes('brow')||i.includes('waxing')||i.includes('massage')||i.includes('esthetic')||i.includes('makeup')||i.includes('trainer')||i.includes('yoga')||i.includes('pilates')) return `BEAUTY & WELLNESS COMPLIANCE (required): display state license/certification if provided (cosmetology, massage, esthetics); "results vary by individual" near before/after or testimonial content; sanitation/hygiene trust language; clear cancellation/booking policy blurb; for fitness — a consult-your-physician-before-starting disclaimer.`;
+  if(i.includes('music')||i.includes('dj')||i.includes('record')||i.includes('photograph')||i.includes('video')||i.includes('design')||i.includes('tattoo')||i.includes('art')||i.includes('dance')) return `CREATIVE COMPLIANCE (required): a © copyright notice covering all portfolio work, photos, and media on the site; booking/inquiry form (event date, type, budget range) instead of a generic quote form; for tattoo — must be 18+ with valid ID, licensed studio, aftercare mention; for studios with clients on premises — liability waiver mention for sessions.`;
+  if(i.includes('venue')||i.includes('banquet')||i.includes('nightclub')||i.includes('catering')||i.includes('event')||i.includes('party')||i.includes('photo booth')||i.includes('wedding')) return `VENUE & EVENTS COMPLIANCE (required): an event inquiry form (event date, guest count, event type, budget); capacity and ADA accessibility statement; for nightclubs/bars — 21+ age notice and "drink responsibly" language; catering — food handling/health permit trust language; deposit/booking policy blurb.`;
+  if(i.includes('auto')) return `AUTO REPAIR COMPLIANCE (required): written-estimate-before-work language; display ASE certification / warranty on parts & labor if provided; license number in footer.`;
+  if(i.includes('insurance')) return `INSURANCE COMPLIANCE (required): licensed agent/agency number displayed; disclaimer that content is general information, not a policy contract or financial advice, and coverage is subject to policy terms; state licensing statement.`;
+  return `HOME SERVICES COMPLIANCE (required): display the license number prominently in the footer and trust bar (if provided); "Licensed · Bonded · Insured" trust language; clear service-area statement; free-estimate framing on the lead form.`;
+};
+
+const UNIVERSAL_COMPLIANCE = `UNIVERSAL COMPLIANCE (all sites, non-negotiable):
+- Working in-page PRIVACY POLICY and TERMS OF SERVICE: implement as accessible overlay modals opened from footer links, with real, complete, plain-English content tailored to this business (data collected via the form, how it's used, contact for requests, CCPA-aware language for US visitors). Modals must close with Escape and a visible close button.
+- Cookie/consent notice: a small dismissible banner noting the site uses basic analytics cookies, with an "Accept" button; remember dismissal in localStorage.
+- Footer: © current year business name, privacy + terms links, phone, email, service area, license # if provided.
+- ACCESSIBILITY — WCAG 2.1 AA: semantic landmarks (header/nav/main/footer), one h1, logical heading order, a skip-to-content link, visible :focus-visible outlines, all form inputs with <label>, alt text on every img, color contrast ≥ 4.5:1 for body text, prefers-reduced-motion respected, aria-labels on icon-only buttons.
+- SEO: unique <title> (business + service + city), meta description ≤ 155 chars, canonical placeholder, full Open Graph + Twitter card tags, and a JSON-LD LocalBusiness (or Attorney/Dentist etc.) schema block with name, phone, address locality, geo area, opening hours placeholder, and sameAs placeholders.
+- Lead form: name, phone, email, service needed (select), message; action set to the placeholder "https://formspree.io/f/REPLACE_FORM_ID" with method POST and a clear HTML comment telling the developer to swap in the real form endpoint; client-side required validation; a thank-you state.
+- Every phone number is a tel: link. On mobile show a fixed click-to-call bar.
+- Performance: single file, system-loaded Google Fonts only (max 2 families), inline SVG icons only, NO external JS libraries, NO stock photo hotlinks — use CSS gradients/shapes/inline SVG for visuals. Must be fast.`;
+
+/* ============ DESIGN INTELLIGENCE (UI/UX Pro Max layer) ============ */
+const DESIGN_INTEL = `DESIGN INTELLIGENCE — HARD RULES. AI-generated sites share obvious tells. This site must have NONE of them.
+
+BANNED (never use any of these):
+- Purple-to-blue or indigo-violet gradients (#667eea→#764ba2 and anything near it); any gradient text on headlines
+- Inter, Poppins, Montserrat, Roboto, Open Sans, or Lato as the display font (Inter is allowed for small UI labels only)
+- Emoji used as feature/service icons — use consistent inline SVG stroke icons instead
+- The default AI hero: centered headline + one-line subtext + two pill buttons floating in empty space
+- Three identical soft-shadow rounded cards in a row for "features"
+- Uniform 8-16px border-radius on every element; glassmorphism/frosted panels; floating blob shapes
+- Placeholder-gray boxes with no art direction; lorem ipsum; generic stock phrases ("Welcome to", "We are committed to excellence", "Look no further", "Elevate your")
+- The same section rhythm repeated: centered heading → paragraph → grid of cards, over and over
+
+REQUIRED CRAFT (what real designers do):
+- A type scale with real contrast: display moments at clamp(3rem,8vw,7rem), tight leading (0.95-1.05) and slight negative tracking on big serifs/grotesques; body at 1rem-1.125rem with 1.6-1.7 leading
+- Layout variety: alternate section anatomies — split 40/60, offset asymmetric grid, full-bleed band, sticky-side layout, editorial two-column with a pull quote. No two adjacent sections share the same structure
+- An opinionated grid with intentional misalignment somewhere (an overlapping image frame, a headline that crosses a boundary, a number that bleeds off-edge)
+- Texture and depth without gradients-as-decoration: solid color blocks, duotone frames, thin keylines (1px), oversized ghost numerals, letterspaced microcaps eyebrows, generous asymmetric whitespace
+- One accent color doing one job (CTAs); neutrals carry the design; dark sections use warm/tinted darks (#141210, #12263A) never pure #000 walls with white text everywhere
+- Buttons look designed: squared or slightly-rounded (2-6px) or fully editorial underline-links — not default pills; hover states change something meaningful
+- Icons: one consistent stroke-width inline SVG set, 1.5px stroke, currentColor
+
+CURATED FONT PAIRINGS (Google Fonts — pick ONE pairing that fits the brief, or something equally characterful):
+- Fraunces (display) + Outfit — luxe editorial, spas, beauty
+- Cormorant Garamond + Karla — romantic, weddings, venues, photographers
+- DM Serif Display + Manrope — upscale professional, law, med spa
+- Libre Caslon Text + Work Sans — heritage trust, law firms, insurance
+- Sora + IBM Plex Sans — precise modern, dental, clinical, tech-forward trades
+- Syne + Epilogue — creatives, DJs, designers, dance
+- Unbounded + Space Grotesk — loud impact, nightlife, music venues
+- Bricolage Grotesque + Instrument Sans — contemporary editorial, barbershops, tattoo
+- Archivo Black + Archivo — sturdy trade strength, contractors, roofing, auto
+- Playfair Display + Public Sans — classic authority, banquet halls, catering
+
+PALETTE DISCIPLINE: 1 dominant neutral family (3-4 tints), 1 deep anchor, 1 accent. Derive hues from the trade's real world (copper pipes, courtroom walnut, sage + linen, ink + neon signage, terracotta + brass) — never from "startup" defaults.`;
+
+const BUILD_STANDARDS = `AKIRA DIGITAL BUILD STANDARDS — the bar is a premium Showit template: editorial, designed, unmistakably custom. Never a bootstrap-looking template:
+- SHOWIT-GRADE DESIGN LANGUAGE: oversized display typography as a design element (hero type can be 15-20% of viewport height), intentional type pairing (characterful display + clean body), layered/overlapping elements (text over image frames, offset cards, elements that break the grid), generous whitespace, thin letterspaced uppercase eyebrow labels, hairline dividers, and one signature visual moment the visitor remembers.
+- IMAGERY: if a PHOTO MANIFEST is provided, use those real photos as directed. Otherwise no external images — build rich visual texture with CSS — gradient meshes, duotone-style image frames as styled placeholder blocks with descriptive labels (e.g. "TEAM PHOTO — swap at launch") so real photos drop in cleanly, inline SVG marks and patterns.
+- Mobile-first responsive, flawless at 390px and 1440px — mobile must feel intentionally designed, not shrunk (Showit-style separate mobile consideration): stacked hero, thumb-reach CTAs, fixed call bar.
+- Above-the-fold lead capture on desktop; on mobile, hero CTA buttons (call + form anchor) above the fold.
+- Conversion psychology: urgency without sleaze, social proof, risk reversal (guarantee language if provided), single dominant CTA color used ONLY for CTAs.
+- Real, specific copy for THIS business and city — no lorem ipsum, no placeholder text, no "[Business Name]" tokens. Write like a senior conversion copywriter for local search intent.
+- Tasteful motion: scroll-reveal via IntersectionObserver, subtle parallax or marquee only if it fits the style, hover micro-interactions; all gated behind prefers-reduced-motion.
+- Output raw HTML only. Start with <!DOCTYPE html>. No markdown fences, no commentary.`;
+
+/* ============ API ============ */
+const API = 'https://api.anthropic.com/v1/messages';
+function headers(){
+  return {'content-type':'application/json','x-api-key':getKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'};
+}
+async function callClaude(prompt, maxTokens){
+  const r = await fetch(API,{method:'POST',headers:headers(),body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:maxTokens||4000,messages:[{role:'user',content:prompt}]})});
+  if(!r.ok){ const e = await r.text(); throw new Error('API '+r.status+': '+e.slice(0,200)); }
+  const d = await r.json();
+  return d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+}
+async function streamClaude(prompt, maxTokens, onDelta){
+  const r = await fetch(API,{method:'POST',headers:headers(),body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:maxTokens,stream:true,messages:[{role:'user',content:prompt}]})});
+  if(!r.ok){ const e = await r.text(); throw new Error('API '+r.status+': '+e.slice(0,200)); }
+  const reader = r.body.getReader(); const dec = new TextDecoder();
+  let buf='', full='';
+  function handleLine(line){
+    if(!line.startsWith('data: ')) return;
+    const payload = line.slice(6); if(payload==='[DONE]') return;
+    try{
+      const j = JSON.parse(payload);
+      if(j.type==='content_block_delta' && j.delta && j.delta.text){ full += j.delta.text; onDelta(full); }
+    }catch(e){}
+  }
+  while(true){
+    const {done,value} = await reader.read(); if(done) break;
+    buf += dec.decode(value,{stream:true});
+    const lines = buf.split('\n'); buf = lines.pop();
+    for(const line of lines) handleLine(line);
+  }
+  if(buf) handleLine(buf);
+  return full;
+}
+function stripFences(s){
+  s = s.trim();
+  if(s.startsWith('```')){ s = s.replace(/^```[a-z]*\n?/,'').replace(/\n?```\s*$/,''); }
+  const idx = s.indexOf('<!DOCTYPE'); if(idx>0) s = s.slice(idx);
+  const end = s.lastIndexOf('</html>'); if(end>-1) s = s.slice(0, end+7);
+  return s.trim();
+}
+function parseJSONLoose(s){
+  s = s.trim().replace(/^```json\n?/,'').replace(/^```\n?/,'').replace(/\n?```$/,'');
+  const oa = s.indexOf('['), ob = s.indexOf('{');
+  if(oa !== -1 && (ob === -1 || oa < ob)) return JSON.parse(s.slice(oa, s.lastIndexOf(']')+1));
+  return JSON.parse(s.slice(ob, s.lastIndexOf('}')+1));
+}
+
+const STOCK_PHOTOS = [
+  {id:"s0",g:"home",l:"Plumber working under sink",u:"https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s1",g:"home",l:"Pipe wrench and fittings",u:"https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s2",g:"home",l:"Modern home exterior",u:"https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s3",g:"home",l:"Craftsman house exterior",u:"https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s4",g:"home",l:"Construction framing crew",u:"https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s5",g:"home",l:"Contractor on site",u:"https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s6",g:"home",l:"Electrician at panel",u:"https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s7",g:"home",l:"HVAC technician",u:"https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s8",g:"home",l:"Industrial equipment detail",u:"https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s9",g:"home",l:"Fresh cut lawn",u:"https://images.unsplash.com/photo-1558904541-efa843a96f01?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s10",g:"home",l:"Garden landscaping",u:"https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s11",g:"home",l:"Cleaning service in action",u:"https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s12",g:"home",l:"Paint roller on wall",u:"https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s13",g:"home",l:"Backyard pool",u:"https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s14",g:"home",l:"Toolbelt closeup",u:"https://images.unsplash.com/photo-1530124566582-a618bc2615dc?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s15",g:"legal",l:"Gavel on desk",u:"https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s16",g:"legal",l:"Courthouse columns",u:"https://images.unsplash.com/photo-1505664194779-8beaceb93744?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s17",g:"legal",l:"Signing a contract",u:"https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s18",g:"legal",l:"Professional handshake",u:"https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s19",g:"legal",l:"Law books on shelf",u:"https://images.unsplash.com/photo-1589994965851-a8f479c573a9?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s20",g:"legal",l:"Attorney meeting client",u:"https://images.unsplash.com/photo-1556157382-97eda2d62296?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s21",g:"health",l:"Dentist with patient",u:"https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s22",g:"health",l:"Dental clinic chair",u:"https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s23",g:"health",l:"Bright medical office",u:"https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s24",g:"health",l:"Chiropractic adjustment",u:"https://images.unsplash.com/photo-1573883431205-98b5f10aaedb?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s25",g:"beauty",l:"Hot stone massage",u:"https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s26",g:"beauty",l:"Spa treatment room",u:"https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s27",g:"beauty",l:"Salon interior",u:"https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s28",g:"beauty",l:"Hair styling",u:"https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s29",g:"beauty",l:"Barber at work",u:"https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s30",g:"beauty",l:"Barbershop chair",u:"https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s31",g:"beauty",l:"Manicure detail",u:"https://images.unsplash.com/photo-1604654894610-df63bc536371?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s32",g:"beauty",l:"Makeup application",u:"https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s33",g:"beauty",l:"Yoga class",u:"https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s34",g:"beauty",l:"Gym training",u:"https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s35",g:"beauty",l:"Massage therapy",u:"https://images.unsplash.com/photo-1600334129128-685c5582fd35?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s36",g:"beauty",l:"Lash extension closeup",u:"https://images.unsplash.com/photo-1583001931096-959e9a1a6223?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s37",g:"creative",l:"Recording studio console",u:"https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s38",g:"creative",l:"Piano keys moody",u:"https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s39",g:"creative",l:"DJ at festival",u:"https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s40",g:"creative",l:"Concert crowd",u:"https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s41",g:"creative",l:"Event stage lights",u:"https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s42",g:"creative",l:"Photographer with camera",u:"https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s43",g:"creative",l:"Tattoo artist working",u:"https://images.unsplash.com/photo-1565058379802-bbe93b2f703a?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s44",g:"creative",l:"Dancer in studio",u:"https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s45",g:"creative",l:"Microphone stage",u:"https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s46",g:"venue",l:"Wedding reception venue",u:"https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s47",g:"venue",l:"Outdoor wedding arch",u:"https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s48",g:"venue",l:"Elegant table setting",u:"https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s49",g:"venue",l:"Banquet hall dinner",u:"https://images.unsplash.com/photo-1555244162-803834f70033?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s50",g:"venue",l:"Fine dining plating",u:"https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s51",g:"venue",l:"Nightclub crowd",u:"https://images.unsplash.com/photo-1566737236500-c8ac43014a67?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s52",g:"venue",l:"Champagne toast",u:"https://images.unsplash.com/photo-1527529482837-4698179dc6ce?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s53",g:"venue",l:"Event chandelier ballroom",u:"https://images.unsplash.com/photo-1505236858219-8359eb29e329?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s54",g:"other",l:"Mechanic under hood",u:"https://images.unsplash.com/photo-1487754180451-c456f719a1fc?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s55",g:"other",l:"Classic car detail",u:"https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s56",g:"other",l:"Modern office space",u:"https://images.unsplash.com/photo-1497366216548-37526070297c?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s57",g:"other",l:"Business meeting",u:"https://images.unsplash.com/photo-1556761175-b413da4baf72?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s58",g:"universal",l:"Team collaboration",u:"https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s59",g:"universal",l:"City skyline dusk",u:"https://images.unsplash.com/photo-1444723121867-7a241cacace9?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s60",g:"universal",l:"Handshake deal",u:"https://images.unsplash.com/photo-1560250097-0b93528c311a?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s61",g:"universal",l:"Five star review phone",u:"https://images.unsplash.com/photo-1512428559087-560fa5ceab42?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s62",g:"universal",l:"Storefront open sign",u:"https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1600&q=80&auto=format&fit=crop"},
+  {id:"s63",g:"universal",l:"Los Angeles palms",u:"https://images.unsplash.com/photo-1515896769750-31548aa180ed?w=1600&q=80&auto=format&fit=crop"},
+];
+
+/* ============ PHOTO LIBRARY ENGINE ============ */
+let UPLOADS = [];            // {id,l,u(dataURL)}
+let selectedPhotos = [];     // ordered array of photo ids -> {{PHOTO_n}} tokens
+const MAX_PHOTOS = 12;
+
+function industryGroup(){
+  const i = $('industry').value.toLowerCase();
+  if(/law|attorney/.test(i)) return 'legal';
+  if(/dental|chiro|med spa/.test(i)) return 'health';
+  if(/spa|salon|barber|lash|brow|waxing|massage|esthet|makeup|trainer|yoga|pilates|therapist|counselor|holistic|nutrition/.test(i)) return 'beauty';
+  if(/music|dj|record|photograph|video|design|tattoo|art|dance/.test(i)) return 'creative';
+  if(/venue|banquet|nightclub|catering|event|party|photo booth|wedding/.test(i)) return 'venue';
+  if(/auto|insurance/.test(i)) return 'other';
+  return 'home';
+}
+function getPhoto(id){ return STOCK_PHOTOS.find(p=>p.id===id) || UPLOADS.find(p=>p.id===id); }
+function togglePhoto(id){
+  const k = selectedPhotos.indexOf(id);
+  if(k>-1) selectedPhotos.splice(k,1);
+  else{
+    if(selectedPhotos.length>=MAX_PHOTOS){ toast('Max '+MAX_PHOTOS+' photos per site'); return; }
+    selectedPhotos.push(id);
+  }
+  renderPhotoGrid();
+}
+function renderPhotoGrid(){
+  const f = $('photoFilter').value;
+  let list;
+  if(f==='uploads') list = UPLOADS;
+  else if(f==='all') list = STOCK_PHOTOS;
+  else if(f==='auto'){ const g = industryGroup(); list = STOCK_PHOTOS.filter(p=>p.g===g||p.g==='universal'); }
+  else list = STOCK_PHOTOS.filter(p=>p.g===f);
+  // uploads always pinned first when not viewing a specific stock group
+  if(f==='auto'||f==='all') list = UPLOADS.concat(list);
+  // selected photos are always visible, pinned to the front in selection order
+  const pinned = selectedPhotos.map(getPhoto).filter(Boolean).filter(p=>!list.includes(p));
+  list = pinned.concat(list);
+  const grid = $('photoGrid'); grid.innerHTML='';
+  list.forEach(p=>{
+    const b = document.createElement('button');
+    b.className = 'ph' + (selectedPhotos.includes(p.id)?' sel':'');
+    b.style.backgroundImage = "url('"+p.u+"')";
+    b.title = p.l; b.setAttribute('aria-label','Select photo: '+p.l);
+    const n = selectedPhotos.indexOf(p.id);
+    if(n>-1) b.innerHTML = '<span class="ph-badge">'+(n+1)+'</span>';
+    if(p.id[0]==='u') b.innerHTML += '<span class="ph-up">CLIENT</span>';
+    b.onclick = ()=>togglePhoto(p.id);
+    b.ondblclick = ()=>{ if(p.id[0]==='u'){ const nl = prompt('Describe this photo (the agent uses this to place it well):', p.l); if(nl){ p.l = nl.trim(); renderPhotoGrid(); } } };
+    grid.appendChild(b);
+  });
+  $('photoCount').innerHTML = selectedPhotos.length
+    ? '<b>'+selectedPhotos.length+' selected</b> — they become {{PHOTO_1}}…{{PHOTO_'+selectedPhotos.length+'}} in the build. Double-click an upload to describe it.'
+    : 'No photos selected — the agent will use styled placeholder frames instead.';
+}
+$('industry').addEventListener('change', ()=>{ if($('photoFilter').value==='auto') renderPhotoGrid(); });
+
+function handleUploads(files){
+  Array.from(files).forEach(file=>{
+    if(!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = e=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const MAXW = 1600;
+        const scale = Math.min(1, MAXW/img.width);
+        const cv = document.createElement('canvas');
+        cv.width = Math.round(img.width*scale); cv.height = Math.round(img.height*scale);
+        cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+        const data = cv.toDataURL('image/jpeg',0.82);
+        const id = 'u'+Date.now()+Math.floor(Math.random()*999);
+        UPLOADS.unshift({id, l: file.name.replace(/\.[a-z]+$/i,'').replace(/[-_]/g,' '), u:data});
+        if(selectedPhotos.length<MAX_PHOTOS) selectedPhotos.push(id);
+        renderPhotoGrid();
+        toast('Photo added ('+(data.length/1024|0)+' KB embedded) — double-click it to describe it');
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+  $('photoUpload').value='';
+}
+renderPhotoGrid();
+
+/* token expansion: prompts & internal siteHTML keep short {{PHOTO_n}} tokens; previews & downloads get real images */
+function expandPhotos(html){
+  selectedPhotos.forEach((id,i)=>{
+    const p = getPhoto(id); if(!p) return;
+    html = html.split('{{PHOTO_'+(i+1)+'}}').join(p.u);
+  });
+  return html;
+}
+function photoManifest(){
+  if(!selectedPhotos.length) return '';
+  const lines = selectedPhotos.map((id,i)=>{
+    const p = getPhoto(id);
+    return '{{PHOTO_'+(i+1)+'}} — "'+p.l+'"'+(id[0]==='u'?' (client-provided photo)':' (professional stock)');
+  }).join('\n');
+  return '\n\nPHOTO MANIFEST — real photography for this site. Reference images ONLY via these exact tokens as the src value (e.g. <img src="{{PHOTO_1}}" alt="...">) or in CSS (background-image:url(\'{{PHOTO_2}}\')). Never invent any other image URL. Rules: write descriptive alt text based on each photo\'s description; art-direct every photo (duotone/tint overlays, editorial crops via object-fit and aspect-ratio frames, overlap with type) so they feel designed, not dropped in; use the client-provided photos in the most prominent positions (hero, about); loading="lazy" on below-fold images. Use every photo in the manifest exactly once unless it clearly doesn\'t fit.\n' + lines;
+}
+
+/* ============ CLICK-TO-EDIT (Showit-style design freedom) ============ */
+let editMode = false, pickedTarget = null;
+const PICKER_SCRIPT = `<script>(function(){
+var on=false;
+function secs(){var out=[];Array.prototype.slice.call(document.body.children).forEach(function(el){if(/SCRIPT|STYLE|LINK/.test(el.tagName))return;if(el.tagName==='MAIN'){Array.prototype.slice.call(el.children).forEach(function(c){if(!/SCRIPT|STYLE|LINK/.test(c.tagName))out.push(c);});}else{out.push(el);}});return out;}
+function clearOutlines(){secs().forEach(function(el){el.style.outline='';el.style.outlineOffset='';});}
+function hit(node){var list=secs();while(node&&node!==document.body){if(list.indexOf(node)>-1)return node;node=node.parentElement;}return null;}
+window.addEventListener('message',function(e){if(e.data&&typeof e.data.__akiraMode!=='undefined'){on=!!e.data.__akiraMode;document.body.style.cursor=on?'crosshair':'';if(!on)clearOutlines();}});
+document.addEventListener('mouseover',function(e){if(!on)return;var t=hit(e.target);clearOutlines();if(t){t.style.outline='2px solid #E5484D';t.style.outlineOffset='-2px';}},true);
+document.addEventListener('click',function(e){if(!on)return;e.preventDefault();e.stopPropagation();var t=hit(e.target);if(!t)return;var list=secs();var h=t.querySelector('h1,h2,h3,h4');var label=h?h.textContent.trim().slice(0,42):(t.getAttribute('aria-label')||t.id||t.tagName.toLowerCase());parent.postMessage({__akiraPick:1,index:list.indexOf(t),label:label,snippet:t.outerHTML.slice(0,400)},'*');},true);
+})();<\/script>`;
+
+function renderPreview(html){
+  const frame = $('previewFrame');
+  html = expandPhotos(html);
+  const i = html.lastIndexOf('</body>');
+  frame.srcdoc = i > -1 ? html.slice(0,i) + PICKER_SCRIPT + html.slice(i) : html + PICKER_SCRIPT;
+  frame.onload = () => { try{ frame.contentWindow.postMessage({__akiraMode: editMode}, '*'); }catch(e){} };
+}
+function toggleEditMode(){
+  if(!siteHTML){ toast('Forge a site first, then click any section to edit it'); return; }
+  editMode = !editMode;
+  const b = $('editBtn');
+  b.textContent = '✎ Click-to-Edit: ' + (editMode ? 'On' : 'Off');
+  b.classList.toggle('editing', editMode);
+  try{ $('previewFrame').contentWindow.postMessage({__akiraMode: editMode}, '*'); }catch(e){}
+  if(editMode){ showTab('preview'); toast('Click any section in the preview to target it'); }
+  else clearTarget();
+}
+window.addEventListener('message', (e)=>{
+  if(e.data && e.data.__akiraPick){
+    pickedTarget = e.data;
+    $('targetLabel').textContent = '🎯 ' + (pickedTarget.label || 'section');
+    $('targetChip').style.display = 'flex';
+    $('revInput').focus();
+  }
+});
+function clearTarget(){ pickedTarget = null; $('targetChip').style.display = 'none'; }
+
+/* ============ TEMPLATE LIBRARY ENGINE ============ */
+const TPL_KEY = 'akira_forge_templates';
+let selectedTemplate = null;
+function loadTemplates(){ try{ return JSON.parse(localStorage.getItem(TPL_KEY)) || []; }catch(e){ return []; } }
+function storeTemplates(a){ try{ localStorage.setItem(TPL_KEY, JSON.stringify(a)); return true; }catch(e){ toast('Template storage full — delete an old one'); return false; } }
+
+function extractStructure(html){
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const flow = [];
+  [...doc.body.children].forEach(el=>{
+    if(/SCRIPT|STYLE|LINK/.test(el.tagName)) return;
+    if(el.tagName==='MAIN'){ [...el.children].forEach(c=>{ if(!/SCRIPT|STYLE|LINK/.test(c.tagName)) flow.push(secLabel(c)); }); }
+    else flow.push(secLabel(el));
+  });
+  function secLabel(el){
+    const h = el.querySelector('h1,h2,h3,h4');
+    const base = el.tagName.toLowerCase() + (el.id ? '#'+el.id : '');
+    return h ? base + ' — "' + h.textContent.trim().slice(0,50) + '"' : base;
+  }
+  const nav = [...doc.querySelectorAll('nav a')].map(a=>a.textContent.trim()).filter(Boolean).slice(0,10);
+  return {sectionFlow: flow, navItems: nav};
+}
+
+function saveTemplate(){
+  if(!siteHTML || !brief){ toast('Forge a site first, then save it as a template'); return; }
+  const name = prompt('Template name:', ($('bizName').value.trim()||'Untitled') + ' — ' + $('industry').value);
+  if(!name) return;
+  const s = extractStructure(siteHTML);
+  const tpls = loadTemplates();
+  tpls.unshift({
+    id: 't'+Date.now(),
+    name: name.trim(),
+    industry: $('industry').value,
+    pkg: selectedPkg,
+    date: new Date().toISOString().slice(0,10),
+    sectionFlow: s.sectionFlow,
+    navItems: s.navItems,
+    designSystem: { palette: brief.palette, fonts: brief.fonts, designDirection: brief.designDirection, heroPattern: brief.heroHeadline ? 'hero led by: "'+brief.heroHeadline+'"' : '' }
+  });
+  if(tpls.length > 20) tpls.pop();
+  if(storeTemplates(tpls)){ renderTemplates(); toast('Saved to template library'); }
+}
+function deleteTemplate(id, ev){
+  ev.stopPropagation();
+  if(!confirm('Delete this template?')) return;
+  storeTemplates(loadTemplates().filter(t=>t.id!==id));
+  if(selectedTemplate===id) selectedTemplate=null;
+  renderTemplates();
+}
+function selectTemplate(id){
+  selectedTemplate = (selectedTemplate===id) ? null : id;
+  renderTemplates();
+  if(selectedTemplate) toast('Template locked in — the next forge replicates its structure');
+}
+function renderTemplates(){
+  const list = $('tplList'); list.innerHTML='';
+  const tpls = loadTemplates();
+  $('tplHint').style.display = tpls.length ? 'none' : 'block';
+  tpls.forEach(t=>{
+    const b = document.createElement('button');
+    b.className = 'tpl' + (selectedTemplate===t.id?' sel':'');
+    b.onclick = ()=>selectTemplate(t.id);
+    b.innerHTML = '<span class="t-star">★</span><span class="t-info"><span class="t-name">'+t.name+'</span><br><span class="t-meta">'+t.industry+' · '+t.pkg+' · '+t.date+' · '+t.sectionFlow.length+' sections</span></span>';
+    const del = document.createElement('button');
+    del.className='t-del'; del.textContent='✕'; del.setAttribute('aria-label','Delete template');
+    del.onclick = (ev)=>deleteTemplate(t.id, ev);
+    b.appendChild(del);
+    list.appendChild(b);
+  });
+}
+renderTemplates();
+
+/* ============ REFERENCE SITE ENGINE ============ */
+async function fetchReference(url){
+  if(!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  const readers = [
+    'https://r.jina.ai/' + url,
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(url)
+  ];
+  for(const r of readers){
+    try{
+      const res = await fetch(r, {signal: AbortSignal.timeout(20000)});
+      if(res.ok){
+        const txt = await res.text();
+        if(txt && txt.length > 200) return txt.slice(0, 16000);
+      }
+    }catch(e){}
+  }
+  return null;
+}
+async function analyzeReference(url, content){
+  const prompt = `You are Akira Digital's design analyst. A designer wants to replicate the STRUCTURE and FEEL of a reference website for a new client (with completely original copy). Here is the reference site (${url}) as extracted text/markdown:
+
+${content}
+
+Return ONLY a JSON object — the replication blueprint:
+{
+ "sectionFlow": ["ordered list of the page's sections as short labels, e.g. 'sticky nav', 'full-bleed hero with headline left', 'services 3-col', ..."],
+ "navItems": ["nav labels observed"],
+ "heroPattern": "one sentence: how the hero is constructed (alignment, media, CTA placement)",
+ "layoutNotes": "2-3 sentences on grid, density, whitespace, section rhythm and any signature layout moves",
+ "toneNotes": "2 sentences on copy voice and personality",
+ "paletteHints": "any colors/mood inferable from the content, or 'unknown'",
+ "typographyHints": "serif/sans character if inferable, or 'unknown'",
+ "conversionElements": ["forms, CTAs, trust elements, booking flows observed"]
+}`;
+  return parseJSONLoose(await callClaude(prompt, 1800));
+}
+
+/* ============ STAGE UI ============ */
+function setStage(n, state, note){
+  const el = $('st'+n);
+  el.classList.remove('active','done');
+  if(state) el.classList.add(state);
+  if(note) $('st'+n+'n').textContent = note;
+}
+function resetStages(){ [1,2,3,4].forEach(n=>setStage(n,null)); $('auditBox').classList.remove('show'); }
+
+/* ============ PIPELINE ============ */
+function intake(){
+  return {
+    name: $('bizName').value.trim(),
+    industry: $('industry').value,
+    city: $('city').value.trim(),
+    phone: $('phone').value.trim(),
+    email: $('email').value.trim(),
+    services: $('services').value.trim(),
+    license: $('license').value.trim(),
+    years: $('yearFounded').value.trim(),
+    vibe: $('vibe').value.trim(),
+    refUrl: $('refUrl').value.trim(),
+    style: selectedStyle,
+    notes: $('notes').value.trim(),
+    pkg: selectedPkg
+  };
+}
+
+async function runPipeline(){
+  if(building) return;
+  const c = intake();
+  if(!getKey()){ openKeyModal(); return; }
+  if(!c.name || !c.city){ toast('Business name and city are required'); return; }
+
+  building = true; siteHTML=''; brief=null;
+  $('buildBtn').disabled = true; $('statusDot').classList.add('building');
+  resetStages(); $('revBar').classList.remove('show');
+  $('emptyState').style.display='none'; $('previewCanvas').style.display='flex'; showTab('preview');
+  const t0 = Date.now();
+
+  try{
+    /* STAGE 0 (optional) — study reference site */
+    let refBlueprint = null;
+    if(c.refUrl){
+      setStage(1,'active','studying reference site…');
+      log('studying reference — '+c.refUrl);
+      const refContent = await fetchReference(c.refUrl);
+      if(refContent){
+        try{ refBlueprint = await analyzeReference(c.refUrl, refContent); log('reference blueprint extracted — '+(refBlueprint.sectionFlow||[]).length+' sections mapped'); }
+        catch(e){ log('reference analysis failed — continuing without it', true); }
+      } else {
+        toast('Could not read reference site — building without it');
+        log('reference site unreachable — continuing without it', true);
+      }
+    }
+    const tpl = selectedTemplate ? loadTemplates().find(t=>t.id===selectedTemplate) : null;
+    const tplNote = tpl ? `
+
+TEMPLATE BLUEPRINT (one of the designer's own past builds — "${tpl.name}". Replicate its structure and proven design system for this new client, with completely original copy):
+Section flow to follow in order: ${JSON.stringify(tpl.sectionFlow)}
+Nav items pattern: ${JSON.stringify(tpl.navItems)}
+Proven design system (reuse or closely adapt): ${JSON.stringify(tpl.designSystem)}` : '';
+    if(tpl) log('forging from template — '+tpl.name);
+    const refNote = (refBlueprint ? `
+
+REFERENCE SITE BLUEPRINT (the designer wants this site's structure and feel replicated — follow the section flow, hero pattern, and layout rhythm closely; write completely ORIGINAL copy for this client, never reuse the reference's text, brand names, or images):
+${JSON.stringify(refBlueprint,null,2)}` : '') + tplNote;
+
+    /* STAGE 1+2 — brief & design system in one call */
+    setStage(1,'active','positioning + copy strategy…');
+    log('stage 1/4 — writing creative brief for '+c.name);
+    const briefPrompt = `You are the creative director at Akira Digital, a web agency that builds high-converting websites for local service businesses and law firms. Motto: "We build websites that win business."
+
+CLIENT INTAKE:
+${JSON.stringify(c,null,2)}
+
+Produce a creative brief AND design system for this client's new website. Respond with ONLY a JSON object, no markdown, in this exact shape:
+{
+ "positioning": "one sharp sentence on how this business wins vs local competitors",
+ "heroHeadline": "the exact hero headline (specific, local, benefit-led — not generic)",
+ "heroSub": "supporting subheadline",
+ "copyAngles": ["3-5 conversion angles specific to this industry and city"],
+ "palette": {"bg":"#hex","surface":"#hex","primary":"#hex","accent":"#hex (CTA only)","text":"#hex","muted":"#hex"},
+ "fonts": {"display":"Google Font name","body":"Google Font name"},
+ "designDirection": "2-3 sentences: the visual concept and one signature element that makes this site memorable and distinctly high-end for this trade",
+ "seo": {"title":"≤60 chars, business + service + city","description":"≤155 chars meta description"},
+ "schemaType": "the most specific schema.org type (e.g. Plumber, Attorney, Dentist, HVACBusiness, Electrician, RoofingContractor, LocalBusiness)"
+}
+Rules: palette must pass WCAG AA contrast for text on bg; accent reserved for CTAs; the bar is premium Showit-template quality. Choose the font pairing FROM the design intelligence library below (or equally characterful) and a palette that obeys its discipline.
+${DESIGN_INTEL}
+DESIGN MARKET SELECTION (this look is the foundation — derive palette, fonts, and direction from it): ${STYLE_BRIEFS[selectedStyle]}${refNote}
+${c.vibe ? 'CLIENT STYLE NOTES (refine/override the look with these): "'+c.vibe+'"' : ''}`;
+    const briefRaw = await callClaude(briefPrompt, 2500);
+    brief = parseJSONLoose(briefRaw);
+    setStage(1,'done', brief.positioning ? brief.positioning.slice(0,60)+'…' : 'done');
+    setStage(2,'done', (brief.fonts?brief.fonts.display+' / '+brief.fonts.body:'') + (brief.palette?' · '+brief.palette.primary:''));
+    log('brief locked — '+(brief.heroHeadline||''));
+
+    /* STAGE 3 — build, streamed */
+    setStage(3,'active','streaming build…');
+    const buildPrompt = `You are Akira Digital's senior engineer + designer building a client website in a single pass. Build a COMPLETE single-file website (one HTML file, all CSS and JS inline).
+
+CLIENT INTAKE:
+${JSON.stringify(c,null,2)}
+
+APPROVED CREATIVE BRIEF & DESIGN SYSTEM (follow exactly — palette, fonts, headline, direction):
+${JSON.stringify(brief,null,2)}
+
+PACKAGE SCOPE:
+${PKG_SPEC[c.pkg]}
+
+${BUILD_STANDARDS}
+
+${DESIGN_INTEL}
+
+${UNIVERSAL_COMPLIANCE}
+
+${INDUSTRY_COMPLIANCE(c.industry)}
+${refNote}
+${photoManifest()}
+Remember: output ONLY the raw HTML document, starting with <!DOCTYPE html>.`;
+    const frame = $('previewFrame');
+    let lastPaint = 0;
+    const raw = await streamClaude(buildPrompt, 42000, (partial)=>{
+      const kb = (partial.length/1024).toFixed(1);
+      setStage(3,'active', kb+' KB written…');
+      log('stage 3/4 — <span class="c-red">forging</span> '+c.name+' · '+kb+' KB');
+      const now = Date.now();
+      if(now - lastPaint > 1200){ lastPaint = now; frame.srcdoc = expandPhotos(stripFences(partial)); }
+    });
+    siteHTML = stripFences(raw);
+    renderPreview(siteHTML);
+    setStage(3,'done',(siteHTML.length/1024).toFixed(1)+' KB · complete');
+
+    /* STAGE 4 — compliance QA */
+    setStage(4,'active','auditing legal + a11y + SEO…');
+    log('stage 4/4 — compliance QA audit');
+    const auditPrompt = `You are Akira Digital's compliance QA lead. Audit this generated client website (industry: ${c.industry}). Check ONLY against this list and return ONLY a JSON array, no markdown:
+[{"item":"short name","status":"pass|warn|fail","note":"one short sentence"}]
+
+Checklist: privacy policy present & real; terms of service present & real; cookie consent banner; industry-specific legal disclaimers correct for ${c.industry}; license/credential display (if provided: ${c.license||'none provided'}); WCAG AA basics (skip link, labels, alt text, focus styles, contrast, heading order); SEO meta (title, description, OG tags, JSON-LD schema present & valid type); lead form with placeholder endpoint clearly flagged for swap; click-to-call tel: links; mobile call bar; single-file / no external JS libs; NO AI design tells (fail if: purple-blue gradients, emoji icons, Inter/Poppins display font, generic centered hero with two pill buttons, three identical feature cards, gradient headline text).
+
+WEBSITE HTML (may be truncated):
+${siteHTML.slice(0, 120000)}`;
+    let audit = [];
+    try{ audit = parseJSONLoose(await callClaude(auditPrompt, 2500)); if(!Array.isArray(audit)) audit=[]; }
+    catch(e){ audit=[{item:'Audit',status:'warn',note:'Audit response could not be parsed — review manually.'}]; }
+    renderAudit(audit);
+    setStage(4,'done', audit.filter(a=>a.status==='pass').length+'/'+audit.length+' checks passed');
+
+    const secs = Math.round((Date.now()-t0)/1000);
+    log('build complete in '+secs+'s — review, revise, download. Client-ready.');
+    toast('Site forged in '+secs+'s');
+    $('revBar').classList.add('show');
+  }catch(err){
+    log('error — '+err.message, true);
+    toast('Build failed: '+err.message.slice(0,80));
+    resetStages();
+    if(!siteHTML){ building=false; showTab('preview'); }
+  }finally{
+    building = false; $('buildBtn').disabled = false; $('statusDot').classList.remove('building');
+  }
+}
+
+function renderAudit(items){
+  const box = $('auditList'); box.innerHTML='';
+  items.forEach(a=>{
+    const row = document.createElement('div'); row.className='a-item';
+    const cls = a.status==='pass'?'a-pass':a.status==='fail'?'a-fail':'a-warn';
+    row.innerHTML = `<span class="a-badge ${cls}">${(a.status||'').toUpperCase()}</span><div class="a-txt">${a.item}<span class="a-note">${a.note||''}</span></div>`;
+    box.appendChild(row);
+  });
+  $('auditBox').classList.add('show');
+}
+
+/* ============ REVISIONS ============ */
+async function runRevision(){
+  const req = $('revInput').value.trim();
+  if(!req || building || !siteHTML) return;
+  if(!getKey()){ openKeyModal(); return; }
+  building = true; $('statusDot').classList.add('building');
+  setStage(3,'active','revising…'); log('revision — '+req);
+  const targetNote = pickedTarget ? `
+
+TARGET SECTION: the designer clicked a specific section in the preview — section index ${pickedTarget.index} (labeled "${pickedTarget.label}"), which begins with:
+${pickedTarget.snippet}
+Apply the revision to THIS section specifically. Only touch other parts of the page if required for consistency (e.g. a color token change).` : '';
+  try{
+    const prompt = `You are Akira Digital's senior engineer. Here is the current client website:
+
+${siteHTML}
+
+REVISION REQUEST: "${req}"${targetNote}
+${photoManifest()}
+Apply the revision precisely. If image tokens like {{PHOTO_n}} appear in the HTML, keep using tokens — do not replace them with URLs. Keep everything else intact — same design system, same compliance features (privacy/terms modals, disclaimers, accessibility, SEO/schema, form). Maintain all Akira quality standards. Output ONLY the complete updated raw HTML starting with <!DOCTYPE html>.`;
+    const frame = $('previewFrame'); let lastPaint=0;
+    const raw = await streamClaude(prompt, 42000, (partial)=>{
+      const kb=(partial.length/1024).toFixed(1);
+      log('revising · '+kb+' KB');
+      const now=Date.now();
+      if(now-lastPaint>1200){ lastPaint=now; frame.srcdoc = expandPhotos(stripFences(partial)); }
+    });
+    siteHTML = stripFences(raw); renderPreview(siteHTML);
+    setStage(3,'done',(siteHTML.length/1024).toFixed(1)+' KB · revised');
+    $('revInput').value=''; clearTarget(); log('revision applied — review the preview'); toast('Revision applied');
+  }catch(err){ log('error — '+err.message, true); toast('Revision failed'); }
+  finally{ building=false; $('statusDot').classList.remove('building'); }
+}
+
+/* ============ EXPORT ============ */
+function slug(){ return ($('bizName').value.trim()||'akira-site').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
+function downloadSite(){
+  if(!siteHTML){ toast('Nothing to download yet'); return; }
+  const blob = new Blob([expandPhotos(siteHTML)],{type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = slug()+'.html'; a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Downloaded '+slug()+'.html — push to GitHub → Vercel');
+}
+function copyCode(){
+  if(!siteHTML){ toast('Nothing to copy yet'); return; }
+  navigator.clipboard.writeText(expandPhotos(siteHTML)).then(()=>toast('HTML copied'));
+}
+</script>
+</body>
+</html>

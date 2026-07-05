@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKIRA SIGNAL — Social Media Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0D0D11;--panel:#15151B;--panel2:#1B1B22;--line:#26262E;--text:#EDEDF2;--muted:#8B8B98;--dim:#5A5A66;--red:#E5484D;--red-soft:rgba(229,72,77,.14);--gold:#C9A96A;--ok:#4CC38A;--mono:'JetBrains Mono',monospace;--disp:'Space Grotesk',sans-serif;--body:'Inter',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--ink);color:var(--text);font-family:var(--body);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:13px;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 11px;width:100%;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--red)}
+label{display:block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 5px}
+::placeholder{color:var(--dim)}
+header{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--panel)}
+.hinomaru{width:14px;height:14px;border-radius:50%;background:var(--red);flex:none}
+.hinomaru.busy{animation:pulse 1.4s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(229,72,77,.55)}100%{box-shadow:0 0 0 14px rgba(229,72,77,0)}}
+.wordmark{font-family:var(--disp);font-weight:700;font-size:16px;letter-spacing:.14em}
+.wordmark span{color:var(--red)}
+.subtitle{font-size:11px;color:var(--muted);border-left:1px solid var(--line);padding-left:14px}
+.head-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.key-chip{font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--panel2);border:1px solid var(--line);border-radius:99px;padding:5px 12px;display:flex;align-items:center;gap:7px}
+.key-dot{width:7px;height:7px;border-radius:50%;background:var(--red)}
+.key-dot.on{background:var(--ok)}
+.ghost-btn{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:12px}
+.layout{display:grid;grid-template-columns:380px 1fr;height:calc(100vh - 57px)}
+.rail{border-right:1px solid var(--line);overflow-y:auto;padding:20px;background:var(--panel)}
+.main{overflow-y:auto;padding:20px}
+.section-label{font-family:var(--disp);font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin:0 0 14px;display:flex;align-items:center;gap:8px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--line)}
+.field{margin-bottom:12px}
+.hint{font-size:11px;color:var(--dim);margin-top:4px}
+.proof{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);padding:8px 10px;margin-bottom:6px;cursor:pointer}
+.proof.sel{border-color:var(--red);background:var(--red-soft)}
+.proof .p-star{color:var(--gold)}
+.proof .p-name{font-size:12px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.proof .p-meta{font-size:10px;color:var(--dim);font-family:var(--mono)}
+.gen-btn{width:100%;background:var(--red);color:#fff;border:none;border-radius:10px;padding:13px;font-family:var(--disp);font-weight:600;font-size:14px;letter-spacing:.05em;margin-top:6px}
+.gen-btn:disabled{opacity:.4;cursor:not-allowed}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--dim);text-align:center;padding:80px 30px}
+.empty .e-mark{width:56px;height:56px;border-radius:50%;background:var(--red-soft);display:flex;align-items:center;justify-content:center}
+.empty .e-mark div{width:20px;height:20px;border-radius:50%;background:var(--red)}
+.empty h2{font-family:var(--disp);font-size:17px;color:var(--text)}
+.empty p{font-size:13px;max-width:440px;color:var(--muted)}
+.post{border:1px solid var(--line);border-radius:12px;background:var(--panel);margin-bottom:16px;overflow:hidden}
+.post-head{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--panel2)}
+.post-day{font-family:var(--mono);font-size:11px;color:var(--gold);font-weight:600}
+.post-type{font-family:var(--disp);font-size:13px;font-weight:600}
+.post-goal{font-size:11px;color:var(--muted);margin-left:auto}
+.variant{padding:14px 16px;border-bottom:1px solid var(--line)}
+.variant:last-child{border-bottom:none}
+.v-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.v-platform{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--ink);background:var(--gold);border-radius:4px;padding:2px 8px}
+.v-copy{margin-left:auto;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600}
+.v-copy:hover{border-color:var(--gold);color:var(--gold)}
+.v-text{font-size:13px;white-space:pre-wrap;color:var(--text)}
+.v-tags{font-size:11px;color:var(--dim);font-family:var(--mono);margin-top:8px}
+.console{font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 18px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--ink)}
+.console .c-red{color:var(--red)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:50}
+.modal-bg.show{display:flex}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px;width:440px;max-width:92vw}
+.modal h3{font-family:var(--disp);font-size:15px;margin-bottom:6px}
+.modal p{font-size:12px;color:var(--muted);margin-bottom:14px}
+.modal .row{display:flex;gap:8px;margin-top:12px}
+.act{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 13px;font-size:12px;font-weight:600}
+.act.primary{background:var(--red);border-color:var(--red);color:#fff}
+.toast{position:fixed;bottom:52px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 18px;font-size:12px;transition:.25s;z-index:60}
+.toast.show{transform:translateX(-50%) translateY(0)}
+@media(max-width:900px){.layout{grid-template-columns:1fr;height:auto}.rail{border-right:none;border-bottom:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="hinomaru" id="statusDot"></div>
+  <div class="wordmark">AKIRA <span>SIGNAL</span></div>
+  <div class="subtitle">Social Media Agent · v2 · proof-first weekly content engine</div>
+  <div class="head-right">
+    <div class="key-chip"><div class="key-dot" id="keyDot"></div><span id="keyLabel">No API key</span></div>
+    <button class="ghost-btn" onclick="openKeyModal()">Key</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="rail">
+    <div class="section-label">This Week's Ammo</div>
+
+    <div class="field">
+      <label>Proof from FORGE <span style="color:var(--dim);text-transform:none">(auto-pulled from your template library)</span></label>
+      <div id="proofList"></div>
+      <div class="hint" id="proofHint">No FORGE templates found yet — save builds as templates in FORGE and they'll appear here as proof material.</div>
+    </div>
+
+    <div class="field"><label for="wins">Wins & happenings this week</label><textarea id="wins" rows="3" placeholder="Closed a $2,500 Growth site for an Atlanta plumber; demo got a reply in 20 min; new 5-star review from…"></textarea></div>
+
+    <div class="field"><label for="testimonial">Client quote / review (optional)</label><textarea id="testimonial" rows="2" placeholder='"Robyn had our new site live in days and calls started the same week." — Mike, HVAC owner'></textarea></div>
+
+    <div class="field"><label for="niche">Focus niche this week</label>
+      <select id="niche">
+        <option>Home Services</option><option>Law Firms</option><option>Health</option>
+        <option>Beauty & Wellness</option><option>Musicians & Creatives</option>
+        <option>Venues & Events</option><option>Mixed / General</option>
+      </select>
+    </div>
+
+    <div class="field"><label for="platforms">Platforms</label>
+      <select id="platforms">
+        <option value="all">LinkedIn + Instagram + Facebook</option>
+        <option value="linkedin">LinkedIn only</option>
+        <option value="instagram">Instagram only</option>
+        <option value="facebook">Facebook only</option>
+      </select>
+    </div>
+
+    <button class="gen-btn" id="genBtn" onclick="generatePack()">⚡ Generate Weekly Pack</button>
+    <div class="hint" style="margin-top:10px">Outputs the 5-post Akira cadence: 2 before/after proof posts, 1 build-in-public, 1 client win, 1 authority post — every one ends at akiradigital.net.</div>
+  </aside>
+
+  <main class="main">
+    <div class="empty" id="emptyState">
+      <div class="e-mark"><div></div></div>
+      <h2>YOUR WEEK OF CONTENT, ONE CLICK</h2>
+      <p>Select proof builds on the left, drop in any wins, and hit Generate. SIGNAL writes Monday-to-Friday posts built on real work — the before/after format that actually converts local business owners.</p>
+    </div>
+    <div id="packArea"></div>
+  </main>
+</div>
+
+<div class="console" id="consoleLine">idle — awaiting this week's ammo</div>
+
+<div class="modal-bg" id="keyModal">
+  <div class="modal">
+    <h3>Anthropic API Key</h3>
+    <p>Stored locally as <code style="font-family:var(--mono);color:var(--gold)">akira_akey</code> — shared with FORGE and your other agents. Sent only to the Anthropic API.</p>
+    <input id="keyInput" type="password" placeholder="sk-ant-…">
+    <div class="row">
+      <button class="act primary" style="flex:1" onclick="saveKey()">Save key</button>
+      <button class="act" onclick="closeKeyModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let busy = false, selectedProof = [];
+
+function getKey(){ return localStorage.getItem('akira_akey') || ''; }
+function refreshKeyUI(){ const k=getKey(); $('keyDot').classList.toggle('on',!!k); $('keyLabel').textContent = k?'akira_akey · linked':'No API key'; }
+function openKeyModal(){ $('keyInput').value=getKey(); $('keyModal').classList.add('show'); }
+function closeKeyModal(){ $('keyModal').classList.remove('show'); }
+function saveKey(){ const v=$('keyInput').value.trim(); if(v)localStorage.setItem('akira_akey',v); else localStorage.removeItem('akira_akey'); refreshKeyUI(); closeKeyModal(); toast(v?'Key saved':'Key removed'); }
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2400); }
+function log(m,red){ $('consoleLine').innerHTML = red?('<span class="c-red">'+m+'</span>'):m; }
+refreshKeyUI();
+
+/* ===== TEAM BUS: read FORGE's template library as proof material ===== */
+function loadForgeProof(){
+  let tpls = [];
+  try{ tpls = JSON.parse(localStorage.getItem('akira_forge_templates')) || []; }catch(e){}
+  const box = $('proofList'); box.innerHTML='';
+  $('proofHint').style.display = tpls.length ? 'none' : 'block';
+  tpls.slice(0,8).forEach(t=>{
+    const b = document.createElement('button');
+    b.className = 'proof' + (selectedProof.includes(t.id)?' sel':'');
+    b.innerHTML = '<span class="p-star">★</span><span class="p-name">'+t.name+'</span><span class="p-meta">'+t.industry+'</span>';
+    b.onclick = ()=>{ const i=selectedProof.indexOf(t.id); if(i>-1)selectedProof.splice(i,1); else selectedProof.push(t.id); loadForgeProof(); };
+    box.appendChild(b);
+  });
+}
+loadForgeProof();
+
+const API='https://api.anthropic.com/v1/messages';
+async function callClaude(prompt,maxTokens){
+  const r = await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-api-key':getKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:maxTokens||6000,messages:[{role:'user',content:prompt}]})});
+  if(!r.ok){ const e=await r.text(); throw new Error('API '+r.status+': '+e.slice(0,180)); }
+  const d = await r.json();
+  return d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+}
+function parseJSONLoose(s){
+  s=s.trim().replace(/^```json\n?/,'').replace(/^```\n?/,'').replace(/\n?```$/,'');
+  const oa=s.indexOf('['),ob=s.indexOf('{');
+  if(oa!==-1&&(ob===-1||oa<ob))return JSON.parse(s.slice(oa,s.lastIndexOf(']')+1));
+  return JSON.parse(s.slice(ob,s.lastIndexOf('}')+1));
+}
+
+async function generatePack(){
+  if(busy) return;
+  if(!getKey()){ openKeyModal(); return; }
+  busy=true; $('genBtn').disabled=true; $('statusDot').classList.add('busy');
+  log('SIGNAL writing this week\'s pack…');
+  try{
+    let tpls=[]; try{ tpls=JSON.parse(localStorage.getItem('akira_forge_templates'))||[]; }catch(e){}
+    const proof = tpls.filter(t=>selectedProof.includes(t.id)).map(t=>({name:t.name,industry:t.industry,pkg:t.pkg,sections:t.sectionFlow.length}));
+    const plat = $('platforms').value;
+    const prompt = `You are AKIRA SIGNAL, the social media agent for Akira Digital — a Los Angeles web agency (akiradigital.net) run by founder Robyn Williams that builds high-converting websites for local service businesses and law firms, starting at $1,000, with sites delivered fast and compliance built in.
+
+THIS WEEK'S RAW MATERIAL:
+- Recent builds (proof): ${JSON.stringify(proof.length?proof:'none selected — lean on the process and niche expertise instead')}
+- Wins & happenings: ${$('wins').value.trim()||'none provided'}
+- Client quote: ${$('testimonial').value.trim()||'none provided'}
+- Focus niche: ${$('niche').value}
+- Platforms: ${plat==='all'?'LinkedIn, Instagram, Facebook':plat}
+
+Write the Akira weekly content pack — exactly 5 posts, Monday to Friday, in this cadence:
+1. MON — Before/After proof post (paint the picture of a typical outdated ${$('niche').value} site vs an Akira build; visceral and specific)
+2. TUE — Authority post (answer a real question ${$('niche').value} owners Google; teach something genuinely useful; position Akira as the expert)
+3. WED — Build-in-public post (the story of a recent build — speed, craft, compliance details, what it means for the owner)
+4. THU — Client win / social proof post (use the quote or wins if provided; otherwise a results-focused mini story told credibly without inventing specific fake clients or fake numbers)
+5. FRI — Second before/after or offer post (direct: free mockup offer, what they get, why now)
+
+RULES: every post ends with a CTA to akiradigital.net; write like a sharp founder, not a marketing bot — no "🚀 Exciting news!", no "game-changer", no hashtag walls; hooks in the first line; short paragraphs with white space; be specific about trades and cities; NEVER invent fake client names, fake review counts, or fake revenue numbers — if no real win is provided, speak to the process and the offer instead.
+
+Respond with ONLY a JSON array:
+[{"day":"MON","type":"Before / After","goal":"one-line goal",
+  "variants":[{"platform":"LinkedIn","text":"full post text"},{"platform":"Instagram","text":"caption version"},{"platform":"Facebook","text":"version"}],
+  "hashtags":"3-5 tasteful hashtags"}]
+${plat!=='all'?'Only include the '+plat+' variant in variants.':''}`;
+    const posts = parseJSONLoose(await callClaude(prompt, 8000));
+    renderPack(posts);
+    log('weekly pack ready — '+posts.length+' posts · copy & schedule');
+    toast('Weekly pack generated');
+  }catch(err){ log('error — '+err.message, true); toast('Generation failed'); }
+  finally{ busy=false; $('genBtn').disabled=false; $('statusDot').classList.remove('busy'); }
+}
+
+function renderPack(posts){
+  $('emptyState').style.display='none';
+  const area=$('packArea'); area.innerHTML='';
+  posts.forEach(p=>{
+    const card=document.createElement('div'); card.className='post';
+    let v='';
+    (p.variants||[]).forEach((x,i)=>{
+      v+='<div class="variant"><div class="v-head"><span class="v-platform">'+x.platform+'</span><button class="v-copy" data-t="'+encodeURIComponent(x.text)+'">Copy</button></div><div class="v-text"></div></div>';
+    });
+    card.innerHTML='<div class="post-head"><span class="post-day">'+p.day+'</span><span class="post-type">'+p.type+'</span><span class="post-goal">'+ (p.goal||'') +'</span></div>'+v+((p.hashtags)?'<div class="variant"><div class="v-tags">'+p.hashtags+'</div></div>':'');
+    // safe text injection
+    const texts=card.querySelectorAll('.v-text');
+    (p.variants||[]).forEach((x,i)=>{ if(texts[i]) texts[i].textContent = x.text; });
+    card.querySelectorAll('.v-copy').forEach(b=>b.onclick=()=>{ navigator.clipboard.writeText(decodeURIComponent(b.dataset.t)).then(()=>toast('Copied — go post it')); });
+    area.appendChild(card);
+  });
+}
+</script>
+</body>
+</html>

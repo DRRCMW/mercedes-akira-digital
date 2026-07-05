@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKIRA ATLAS — Build Ops Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0D0D11;--panel:#15151B;--panel2:#1B1B22;--line:#26262E;--text:#EDEDF2;--muted:#8B8B98;--dim:#5A5A66;--red:#E5484D;--red-soft:rgba(229,72,77,.14);--gold:#C9A96A;--ok:#4CC38A;--warn:#F0B429;--mono:'JetBrains Mono',monospace;--disp:'Space Grotesk',sans-serif;--body:'Inter',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--ink);color:var(--text);font-family:var(--body);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:13px;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 11px;width:100%;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--red)}
+label{display:block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 5px}
+::placeholder{color:var(--dim)}
+header{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--panel)}
+.hinomaru{width:14px;height:14px;border-radius:50%;background:var(--red);flex:none}
+.hinomaru.busy{animation:pulse 1.4s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(229,72,77,.55)}100%{box-shadow:0 0 0 14px rgba(229,72,77,0)}}
+.wordmark{font-family:var(--disp);font-weight:700;font-size:16px;letter-spacing:.14em}
+.wordmark span{color:var(--red)}
+.subtitle{font-size:11px;color:var(--muted);border-left:1px solid var(--line);padding-left:14px}
+.head-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.key-chip{font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--panel2);border:1px solid var(--line);border-radius:99px;padding:5px 12px;display:flex;align-items:center;gap:7px}
+.key-dot{width:7px;height:7px;border-radius:50%;background:var(--red)}
+.key-dot.on{background:var(--ok)}
+.ghost-btn{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:12px}
+.layout{display:grid;grid-template-columns:380px 1fr;height:calc(100vh - 57px)}
+.rail{border-right:1px solid var(--line);overflow-y:auto;padding:20px;background:var(--panel)}
+.main{overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.section-label{font-family:var(--disp);font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin:0 0 14px;display:flex;align-items:center;gap:8px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--line)}
+.field{margin-bottom:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hint{font-size:11px;color:var(--dim);margin-top:4px}
+.gen-btn{width:100%;background:var(--red);color:#fff;border:none;border-radius:10px;padding:12px;font-family:var(--disp);font-weight:600;font-size:14px;letter-spacing:.05em;margin-top:4px}
+.gen-btn:disabled{opacity:.4}
+.proj{border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:.12s;width:100%;text-align:left}
+.proj:hover{border-color:var(--gold)}
+.proj.sel{border-color:var(--red);background:var(--red-soft)}
+.proj .pj-name{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
+.proj .pj-meta{font-size:10px;color:var(--dim);font-family:var(--mono);margin-top:3px}
+.badge{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.06em;border-radius:4px;padding:2px 7px;margin-left:auto}
+.b-scoping{background:rgba(240,180,41,.15);color:var(--warn)}
+.b-building{background:rgba(229,72,77,.15);color:var(--red)}
+.b-review{background:rgba(201,169,106,.18);color:var(--gold)}
+.b-delivered{background:rgba(76,195,138,.15);color:var(--ok)}
+.io-row{display:flex;gap:8px;margin-top:10px}
+.act{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 13px;font-size:12px;font-weight:600}
+.act:hover{border-color:var(--gold);color:var(--gold)}
+.act.primary{background:var(--red);border-color:var(--red);color:#fff}
+.act.primary:hover{color:#fff}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--dim);text-align:center;padding:80px 30px}
+.empty .e-mark{width:56px;height:56px;border-radius:50%;background:var(--red-soft);display:flex;align-items:center;justify-content:center}
+.empty .e-mark div{width:20px;height:20px;border-radius:50%;background:var(--red)}
+.empty h2{font-family:var(--disp);font-size:17px;color:var(--text)}
+.empty p{font-size:13px;max-width:460px;color:var(--muted)}
+.card{border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.card-head{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--panel2);flex-wrap:wrap}
+.card-head h3{font-family:var(--disp);font-size:15px}
+.status-row{display:flex;gap:6px;margin-left:auto}
+.st-btn{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:99px;padding:4px 12px;font-size:11px;font-weight:600}
+.st-btn.on{border-color:var(--red);color:var(--red);background:var(--red-soft)}
+.card-body{padding:16px}
+.ai-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.task{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}
+.task:last-child{border:none}
+.task input[type=checkbox]{width:auto;accent-color:var(--red);margin-top:3px}
+.task .tk-text{font-size:13px;flex:1}
+.task.done .tk-text{color:var(--dim);text-decoration:line-through}
+.task .tk-phase{font-family:var(--mono);font-size:9px;color:var(--gold);flex:none;margin-top:4px}
+.progress{height:5px;background:var(--panel2);border-radius:99px;overflow:hidden;margin:10px 0 14px}
+.progress div{height:100%;background:var(--red);transition:width .3s}
+.output{background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:12px;display:none}
+.output.show{display:block}
+.output-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.output-head b{font-family:var(--disp);font-size:12px;letter-spacing:.06em;color:var(--gold)}
+.output pre{font-family:var(--body);font-size:13px;white-space:pre-wrap;color:var(--text);max-height:420px;overflow-y:auto}
+.console{font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 18px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--ink)}
+.console .c-red{color:var(--red)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:50}
+.modal-bg.show{display:flex}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px;width:440px;max-width:92vw}
+.modal h3{font-family:var(--disp);font-size:15px;margin-bottom:6px}
+.modal p{font-size:12px;color:var(--muted);margin-bottom:14px}
+.modal .row{display:flex;gap:8px;margin-top:12px}
+.toast{position:fixed;bottom:52px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 18px;font-size:12px;transition:.25s;z-index:60}
+.toast.show{transform:translateX(-50%) translateY(0)}
+@media(max-width:900px){.layout{grid-template-columns:1fr;height:auto}.rail{border-right:none;border-bottom:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="hinomaru" id="statusDot"></div>
+  <div class="wordmark">AKIRA <span>ATLAS</span></div>
+  <div class="subtitle">Build Ops Agent · 08 · dashboards, command centers & custom builds</div>
+  <div class="head-right">
+    <div class="key-chip"><div class="key-dot" id="keyDot"></div><span id="keyLabel">No API key</span></div>
+    <button class="ghost-btn" onclick="openKeyModal()">Key</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="rail">
+    <div class="section-label">New Build</div>
+    <div class="field"><label for="pName">Project name</label><input id="pName" placeholder="StayDiff Team Alignment Dashboard"></div>
+    <div class="grid2">
+      <div class="field"><label for="pClient">Client / owner</label><input id="pClient" placeholder="StayDiff"></div>
+      <div class="field"><label for="pType">Build type</label>
+        <select id="pType">
+          <option>Team Alignment Dashboard</option>
+          <option>Ops Command Center</option>
+          <option>Client Portal</option>
+          <option>Tracker / Mini-CRM</option>
+          <option>Community / Ministry Dashboard</option>
+          <option>Event / Sponsorship Dashboard</option>
+          <option>Operating System (business OS)</option>
+          <option>Other Custom Build</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label for="pGoal">What problem does it solve</label><textarea id="pGoal" rows="2" placeholder="Team of 8 misaligned on priorities; need one screen for goals, blockers, wins, and weekly focus"></textarea></div>
+    <div class="grid2">
+      <div class="field"><label for="pUsers">Who uses it</label><input id="pUsers" placeholder="Founder + 8 team members"></div>
+      <div class="field"><label for="pPrice">Price / budget</label><input id="pPrice" placeholder="$1,500"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label for="pDeadline">Deadline</label><input id="pDeadline" type="date"></div>
+      <div class="field"><label for="pStack">Stack</label>
+        <select id="pStack"><option>Single-file HTML → GitHub → Vercel</option><option>React app</option><option>Notion-based</option><option>Other</option></select>
+      </div>
+    </div>
+    <div class="field"><label for="pFeatures">Must-have features</label><textarea id="pFeatures" rows="2" placeholder="Weekly focus board, blocker flags, wins feed, role-based views, mobile friendly"></textarea></div>
+    <button class="gen-btn" onclick="createProject()">＋ Create Build</button>
+
+    <div class="section-label" style="margin-top:24px">Active Builds</div>
+    <div id="projList"></div>
+    <div class="io-row">
+      <button class="act" style="flex:1" onclick="exportBuilds()">⇩ Export</button>
+      <button class="act" style="flex:1" onclick="document.getElementById('importFile').click()">⇧ Import</button>
+      <input type="file" id="importFile" accept=".json" hidden onchange="importBuilds(this.files[0])">
+    </div>
+    <div class="hint">Export/import moves your build book between devices — storage is per-browser.</div>
+  </aside>
+
+  <main class="main">
+    <div class="empty" id="emptyState">
+      <div class="e-mark"><div></div></div>
+      <h2>EVERY BUILD, MANAGED</h2>
+      <p>ATLAS is the ops brain for your custom work — the StayDiff-style dashboards, command centers, and operating systems you keep getting asked to build. Intake a project on the left; ATLAS scopes it, prices it, writes the spec and proposal, breaks down the tasks, and tracks it to delivered.</p>
+    </div>
+    <div id="projArea"></div>
+  </main>
+</div>
+
+<div class="console" id="consoleLine">idle — no build selected</div>
+
+<div class="modal-bg" id="keyModal">
+  <div class="modal">
+    <h3>Anthropic API Key</h3>
+    <p>Stored locally as <code style="font-family:var(--mono);color:var(--gold)">akira_akey</code> — shared with FORGE, SIGNAL and your other agents.</p>
+    <input id="keyInput" type="password" placeholder="sk-ant-…">
+    <div class="row"><button class="act primary" style="flex:1" onclick="saveKey()">Save key</button><button class="act" onclick="closeKeyModal()">Cancel</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const BUILDS_KEY = 'akira_builds';
+const STATUSES = ['Scoping','Building','Review','Delivered'];
+let busy=false, activeId=null;
+
+function getKey(){ return localStorage.getItem('akira_akey')||''; }
+function refreshKeyUI(){ const k=getKey(); $('keyDot').classList.toggle('on',!!k); $('keyLabel').textContent=k?'akira_akey · linked':'No API key'; }
+function openKeyModal(){ $('keyInput').value=getKey(); $('keyModal').classList.add('show'); }
+function closeKeyModal(){ $('keyModal').classList.remove('show'); }
+function saveKey(){ const v=$('keyInput').value.trim(); if(v)localStorage.setItem('akira_akey',v); else localStorage.removeItem('akira_akey'); refreshKeyUI(); closeKeyModal(); toast(v?'Key saved':'Key removed'); }
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2400); }
+function log(m,red){ $('consoleLine').innerHTML = red?('<span class="c-red">'+m+'</span>'):m; }
+refreshKeyUI();
+
+function loadBuilds(){ try{ return JSON.parse(localStorage.getItem(BUILDS_KEY))||[]; }catch(e){ return []; } }
+function storeBuilds(a){ try{ localStorage.setItem(BUILDS_KEY, JSON.stringify(a)); return true; }catch(e){ toast('Storage full — export & prune old builds'); return false; } }
+function getBuild(id){ return loadBuilds().find(b=>b.id===id); }
+function updateBuild(id, fn){ const a=loadBuilds(); const b=a.find(x=>x.id===id); if(!b)return; fn(b); storeBuilds(a); renderAll(); }
+
+function createProject(){
+  const name=$('pName').value.trim();
+  if(!name){ toast('Give the build a name'); return; }
+  const a=loadBuilds();
+  const b={ id:'b'+Date.now(), name, client:$('pClient').value.trim(), type:$('pType').value, goal:$('pGoal').value.trim(), users:$('pUsers').value.trim(), price:$('pPrice').value.trim(), deadline:$('pDeadline').value, stack:$('pStack').value, features:$('pFeatures').value.trim(), status:'Scoping', created:new Date().toISOString().slice(0,10), tasks:[], outputs:{} };
+  a.unshift(b); storeBuilds(a);
+  activeId=b.id;
+  ['pName','pClient','pGoal','pUsers','pPrice','pFeatures'].forEach(i=>$(i).value='');
+  renderAll(); toast('Build created — generate the spec next');
+}
+function deleteBuild(id){ if(!confirm('Delete this build?'))return; storeBuilds(loadBuilds().filter(b=>b.id!==id)); if(activeId===id)activeId=null; renderAll(); }
+
+function renderAll(){ renderList(); renderActive(); }
+function renderList(){
+  const list=$('projList'); list.innerHTML='';
+  loadBuilds().forEach(b=>{
+    const el=document.createElement('button');
+    el.className='proj'+(activeId===b.id?' sel':'');
+    el.onclick=()=>{ activeId=b.id; renderAll(); };
+    el.innerHTML='<div class="pj-name">'+b.name+'<span class="badge b-'+b.status.toLowerCase()+'">'+b.status.toUpperCase()+'</span></div><div class="pj-meta">'+b.type+' · '+(b.client||'—')+' · '+(b.price||'unpriced')+(b.deadline?' · due '+b.deadline:'')+'</div>';
+    list.appendChild(el);
+  });
+}
+function renderActive(){
+  const area=$('projArea'); area.innerHTML='';
+  const b = activeId && getBuild(activeId);
+  $('emptyState').style.display = b?'none':'flex';
+  if(!b){ log('idle — no build selected'); return; }
+  const doneCt=b.tasks.filter(t=>t.done).length;
+  const pct=b.tasks.length?Math.round(doneCt/b.tasks.length*100):0;
+  const card=document.createElement('div'); card.className='card';
+  card.innerHTML=
+    '<div class="card-head"><h3>'+b.name+'</h3><span class="pj-meta" style="font-family:var(--mono);font-size:10px;color:var(--dim)">'+b.type+' · '+(b.client||'—')+' · '+(b.price||'unpriced')+'</span>'+
+    '<div class="status-row">'+STATUSES.map(s=>'<button class="st-btn'+(b.status===s?' on':'')+'" onclick="setStatus(\''+s+'\')">'+s+'</button>').join('')+
+    '<button class="st-btn" style="color:var(--dim)" onclick="deleteBuild(\''+b.id+'\')" aria-label="Delete build">✕</button></div></div>'+
+    '<div class="card-body">'+
+    '<div class="ai-row">'+
+      '<button class="act primary" onclick="aiAction(\'spec\')">⚙ Build Spec</button>'+
+      '<button class="act" onclick="aiAction(\'proposal\')">✉ Proposal</button>'+
+      '<button class="act" onclick="aiAction(\'tasks\')">☑ Task Breakdown</button>'+
+      '<button class="act" onclick="aiAction(\'handoff\')">🎁 Handoff Doc</button>'+
+    '</div>'+
+    (b.tasks.length?('<div class="pj-meta" style="font-family:var(--mono);font-size:10px;color:var(--muted)">'+doneCt+'/'+b.tasks.length+' tasks · '+pct+'%</div><div class="progress"><div style="width:'+pct+'%"></div></div><div id="taskList"></div>'):'<div class="hint">No tasks yet — hit ☑ Task Breakdown and ATLAS builds the checklist.</div>')+
+    '<div class="output" id="outBox"><div class="output-head"><b id="outTitle"></b><button class="v-copy act" style="margin-left:auto" onclick="copyOutput()">Copy</button></div><pre id="outPre"></pre></div>'+
+    '</div>';
+  area.appendChild(card);
+  if(b.tasks.length){
+    const tl=card.querySelector('#taskList');
+    b.tasks.forEach((t,i)=>{
+      const row=document.createElement('div'); row.className='task'+(t.done?' done':'');
+      const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=!!t.done;
+      cb.onchange=()=>updateBuild(b.id, x=>{ x.tasks[i].done=cb.checked; });
+      const span=document.createElement('span'); span.className='tk-text'; span.textContent=t.text;
+      const ph=document.createElement('span'); ph.className='tk-phase'; ph.textContent=t.phase||'';
+      row.appendChild(cb); row.appendChild(span); row.appendChild(ph);
+      tl.appendChild(row);
+    });
+  }
+  log('build open — '+b.name+' · '+b.status);
+}
+function setStatus(s){ updateBuild(activeId, b=>{ b.status=s; }); toast('Status → '+s); }
+
+const API='https://api.anthropic.com/v1/messages';
+async function callClaude(prompt,maxTokens){
+  const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-api-key':getKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:maxTokens||4000,messages:[{role:'user',content:prompt}]})});
+  if(!r.ok){ const e=await r.text(); throw new Error('API '+r.status+': '+e.slice(0,180)); }
+  const d=await r.json();
+  return d.content.filter(x=>x.type==='text').map(x=>x.text).join('');
+}
+function parseJSONLoose(s){
+  s=s.trim().replace(/^```json\n?/,'').replace(/^```\n?/,'').replace(/\n?```$/,'');
+  const oa=s.indexOf('['),ob=s.indexOf('{');
+  if(oa!==-1&&(ob===-1||oa<ob))return JSON.parse(s.slice(oa,s.lastIndexOf(']')+1));
+  return JSON.parse(s.slice(ob,s.lastIndexOf('}')+1));
+}
+
+async function aiAction(kind){
+  if(busy||!activeId) return;
+  if(!getKey()){ openKeyModal(); return; }
+  const b=getBuild(activeId);
+  busy=true; $('statusDot').classList.add('busy');
+  const ctx=`PROJECT: ${b.name}\nCLIENT: ${b.client||'—'}\nTYPE: ${b.type}\nPROBLEM: ${b.goal||'—'}\nUSERS: ${b.users||'—'}\nMUST-HAVES: ${b.features||'—'}\nSTACK: ${b.stack}\nPRICE: ${b.price||'to be proposed'}\nDEADLINE: ${b.deadline||'flexible'}\nBUILDER: Robyn Williams, Akira Digital (akiradigital.net) — solo builder, ships single-file dashboards via GitHub → Vercel, strong AI-agent and Notion/Make.com integration skills.`;
+  try{
+    if(kind==='tasks'){
+      log('ATLAS breaking down the build…');
+      const raw=await callClaude(`You are ATLAS, Akira Digital's build ops agent. Break this project into a complete build checklist a solo builder can execute.\n\n${ctx}\n\nRespond ONLY with a JSON array of 10-18 tasks in true execution order:\n[{"text":"clear, specific task","phase":"SCOPE|DESIGN|BUILD|DATA|TEST|LAUNCH"}]\nRules: concrete (name real tabs/features from the must-haves), include a compliance/access check, a mobile pass, a client review checkpoint, and a handoff step.`, 2500);
+      const tasks=parseJSONLoose(raw);
+      updateBuild(b.id, x=>{ x.tasks = tasks.map(t=>({text:t.text,phase:t.phase,done:false})); });
+      toast(tasks.length+' tasks loaded'); log('task breakdown ready — '+tasks.length+' steps');
+    } else {
+      const prompts={
+        spec:`You are ATLAS. Write a tight build spec for this project — the doc Robyn builds from. Sections: Overview & success criteria; Screens/tabs (name each, what's on it); Data model (entities & fields); Roles & views; Integrations; Out of scope; Milestones with rough dates${b.deadline?' backwards from '+b.deadline:''}. Be specific to the must-haves. Plain text, no markdown symbols beyond simple caps headers.\n\n${ctx}`,
+        proposal:`You are ATLAS. Write a client-ready proposal email for this build from Robyn at Akira Digital. Warm, confident, plain-spoken. Include: what we're building & why it solves their problem; what's included (bullets in prose form); timeline; investment (${b.price||'propose a fair fixed price for this scope, positioned with a payment split'}); 50% to start / 50% at delivery; one clear next step. No fluff, no "I hope this finds you well".\n\n${ctx}`,
+        handoff:`You are ATLAS. Write the delivery/handoff document for this build: what was delivered (tabs/features), how to access & log in, how to update content, known limitations, support terms, and a short "make it stick" adoption tip for their team. Warm and clear, written to the client.\n\n${ctx}\nCOMPLETED TASKS: ${b.tasks.filter(t=>t.done).map(t=>t.text).join('; ')||'per spec'}`
+      };
+      const titles={spec:'BUILD SPEC',proposal:'PROPOSAL EMAIL',handoff:'HANDOFF DOC'};
+      log('ATLAS writing '+titles[kind].toLowerCase()+'…');
+      const out=await callClaude(prompts[kind], 3500);
+      updateBuild(b.id, x=>{ x.outputs[kind]=out; });
+      showOutput(titles[kind], out);
+      log(titles[kind].toLowerCase()+' ready — copy & send');
+    }
+  }catch(err){ log('error — '+err.message, true); toast('Action failed'); }
+  finally{ busy=false; $('statusDot').classList.remove('busy'); }
+}
+function showOutput(title, text){
+  const box=$('outBox'); if(!box) return;
+  $('outTitle').textContent=title; $('outPre').textContent=text; box.classList.add('show');
+}
+function copyOutput(){ navigator.clipboard.writeText($('outPre').textContent).then(()=>toast('Copied')); }
+
+function exportBuilds(){
+  const blob=new Blob([JSON.stringify(loadBuilds(),null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='akira-builds-'+new Date().toISOString().slice(0,10)+'.json'; a.click(); URL.revokeObjectURL(a.href);
+  toast('Build book exported');
+}
+function importBuilds(file){
+  if(!file) return;
+  const r=new FileReader();
+  r.onload=e=>{ try{ const inc=JSON.parse(e.target.result); if(!Array.isArray(inc)) throw 0; const cur=loadBuilds(); const ids=new Set(cur.map(b=>b.id)); inc.forEach(b=>{ if(!ids.has(b.id)) cur.push(b); }); storeBuilds(cur); renderAll(); toast('Imported '+inc.length+' builds'); }catch(err){ toast('Import failed — not a valid build book'); } };
+  r.readAsText(file);
+  $('importFile').value='';
+}
+renderAll();
+</script>
+</body>
+</html>
