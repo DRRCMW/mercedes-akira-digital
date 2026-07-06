@@ -578,17 +578,17 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
         <div class="ni-info"><div class="ni-name">Web Builder</div><div class="ni-desc">FORGE — builds full sites</div></div>
         <div class="ni-badge" style="background:rgba(59,158,221,.12);color:#3b9edd;">02</div>
       </div>
-      <div class="nav-item" id="nav-client-success" onclick="showAgentView('client-success')">
+      <div class="nav-item" id="nav-client-success" onclick="showDedicatedAgent('client-success')">
         <div class="ni-icon" style="background:rgba(34,197,94,.15);color:#22c55e;font-size:13px;">💌</div>
         <div class="ni-info"><div class="ni-name">Client Success</div><div class="ni-desc">Onboards &amp; upsells clients</div></div>
         <div class="ni-badge" style="background:rgba(34,197,94,.12);color:#22c55e;">03</div>
       </div>
-      <div class="nav-item" id="nav-ops-finance" onclick="showAgentView('ops-finance')">
+      <div class="nav-item" id="nav-ops-finance" onclick="showDedicatedAgent('ops-finance')">
         <div class="ni-icon" style="background:rgba(201,148,26,.12);color:#c9941a;font-size:13px;">📊</div>
         <div class="ni-info"><div class="ni-name">Ops &amp; Finance</div><div class="ni-desc">Monday founder briefing</div></div>
         <div class="ni-badge" style="background:rgba(201,148,26,.1);color:#c9941a;">05</div>
       </div>
-      <div class="nav-item" id="nav-growth" onclick="showAgentView('growth')">
+      <div class="nav-item" id="nav-growth" onclick="showDedicatedAgent('growth')">
         <div class="ni-icon" style="background:rgba(139,92,246,.15);color:#8b5cf6;font-size:13px;">📈</div>
         <div class="ni-info"><div class="ni-name">Growth Agent</div><div class="ni-desc">Monday content + outreach</div></div>
         <div class="ni-badge" style="background:rgba(139,92,246,.12);color:#8b5cf6;">04</div>
@@ -10559,19 +10559,19 @@ var AGENTS = [
     icon: '📱', color: '#ec4899', bg: 'rgba(236,72,153,.12)', accent: '#ec4899',
     desc: 'Mon–Fri at 8:00 AM PST. Claude Sonnet generates 5 platform-specific posts daily. Pillars rotate by day (Mon=Education, Tue=Services, Wed=Hot Take, Thu=Social Proof, Fri=Behind Scenes). Outputs: Instagram Reel caption, TikTok script with CapCut overlays, LinkedIn post with engagement question, Facebook post, and Google Business Profile post. All 5 saved to Notion content calendar + SMS to Robyn.',
     schedule: 'Mon–Fri · 8:00 AM PST',
-    makeId: '4908666', makeUrl: 'https://us2.make.com/2153645/scenarios/4908666/edit', webhookUrl: null, viewFn: "showAgentView('social-media')", type: 'scheduled'
+    makeId: '4908666', makeUrl: 'https://us2.make.com/2153645/scenarios/4908666/edit', webhookUrl: null, viewFn: "openEmbeddedAgent('/akira-signal.html','SIGNAL — Social Agent','📱')", type: 'scheduled'
   }
 ];
 
 // ── AGENT CONFIG ──
 var AGENT_TABLE_DATA = [
   { id:'mercedes', name:'Mercedes', subtitle:'Sales Agent', icon:'✦', color:'#a78bfa', bg:'linear-gradient(135deg,rgba(139,92,246,.25),rgba(59,158,221,.15))', schedule:'Every 15 min · GitHub Actions', makeUrl:'https://github.com/DRRCMW/mercedes-akira-digital/actions', notionUrl:'https://www.notion.so/a3d2c021b2cc4aed983b10886908824a', webhookUrl:null, viewFn:"showAgent()", type:'github' },
-  { id:'web-builder', name:'Web Builder', subtitle:'Agent 02', icon:'🏗️', color:'#3b9edd', bg:'rgba(59,158,221,.15)', schedule:'Instant webhook on new client', makeUrl:'https://us2.make.com/2153645/scenarios/4786356/edit', notionUrl:'https://www.notion.so/45a529f23db74df29e6287dc0843f0d7', webhookUrl:'https://hook.us2.make.com/t4u4pskcvsdnw5jvq5nyxikwizfbia', viewFn:"showAgentView('web-builder')", type:'webhook' },
-  { id:'client-success', name:'Client Success', subtitle:'Agent 03', icon:'💌', color:'#22c55e', bg:'rgba(34,197,94,.15)', schedule:'Instant · fires after Web Builder', makeUrl:'https://us2.make.com/2153645/scenarios/4786320/edit', notionUrl:'https://www.notion.so/9bf24d82460c4f6ca3d9c0442ce3501b', webhookUrl:'https://hook.us2.make.com/5e3221wbb0f4y6jp9mk09g2tji62', viewFn:"showAgentView('client-success')", type:'webhook' },
-  { id:'ops-finance', name:'Ops & Finance', subtitle:'Agent 05', icon:'📊', color:'#c9941a', bg:'rgba(201,148,26,.12)', schedule:'Every Monday · 7:00 AM', makeUrl:'https://us2.make.com/2153645/scenarios/4786137/edit', notionUrl:'https://www.notion.so/c9bf66bb80ea48bba6408a858ee99b13', webhookUrl:null, viewFn:"showAgentView('ops-finance')", type:'scheduled' },
-  { id:'growth', name:'Growth Agent', subtitle:'Agent 04', icon:'📈', color:'#8b5cf6', bg:'rgba(139,92,246,.15)', schedule:'Every Monday · 8:00 AM', makeUrl:'https://us2.make.com/2153645/scenarios/4786443/edit', notionUrl:'https://www.notion.so/45a529f23db74df29e6287dc0843f0d7', webhookUrl:null, viewFn:"showAgentView('growth')", type:'scheduled' },
-  { id:'seo', name:'SEO Agent', subtitle:'Agent 06', icon:'🔍', color:'#ef4444', bg:'rgba(239,68,68,.12)', schedule:'1st of every month · 6:00 AM', makeUrl:'https://us2.make.com/2153645/scenarios/4786482/edit', notionUrl:'https://www.notion.so/33c64950aee3806e8e46e383a01266f3', webhookUrl:null, viewFn:"showAgentView('seo')", type:'scheduled' },
-  { id:'social-media', name:'Social Media', subtitle:'Agent 07', icon:'📱', color:'#8b5cf6', bg:'rgba(139,92,246,.12)', schedule:'Mon–Fri · 8:00 AM PST', makeUrl:'https://us2.make.com/2153645/scenarios/4908666/edit', notionUrl:'', webhookUrl: null, viewFn: "showAgentView('social-media')", type:'scheduled' }
+  { id:'web-builder', name:'Web Builder', subtitle:'Agent 02', icon:'🏗️', color:'#3b9edd', bg:'rgba(59,158,221,.15)', schedule:'Instant webhook on new client', makeUrl:'https://us2.make.com/2153645/scenarios/4786356/edit', notionUrl:'https://www.notion.so/45a529f23db74df29e6287dc0843f0d7', webhookUrl:'https://hook.us2.make.com/t4u4pskcvsdnw5jvq5nyxikwizfbia', viewFn:"openEmbeddedAgent('/akira-forge.html','AKIRA FORGE — Web Builder','⚒️')", type:'webhook' },
+  { id:'client-success', name:'Client Success', subtitle:'Agent 03', icon:'💌', color:'#22c55e', bg:'rgba(34,197,94,.15)', schedule:'Instant · fires after Web Builder', makeUrl:'https://us2.make.com/2153645/scenarios/4786320/edit', notionUrl:'https://www.notion.so/9bf24d82460c4f6ca3d9c0442ce3501b', webhookUrl:'https://hook.us2.make.com/5e3221wbb0f4y6jp9mk09g2tji62', viewFn:"showDedicatedAgent('client-success')", type:'webhook' },
+  { id:'ops-finance', name:'Ops & Finance', subtitle:'Agent 05', icon:'📊', color:'#c9941a', bg:'rgba(201,148,26,.12)', schedule:'Every Monday · 7:00 AM', makeUrl:'https://us2.make.com/2153645/scenarios/4786137/edit', notionUrl:'https://www.notion.so/c9bf66bb80ea48bba6408a858ee99b13', webhookUrl:null, viewFn:"showDedicatedAgent('ops-finance')", type:'scheduled' },
+  { id:'growth', name:'Growth Agent', subtitle:'Agent 04', icon:'📈', color:'#8b5cf6', bg:'rgba(139,92,246,.15)', schedule:'Every Monday · 8:00 AM', makeUrl:'https://us2.make.com/2153645/scenarios/4786443/edit', notionUrl:'https://www.notion.so/45a529f23db74df29e6287dc0843f0d7', webhookUrl:null, viewFn:"showDedicatedAgent('growth')", type:'scheduled' },
+  { id:'seo', name:'SEO Agent', subtitle:'Agent 06', icon:'🔍', color:'#ef4444', bg:'rgba(239,68,68,.12)', schedule:'1st of every month · 6:00 AM', makeUrl:'https://us2.make.com/2153645/scenarios/4786482/edit', notionUrl:'https://www.notion.so/33c64950aee3806e8e46e383a01266f3', webhookUrl:null, viewFn:"showSeoView()", type:'scheduled' },
+  { id:'social-media', name:'Social Media', subtitle:'Agent 07', icon:'📱', color:'#8b5cf6', bg:'rgba(139,92,246,.12)', schedule:'Mon–Fri · 8:00 AM PST', makeUrl:'https://us2.make.com/2153645/scenarios/4908666/edit', notionUrl:'', webhookUrl: null, viewFn: "openEmbeddedAgent('/akira-signal.html','SIGNAL — Social Agent','📱')", type:'scheduled' }
 ];
 
 function showAgentControl() {
@@ -12965,5 +12965,289 @@ window.addEventListener('load', function() {
   console.log('[Guardian] Lead Guardian initialized — cloud-first mode');
 })();
 </script>
+<style id="akiraV5Style">
+#seoView{ --muted:#aab4c6; }
+#dedicatedAgentView{ padding:26px 30px; }
+.dv-head{ display:flex; align-items:center; gap:14px; margin-bottom:6px; }
+.dv-ico{ width:52px; height:52px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:26px; }
+.dv-name{ font-size:22px; font-weight:800; letter-spacing:.3px; }
+.dv-sub{ font-size:12px; color:#9aa6b8; margin-top:2px; }
+.dv-chips{ display:flex; gap:8px; margin:14px 0 18px; flex-wrap:wrap; }
+.dv-chip{ font-size:11px; padding:5px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.1); color:#c7cfdc; background:rgba(255,255,255,.04); }
+.dv-panel{ background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:16px 18px; margin-bottom:14px; }
+.dv-panel-title{ font-size:11px; font-weight:800; letter-spacing:1.4px; text-transform:uppercase; color:#8f9bb0; margin-bottom:8px; }
+.dv-panel p, .dv-panel li{ font-size:13px; line-height:1.65; color:#d4dae4; }
+.dv-panel ol{ margin:4px 0 0 18px; padding:0; }
+.dv-panel ol li{ margin-bottom:7px; }
+.dv-actions{ display:flex; gap:10px; flex-wrap:wrap; margin:4px 0 18px; }
+.dv-btn{ border:none; cursor:pointer; font-weight:700; font-size:12.5px; padding:10px 16px; border-radius:9px; background:rgba(255,255,255,.06); color:#e6eaf1; border:1px solid rgba(255,255,255,.1); }
+.dv-btn.primary{ background:#22c55e; color:#06130a; border-color:#22c55e; }
+.dv-btn.make{ background:rgba(240,180,41,.14); color:#f0b429; border-color:rgba(240,180,41,.35); }
+.dv-arch-item{ border:1px solid rgba(255,255,255,.07); border-radius:9px; margin-bottom:8px; background:rgba(255,255,255,.02); }
+.dv-arch-item summary{ cursor:pointer; padding:10px 13px; font-size:12.5px; color:#dbe1ea; list-style:none; display:flex; gap:10px; align-items:baseline; }
+.dv-arch-item summary::-webkit-details-marker{ display:none; }
+.dv-arch-date{ font-size:10.5px; color:#8b96a9; white-space:nowrap; }
+.dv-arch-body{ padding:2px 14px 12px; font-size:12px; line-height:1.6; color:#b9c2d0; white-space:pre-wrap; border-top:1px dashed rgba(255,255,255,.07); }
+.dv-empty{ font-size:12px; color:#8b96a9; padding:8px 2px; }
+#acArchivePanel{ margin:22px 24px 30px; }
+</style>
+<script id="akiraV5">
+(function(){
+  /* ══════════ A. GEOMETRY FIX — re-home escaped views into the content area ══════════ */
+  function rehome(){
+    var fa = document.querySelector('.frame-area');
+    if(!fa) return;
+    ['agentControlView','playbookView','socialMediaAgentView'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el && el.parentElement !== fa) fa.appendChild(el);
+    });
+  }
+  rehome();
+
+  /* ══════════ B. REPORT ARCHIVE — capture every agent report the feed pulls ══════════ */
+  var _fetch = window.fetch;
+  window.fetch = function(u, o){
+    var p = _fetch.apply(this, arguments);
+    try{
+      var url = (typeof u === 'string') ? u : ((u && u.url) || '');
+      if(url.indexOf('api.notion.com') > -1 && url.indexOf('/query') > -1){
+        p.then(function(r){ try{ r.clone().json().then(akiraArchiveStore).catch(function(){}); }catch(e){} });
+      }
+    }catch(e){}
+    return p;
+  };
+  function akiraArchiveStore(j){
+    if(!j || !j.results || !j.results.length) return;
+    var arch; try{ arch = JSON.parse(localStorage.getItem('akira_agent_archive') || '{"items":[]}'); }catch(e){ arch = {items:[]}; }
+    var items = arch.items || [], seen = {};
+    items.forEach(function(it){ seen[it.id] = true; });
+    var added = 0;
+    j.results.forEach(function(pg){
+      if(!pg || !pg.id || seen[pg.id]) return;
+      var props = pg.properties || {}, title = '', body = [];
+      Object.keys(props).forEach(function(k){
+        var p = props[k]; if(!p) return;
+        var txt = (p.title || p.rich_text || []).map(function(t){ return t.plain_text || ''; }).join('');
+        if(p.type === 'title' && txt) title = txt;
+        else if(txt) body.push(k + ': ' + txt);
+        if(p.type === 'select' && p.select && p.select.name) body.push(k + ': ' + p.select.name);
+      });
+      var agent = '';
+      var hay = (title + ' ' + body.join(' ')).toLowerCase();
+      (window.AGENTS || []).forEach(function(a){
+        if(!agent && a && a.name && hay.indexOf(a.name.toLowerCase()) > -1) agent = a.id;
+      });
+      items.unshift({ id: pg.id, created: pg.created_time || new Date().toISOString(), agent: agent, title: title || '(untitled report)', body: body.join('\n') });
+      seen[pg.id] = true; added++;
+    });
+    if(!added) return;
+    items.sort(function(a,b){ return (b.created||'').localeCompare(a.created||''); });
+    try{ localStorage.setItem('akira_agent_archive', JSON.stringify({items: items.slice(0,300)})); }catch(e){}
+    var pane = document.getElementById('acArchList');
+    if(pane) renderArchInto(pane, '');
+  }
+  function getArchive(){ try{ return (JSON.parse(localStorage.getItem('akira_agent_archive') || '{"items":[]}').items) || []; }catch(e){ return []; } }
+  function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function renderArchInto(el, agentId){
+    var items = getArchive();
+    var mine = agentId ? items.filter(function(it){ return it.agent === agentId; }) : items;
+    if(!mine.length && agentId) mine = [];
+    if(!mine.length){
+      el.innerHTML = '<div class="dv-empty">No archived reports yet. Reports are captured automatically every time the feed refreshes — hit ⟳ Refresh Feed in Agent Control, then check back here. Past runs also live in Notion via View Output.</div>';
+      return;
+    }
+    var h = '';
+    mine.slice(0, 40).forEach(function(it){
+      var d = (it.created || '').slice(0, 10);
+      h += '<details class="dv-arch-item"><summary><span class="dv-arch-date">' + escHtml(d) + '</span><span>' + escHtml(it.title) + '</span></summary><div class="dv-arch-body">' + escHtml(it.body || '(no body captured — open View Output in Notion for the full report)') + '</div></details>';
+    });
+    el.innerHTML = h;
+  }
+  window.renderArchInto = renderArchInto;
+
+  /* ══════════ C. DEDICATED AGENT VIEWS — Client Success · Ops & Finance · Growth ══════════ */
+  var HOW = {
+    'client-success': ['A lifecycle trigger fires — a site launches, a client hits day 30, an upsell window opens, or a renewal comes due.','The webhook delivers the client record (name, package, history) into the Make.com scenario.','Claude Sonnet writes the full action package: a personalized email, an SMS, an upsell pitch with timing, care-plan talking points, and a 3-step follow-up sequence.','Everything is logged to the Notion CRM and Robyn gets an SMS with the priority level.','Owner of the review engine: a Google review ask goes out at launch and at day 30, for every client, no exceptions.'],
+    'ops-finance': ['Every Monday at 7:00 AM PST the scenario wakes up on schedule.','Mercedes pulls the active pipeline, client list, and unpaid invoices from Notion.','Claude Sonnet writes the founder briefing: Revenue Snapshot (MRR + invoices + pace vs the $83K monthly target), a Pipeline Heat Map, the Top 3 Money Moves of the week, and 2 Quick Wins to do before 9am.','The briefing is saved to Notion and texted to Robyn — read it with coffee, act before 9.','Also owns the legitimacy stack: GBP, NAP consistency, licenses, insurance, contracts, invoices, and the Friday scoreboard.'],
+    'growth': ['Every Monday at 8:00 AM PST, right after the Ops briefing lands.','The scenario pulls active clients from Notion for real proof and context.','Claude Sonnet generates the weekly growth batch: a bold week theme, a LinkedIn post with dollar amounts, a cold email subject + body, an IG Reel hook, a TikTok hook, a 15-second call opener, 3 LA outreach targets with talking points, and a Mon–Fri content calendar.','The whole batch is saved to Notion — pull from it all week instead of writing from scratch.','Also owns upsells, Care Plan renewals, and referral asks; referral leads route back to Mercedes.']
+  };
+  window.showDedicatedAgent = function(id){
+    rehome();
+    hideAllViews();
+    document.querySelectorAll('.nav-item,.nav-home').forEach(function(el){ el.classList.remove('active'); });
+    var nv = document.getElementById('nav-' + id); if(nv) nv.classList.add('active');
+    var a = null;
+    (window.AGENTS || []).forEach(function(x){ if(x && x.id === id) a = x; });
+    if(!a){ if(typeof showAgentControl === 'function') showAgentControl(); return; }
+    var fa = document.querySelector('.frame-area');
+    var host = document.getElementById('dedicatedAgentView');
+    if(!host){
+      host = document.createElement('div');
+      host.id = 'dedicatedAgentView';
+      host.className = 'pb-view';
+      fa.appendChild(host);
+    }
+    var isWebhook = (id === 'client-success' || id === 'web-builder');
+    var runBtn = isWebhook
+      ? '<button class="dv-btn primary" onclick="triggerWebhookAgent(\'' + id + '\',this)">▶ Run Now</button>'
+      : '<button class="dv-btn make" onclick="window.open(\'' + (a.makeUrl || '#') + '\',\'_blank\')">▶ Run in Make.com</button>';
+    var steps = (HOW[id] || []).map(function(s){ return '<li>' + s + '</li>'; }).join('');
+    host.innerHTML =
+      '<div class="dv-head">' +
+        '<div class="dv-ico" style="background:' + (a.bg || 'rgba(255,255,255,.06)') + ';color:' + (a.color || '#fff') + ';">' + (a.icon || '✦') + '</div>' +
+        '<div><div class="dv-name" style="color:' + (a.color || '#fff') + ';">' + escHtml(a.name) + '</div>' +
+        '<div class="dv-sub">' + escHtml(a.subtitle || '') + ' · AI Agent</div></div>' +
+      '</div>' +
+      '<div class="dv-chips">' +
+        '<span class="dv-chip">⏱ ' + escHtml(a.schedule || '') + '</span>' +
+        '<span class="dv-chip" style="color:#22c55e;border-color:rgba(34,197,94,.4);">● ' + escHtml(a.status || 'active') + '</span>' +
+        (typeof a.runs === 'number' ? '<span class="dv-chip">↻ ' + a.runs + ' runs</span>' : '') +
+      '</div>' +
+      '<div class="dv-actions">' + runBtn +
+        '<button class="dv-btn" onclick="window.open(\'' + (a.makeUrl || '#') + '\',\'_blank\')">Open Make.com</button>' +
+        '<button class="dv-btn" onclick="window.open(\'' + (a.notionUrl || '#') + '\',\'_blank\')">View Output in Notion</button>' +
+        '<button class="dv-btn" onclick="showAgentControl()">← All Agents</button>' +
+      '</div>' +
+      '<div class="dv-panel"><div class="dv-panel-title">What this agent does</div><p>' + escHtml(a.desc || '') + '</p></div>' +
+      '<div class="dv-panel"><div class="dv-panel-title">How it works</div><ol>' + steps + '</ol></div>' +
+      '<div class="dv-panel"><div class="dv-panel-title">📁 Report archive</div><div id="dvArchList"></div></div>';
+    host.classList.add('active');
+    renderArchInto(document.getElementById('dvArchList'), id);
+    if(typeof setTopBar === 'function'){ try{ setTopBar(a.icon, a.name, a.bg, a.color, a.subtitle || 'AGENT', 'rgba(34,197,94,.12)', '#22c55e'); }catch(e){} }
+  };
+
+  /* ══════════ D. AGENT CONTROL — archive panel for every report-pulling agent ══════════ */
+  var acv = document.getElementById('agentControlView');
+  if(acv && !document.getElementById('acArchivePanel')){
+    var pnl = document.createElement('div');
+    pnl.id = 'acArchivePanel';
+    pnl.innerHTML = '<div class="dv-panel"><div class="dv-panel-title">📁 Reports archive — all agents</div><div class="dv-empty" style="margin-bottom:8px;">Every report your agents pull (Ops Monday briefing, Growth weekly batch, SEO monthly, Client Success packages) is captured here automatically when the feed refreshes. Click any entry to expand it.</div><div id="acArchList"></div></div>';
+    acv.appendChild(pnl);
+  }
+  if(typeof window.showAgentControl === 'function'){
+    var _sac = window.showAgentControl;
+    window.showAgentControl = function(){
+      rehome();
+      _sac();
+      var el = document.getElementById('acArchList');
+      if(el) renderArchInto(el, '');
+    };
+  }
+
+  /* ══════════ E. PLAYBOOK v2 — original tabbed format, upgraded in place ══════════ */
+  function sBox(id, text){
+    return '<div class="script-box" id="' + id + '">' + text + '<button class="copy-script" onclick="copyScript(\'' + id + '\')">Copy</button></div>';
+  }
+  function card(title, inner){ return '<div class="pb-card"><div class="pb-card-title">' + title + '</div>' + inner + '</div>'; }
+  function upgradePlaybook(pbv){
+    pbv.setAttribute('data-v2','1');
+    if(!pbv.querySelector('#pbs-scripts')) return;
+    var hero = pbv.querySelector('.pb-hero-sub');
+    if(hero) hero.textContent = 'v2 — Demo-first system. Every script sells from a live demo link, not a promise. Click any tab; everything you need mid-call is one click deep. Keep this open during call blocks.';
+    var sc = pbv.querySelector('#pbs-scripts');
+    sc.innerHTML =
+      '<div class="pb-s-title">Call Scripts — v2 (Demo-First)</div>' +
+      '<div class="pb-s-sub">The demo is already live before you dial. You are not pitching a website — you are showing them theirs. Use word for word.</div>' +
+      card('📞 Cold Call (demo live)', sBox('s2coldcall', '"Hi, is this [Name]? This is Robyn with Akira Digital here in LA — I\u2019ll be quick because I know you\u2019re mid-day.\nI build websites for [trade]s, and honestly? I already built yours. I came across [Business] last week, saw the site was [holding you back / hard to find / not mobile-friendly], and instead of calling to pitch you, I just built the new one first.\nIt\u2019s live right now — can I text you the link so you can look at it while we talk?\nIt\u2019s got your services, your service area, click-to-call, a lead form at the top — everything set up so when someone in [City] searches [trade], they call YOU.\nIf you love it, it\u2019s yours and we launch this week — sites start at $1,000. If you don\u2019t, no hard feelings, it cost you 60 seconds."')) +
+      card('📱 Voicemail (under 20 seconds)', sBox('s2vm', '"Hi [Name], Robyn with Akira Digital. I build websites for [trade]s and I already built one for [Business] — it\u2019s live at a private link right now. Texting it to you after this. If you like what you see, call me back at [number] and we can launch it this week. Either way, go take a look — it\u2019s already done."')) +
+      card('💬 First Text / SMS (send right after the call or VM)', sBox('s2sms1', '"Hi [Name] — Robyn from Akira Digital. Here\u2019s that new website I built for [Business]: [demo link]. Open it on your phone — that\u2019s what your customers see. If you want it live this week, just reply YES and I\u2019ll call you. 🔴"')) +
+      card('⏰ Day-7 SMS (Mercedes sends this automatically)', sBox('s2sms7', '"Hi [Name], Robyn again — that website I built for [Business] is still live if you want another look: [demo link]. I take on a limited number of [trade] clients per city so I can do the work right. Want me to hold your spot? Reply YES and I\u2019ll call you today."')) +
+      card('📧 Cold Email / DM', sBox('s2email', 'Subject: I built [Business] a new website (it\u2019s live)\n\nHi [Name],\nI\u2019m Robyn — I run Akira Digital, a web studio that builds sites for [trade]s that actually win business.\nI\u2019ll skip the pitch: I already built your new site. Here it is, live → [demo link]\nWhat\u2019s on it: mobile-first design, your services and service area, click-to-call, a lead form above the fold, and the compliance details most [trade] sites miss.\nIf you like it, we launch this week — packages start at $1,000. If not, it cost you one click to find out.\n\nRobyn Williams · Akira Digital · akiradigital.net'));
+    var ob = pbv.querySelector('#pbs-objections');
+    if(ob && !ob.querySelector('#s2obj1')){
+      var v2obj =
+        card('🛡 "I already have a website." (v2)', sBox('s2obj1', '"You do — and I looked at it before I built this one. Pull them up side by side on your phone. Which one would YOU call?"\n\n→ The demo makes this objection self-answering. Never argue; compare.')) +
+        card('🛡 "How much?" (v2)', sBox('s2obj2', '"The site you\u2019re looking at is the $1,000 Starter — done and live this week. Most [trade]s go Growth at $2,500 because it adds FAQ, reviews, and more service pages — which is what ranks on Google. Which looks closer to what you want?"\n\n→ Always answer price directly, then anchor upward with a reason.')) +
+        card('🛡 "I need to think about it." (v2)', sBox('s2obj3', '"Totally fair. The link stays live for two weeks. One thing while you think: every day the old site is up, the guy across town is getting the calls that should be yours. When should I check back — Thursday or Friday?"')) +
+        card('🛡 "Did you use AI to make this?" (v2)', sBox('s2obj4', '"I use professional tools — same as every serious agency now. What you\u2019re judging is the result: does it look like the best [trade] in [City], and will it make your phone ring? The design system, the compliance, the strategy — that\u2019s me. The tools just make me fast, and my speed is your price."')) +
+        '<div class="pb-s-sub" style="margin:16px 0 10px;">— Classic objection responses below (still valid) —</div>';
+      var firstCard = ob.querySelector('.pb-card');
+      if(firstCard) firstCard.insertAdjacentHTML('beforebegin', v2obj);
+      else ob.insertAdjacentHTML('beforeend', v2obj);
+    }
+    var fu = pbv.querySelector('#pbs-followup');
+    if(fu && !fu.querySelector('#s2pipe')){
+      var pipe = card('⚒ The Demo-First Pipeline (how a lead becomes a client)',
+        '<div id="s2pipe" style="font-size:13px;line-height:1.8;color:#d4dae4;">' +
+        '<b>1. Prospect Finder</b> surfaces businesses with weak or missing sites → <b>2. Mercedes</b> scores them; Hot leads get a forged demo → <b>3. FORGE</b> builds the demo from your best matching niche template → <b>4. Demo deploys</b> to a live URL → <b>5. Outreach</b> goes out with the live link in the very first touch → <b>6. SIGNAL</b> turns the before/after into content → <b>7. Close, launch, review request</b> at day 0 and day 30.<br><br>' +
+        '<b style="color:#f0b429;">Rule of the system:</b> no cold touch without a live demo link. The demo IS the pitch. Ten touches before noon means ten live demos working for you all day.</div>');
+      var fu1 = fu.querySelector('.pb-card');
+      if(fu1) fu1.insertAdjacentHTML('beforebegin', pipe); else fu.insertAdjacentHTML('beforeend', pipe);
+    }
+    var dl = pbv.querySelector('#pbs-daily');
+    if(dl && !dl.querySelector('#s2rhythm')){
+      var rhythm = card('🕗 Daily Operating Rhythm — v2 (Team of One)',
+        '<div id="s2rhythm" style="font-size:13px;line-height:1.9;color:#d4dae4;">' +
+        '<b>8:00–9:00</b> — Mercedes shift review: overnight replies, score changes, today\u2019s Hot list. Forge demos for every new Hot lead (batch of 3–5, ~20 min total).<br>' +
+        '<b>9:00–11:30</b> — Outreach block: calls + follow-ups, demo link in every touch. Ten touches minimum.<br>' +
+        '<b>11:30–12:00</b> — SIGNAL: post today\u2019s content (pack generated Mondays).<br>' +
+        '<b>1:00–4:00</b> — Build block: client work in FORGE/ATLAS. Protect this block — it\u2019s the revenue.<br>' +
+        '<b>4:00–5:00</b> — Pipeline hygiene: proposals out, review requests sent, scoreboard updated.</div>');
+      var dl1 = dl.querySelector('.pb-card');
+      if(dl1) dl1.insertAdjacentHTML('beforebegin', rhythm); else dl.insertAdjacentHTML('beforeend', rhythm);
+    }
+    var ws = pbv.querySelector('#pbs-what-we-sell');
+    if(ws && !ws.querySelector('#s2price')){
+      var price = card('💰 Pricing v2 — anchor harder',
+        '<div id="s2price" style="font-size:13px;line-height:1.85;color:#d4dae4;">' +
+        '<b style="color:#f0b429;">Starter — $1,000:</b> lead-gen one-pager. The demo they\u2019re looking at. Launch in days.<br>' +
+        '<b style="color:#f0b429;">Growth — $2,500:</b> THE default recommendation. Services depth, FAQ, reviews, second capture form.<br>' +
+        '<b style="color:#f0b429;">Authority — $5,000+:</b> market dominance. Sell to established businesses embarrassed by their site.<br>' +
+        '<b style="color:#22c55e;">Care Plan — $99–249/mo:</b> hosting, updates, monthly SEO report. Pitch at launch with the SEO Agent\u2019s baseline report. This is the MRR — every close gets the pitch.<br><br>' +
+        '<b>Custom builds (ATLAS lane):</b> dashboards, command centers, team systems — scope with ATLAS, fixed price $1,500–$5,000 typical, 50% to start / 50% at delivery. These buyers come from referrals and LinkedIn authority posts, not cold outreach.</div>');
+      var ws1 = ws.querySelector('.pb-card');
+      if(ws1) ws1.insertAdjacentHTML('beforebegin', price); else ws.insertAdjacentHTML('beforeend', price);
+    }
+    var tabs = pbv.querySelector('.pb-tabs');
+    var body = sc.parentElement;
+    if(tabs && body && !pbv.querySelector('#pbs-agent-team')){
+      tabs.insertAdjacentHTML('beforeend',
+        '<div class="pb-tab" onclick="pbTab(\'agent-team\')">Agent Team 🤝</div>' +
+        '<div class="pb-tab" onclick="pbTab(\'scoreboard\')">Scoreboard 🎯</div>' +
+        '<div class="pb-tab" onclick="pbTab(\'templates\')">Templates ★</div>');
+      var team =
+        '<div class="pb-section" id="pbs-agent-team">' +
+        '<div class="pb-s-title">The Agent Team — Who Owns What</div>' +
+        '<div class="pb-s-sub">Every agent has one job and a clean handoff. If something falls through, find the owner here.</div>' +
+        card('🔍 Prospect Finder', '<p style="font-size:13px;color:#d4dae4;line-height:1.6;">Owns lead sourcing + site audits. Hands off scored leads to → <b>Mercedes</b>.</p>') +
+        card('🤖 Mercedes (01)', '<p style="font-size:13px;color:#d4dae4;line-height:1.6;">Owns scoring, sequences, day-7 SMS, and the revenue pipeline. Hands Hot leads to → <b>FORGE</b> for demos.</p>') +
+        card('⚒️ FORGE (02)', '<p style="font-size:13px;color:#d4dae4;line-height:1.6;">Owns demo + client site production and the Template Library. Hands proof to → <b>SIGNAL</b>, baselines to → <b>SEO Agent</b>.</p>') +
+        card('💌 Client Success (03)', '<p style="font-size:13px;color:#d4dae4;line-height:1.6;">Owns onboarding + the review engine: Google review ask at launch AND day 30, every client. Hands quotes to → <b>SIGNAL</b>, testimonials to → <b>Ops</b>.</p>') +
+        card('📈 Growth (04)', '<p style="font-size:13px;color:#d4dae4;line-height:1.6;">Owns upsells, Care Plan renewals, and referral asks. Referral leads route back to → <b>Mercedes</b>.</p>') +
+        card('📊 Ops & Finance (05)', '<p style="font-size:13px;color:#d4dae4;line-height:1.6;">Owns the legitimacy stack: GBP, NAP consistency, licenses/insurance, contracts, invoices, and the Friday scoreboard. Serves trust assets to → <b>everyone</b>.</p>') +
+        card('🔎 SEO Agent (06)', '<p style="font-size:13px;color:#d4dae4;line-height:1.6;">Owns the baseline report per launch (that report IS the Care Plan pitch) and monthly client reports. Hands renewal proof to → <b>Growth</b>.</p>') +
+        card('📱 SIGNAL (07)', '<p style="font-size:13px;color:#d4dae4;line-height:1.6;">Owns the 5-post weekly cadence built from real builds and wins. Inbound leads route to → <b>Mercedes</b>.</p>') +
+        card('🗺️ ATLAS (08)', '<p style="font-size:13px;color:#d4dae4;line-height:1.6;">Owns custom builds: scope, spec, proposal, tasks, handoff. Case studies feed → <b>SIGNAL</b>.</p>') +
+        '</div>';
+      var score =
+        '<div class="pb-section" id="pbs-scoreboard">' +
+        '<div class="pb-s-title">The Scoreboard — update every Friday, 4pm</div>' +
+        '<div class="pb-s-sub">Targets, not vanity. One number per column, every Friday, no exceptions.</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:16px;">' +
+        ['50|Touches / wk','15|Demos forged','5|Proposals out','2|Closes / wk','MRR|Care plans ↑'].map(function(x){ var p=x.split('|'); return '<div style="background:rgba(240,180,41,.07);border:1px solid rgba(240,180,41,.25);border-radius:12px;padding:16px;text-align:center;"><div style="font-size:26px;font-weight:800;color:#f0b429;">' + p[0] + '</div><div style="font-size:11px;color:#9aa6b8;margin-top:4px;">' + p[1] + '</div></div>'; }).join('') +
+        '</div>' +
+        card('How to read it', '<p style="font-size:13px;color:#d4dae4;line-height:1.7;">If touches are green and closes are red, the problem is scripts or pricing. If demos are red, the pipeline starves — everything downstream follows.</p>') +
+        '</div>';
+      var tmpl =
+        '<div class="pb-section" id="pbs-templates">' +
+        '<div class="pb-s-title">Template Leverage</div>' +
+        '<div class="pb-s-sub">Templates compound. Your best build in each niche becomes the starting point for every demo in that niche.</div>' +
+        card('★ The rule', '<p style="font-size:13px;color:#d4dae4;line-height:1.7;">Every build you\u2019re proud of goes into the FORGE Template Library (★ Save Template inside FORGE). Your best plumber site becomes the starting structure for every plumber demo — every demo in that niche gets better AND faster. Target: one battle-tested template per niche you actively prospect. Refresh quarterly.</p>') +
+        '</div>';
+      body.insertAdjacentHTML('beforeend', team + score + tmpl);
+    }
+  }
+  if(typeof window.showPlaybook === 'function'){
+    var _spb = window.showPlaybook;
+    window.showPlaybook = function(){
+      rehome();
+      var pbv = document.getElementById('playbookView');
+      if(pbv && !pbv.getAttribute('data-v3')){ try{ upgradePlaybook(pbv); }catch(e){} pbv.setAttribute('data-v3','1'); }
+      _spb();
+    };
+  }
+})();
+</script>
+
 </body>
 </html>
