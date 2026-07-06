@@ -10559,19 +10559,19 @@ var AGENTS = [
     icon: '📱', color: '#ec4899', bg: 'rgba(236,72,153,.12)', accent: '#ec4899',
     desc: 'Mon–Fri at 8:00 AM PST. Claude Sonnet generates 5 platform-specific posts daily. Pillars rotate by day (Mon=Education, Tue=Services, Wed=Hot Take, Thu=Social Proof, Fri=Behind Scenes). Outputs: Instagram Reel caption, TikTok script with CapCut overlays, LinkedIn post with engagement question, Facebook post, and Google Business Profile post. All 5 saved to Notion content calendar + SMS to Robyn.',
     schedule: 'Mon–Fri · 8:00 AM PST',
-    makeId: '4908666', makeUrl: 'https://us2.make.com/2153645/scenarios/4908666/edit', webhookUrl: null, viewFn: "openEmbeddedAgent('/akira-signal.html','SIGNAL — Social Agent','📱')", type: 'scheduled'
+    makeId: '4908666', makeUrl: 'https://us2.make.com/2153645/scenarios/4908666/edit', webhookUrl: 'https://hook.us2.make.com/7vorb5d3yqes4navi3h3f1sde3l9g2na', viewFn: "openEmbeddedAgent('/akira-signal.html','SIGNAL — Social Agent','📱')", type: 'scheduled'
   }
 ];
 
 // ── AGENT CONFIG ──
 var AGENT_TABLE_DATA = [
   { id:'mercedes', name:'Mercedes', subtitle:'Sales Agent', icon:'✦', color:'#a78bfa', bg:'linear-gradient(135deg,rgba(139,92,246,.25),rgba(59,158,221,.15))', schedule:'Every 15 min · GitHub Actions', makeUrl:'https://github.com/DRRCMW/mercedes-akira-digital/actions', notionUrl:'https://www.notion.so/a3d2c021b2cc4aed983b10886908824a', webhookUrl:null, viewFn:"showAgent()", type:'github' },
-  { id:'web-builder', name:'Web Builder', subtitle:'Agent 02', icon:'🏗️', color:'#3b9edd', bg:'rgba(59,158,221,.15)', schedule:'Instant webhook on new client', makeUrl:'https://us2.make.com/2153645/scenarios/4786356/edit', notionUrl:'https://www.notion.so/45a529f23db74df29e6287dc0843f0d7', webhookUrl:'https://hook.us2.make.com/t4u4pskcvsdnw5jvq5nyxikwizfbia', viewFn:"openEmbeddedAgent('/akira-forge.html','AKIRA FORGE — Web Builder','⚒️')", type:'webhook' },
-  { id:'client-success', name:'Client Success', subtitle:'Agent 03', icon:'💌', color:'#22c55e', bg:'rgba(34,197,94,.15)', schedule:'Instant · fires after Web Builder', makeUrl:'https://us2.make.com/2153645/scenarios/4786320/edit', notionUrl:'https://www.notion.so/9bf24d82460c4f6ca3d9c0442ce3501b', webhookUrl:'https://hook.us2.make.com/5e3221wbb0f4y6jp9mk09g2tji62', viewFn:"showDedicatedAgent('client-success')", type:'webhook' },
-  { id:'ops-finance', name:'Ops & Finance', subtitle:'Agent 05', icon:'📊', color:'#c9941a', bg:'rgba(201,148,26,.12)', schedule:'Every Monday · 7:00 AM', makeUrl:'https://us2.make.com/2153645/scenarios/4786137/edit', notionUrl:'https://www.notion.so/c9bf66bb80ea48bba6408a858ee99b13', webhookUrl:null, viewFn:"showDedicatedAgent('ops-finance')", type:'scheduled' },
-  { id:'growth', name:'Growth Agent', subtitle:'Agent 04', icon:'📈', color:'#8b5cf6', bg:'rgba(139,92,246,.15)', schedule:'Every Monday · 8:00 AM', makeUrl:'https://us2.make.com/2153645/scenarios/4786443/edit', notionUrl:'https://www.notion.so/45a529f23db74df29e6287dc0843f0d7', webhookUrl:null, viewFn:"showDedicatedAgent('growth')", type:'scheduled' },
-  { id:'seo', name:'SEO Agent', subtitle:'Agent 06', icon:'🔍', color:'#ef4444', bg:'rgba(239,68,68,.12)', schedule:'1st of every month · 6:00 AM', makeUrl:'https://us2.make.com/2153645/scenarios/4786482/edit', notionUrl:'https://www.notion.so/33c64950aee3806e8e46e383a01266f3', webhookUrl:null, viewFn:"showSeoView()", type:'scheduled' },
-  { id:'social-media', name:'Social Media', subtitle:'Agent 07', icon:'📱', color:'#8b5cf6', bg:'rgba(139,92,246,.12)', schedule:'Mon–Fri · 8:00 AM PST', makeUrl:'https://us2.make.com/2153645/scenarios/4908666/edit', notionUrl:'', webhookUrl: null, viewFn: "openEmbeddedAgent('/akira-signal.html','SIGNAL — Social Agent','📱')", type:'scheduled' }
+  { id:'web-builder', name:'Web Builder', subtitle:'Agent 02', icon:'🏗️', color:'#3b9edd', bg:'rgba(59,158,221,.15)', schedule:'Instant webhook on new client', makeUrl:'https://us2.make.com/2153645/scenarios/4786356/edit', notionUrl:'https://www.notion.so/45a529f23db74df29e6287dc0843f0d7', webhookUrl:'https://hook.us2.make.com/7vorb5d3yqes4navi3h3f1sde3l9g2na', viewFn:"openEmbeddedAgent('/akira-forge.html','AKIRA FORGE — Web Builder','⚒️')", type:'webhook' },
+  { id:'client-success', name:'Client Success', subtitle:'Agent 03', icon:'💌', color:'#22c55e', bg:'rgba(34,197,94,.15)', schedule:'Instant · fires after Web Builder', makeUrl:'https://us2.make.com/2153645/scenarios/4786320/edit', notionUrl:'https://www.notion.so/9bf24d82460c4f6ca3d9c0442ce3501b', webhookUrl:'https://hook.us2.make.com/7vorb5d3yqes4navi3h3f1sde3l9g2na', viewFn:"showDedicatedAgent('client-success')", type:'webhook' },
+  { id:'ops-finance', name:'Ops & Finance', subtitle:'Agent 05', icon:'📊', color:'#c9941a', bg:'rgba(201,148,26,.12)', schedule:'Every Monday · 7:00 AM', makeUrl:'https://us2.make.com/2153645/scenarios/4786137/edit', notionUrl:'https://www.notion.so/c9bf66bb80ea48bba6408a858ee99b13', webhookUrl:'https://hook.us2.make.com/7vorb5d3yqes4navi3h3f1sde3l9g2na', viewFn:"showDedicatedAgent('ops-finance')", type:'scheduled' },
+  { id:'growth', name:'Growth Agent', subtitle:'Agent 04', icon:'📈', color:'#8b5cf6', bg:'rgba(139,92,246,.15)', schedule:'Every Monday · 8:00 AM', makeUrl:'https://us2.make.com/2153645/scenarios/4786443/edit', notionUrl:'https://www.notion.so/45a529f23db74df29e6287dc0843f0d7', webhookUrl:'https://hook.us2.make.com/7vorb5d3yqes4navi3h3f1sde3l9g2na', viewFn:"showDedicatedAgent('growth')", type:'scheduled' },
+  { id:'seo', name:'SEO Agent', subtitle:'Agent 06', icon:'🔍', color:'#ef4444', bg:'rgba(239,68,68,.12)', schedule:'1st of every month · 6:00 AM', makeUrl:'https://us2.make.com/2153645/scenarios/4786482/edit', notionUrl:'https://www.notion.so/33c64950aee3806e8e46e383a01266f3', webhookUrl:'https://hook.us2.make.com/7vorb5d3yqes4navi3h3f1sde3l9g2na', viewFn:"showSeoView()", type:'scheduled' },
+  { id:'social-media', name:'Social Media', subtitle:'Agent 07', icon:'📱', color:'#8b5cf6', bg:'rgba(139,92,246,.12)', schedule:'Mon–Fri · 8:00 AM PST', makeUrl:'https://us2.make.com/2153645/scenarios/4908666/edit', notionUrl:'', webhookUrl: 'https://hook.us2.make.com/7vorb5d3yqes4navi3h3f1sde3l9g2na', viewFn: "openEmbeddedAgent('/akira-signal.html','SIGNAL — Social Agent','📱')", type:'scheduled' }
 ];
 
 function showAgentControl() {
@@ -10622,7 +10622,7 @@ function triggerWebhookAgent(agentId, btn) {
   if (!agent || !agent.webhookUrl) return;
   var orig = btn ? btn.innerHTML : '';
   if (btn) { btn.innerHTML = '⏳ Running...'; btn.disabled = true; btn.style.opacity = '0.7'; }
-  fetch(agent.webhookUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ source:'command_center', triggered_at:new Date().toISOString(), agent:agentId }) })
+  fetch(agent.webhookUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ source:'command_center', triggered_at:new Date().toISOString(), agent:agentId, trigger:'manual', notion_token:(localStorage.getItem('akira_notion_token')||'') }) })
   .then(function(r) {
     if (btn) { btn.innerHTML = r.ok ? '✅ Triggered!' : '⚠️ Sent'; }
     showAgentToast((r.ok ? '✅ ' : '⚠️ ') + agent.name + (r.ok ? ' is now running!' : ' — check Make.com'), r.ok ? '#22c55e' : '#f59e0b');
@@ -13087,7 +13087,7 @@ window.addEventListener('load', function() {
       host.className = 'pb-view';
       fa.appendChild(host);
     }
-    var isWebhook = (id === 'client-success' || id === 'web-builder');
+    var isWebhook = true;
     var runBtn = isWebhook
       ? '<button class="dv-btn primary" onclick="triggerWebhookAgent(\'' + id + '\',this)">▶ Run Now</button>'
       : '<button class="dv-btn make" onclick="window.open(\'' + (a.makeUrl || '#') + '\',\'_blank\')">▶ Run in Make.com</button>';
