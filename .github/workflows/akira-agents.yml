@@ -1,0 +1,27 @@
+name: Akira Agents Schedule
+on:
+  schedule:
+    - cron: '0 14 * * 1'    # Ops & Finance briefing - Mon 7:00 AM PT
+    - cron: '0 15 * * 1'    # Growth content batch - Mon 8:00 AM PT
+    - cron: '0 15 * * 1-5'  # Social media posts - Mon-Fri 8:00 AM PT
+    - cron: '0 13 1 * *'    # SEO report - 1st of month 6:00 AM PT
+  workflow_dispatch: {}
+
+jobs:
+  route:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger agents via command center API (keys live in Vercel)
+        run: |
+          HOUR=$(date -u +%H); DOW=$(date -u +%u); DOM=$(date -u +%d)
+          post() {
+            curl -s -X POST https://mercedes-akira-digital.vercel.app/api/run-agent \
+              -H 'Content-Type: application/json' \
+              -d "{\"agent\":\"$1\",\"trigger\":\"scheduled\"}"
+            echo " -> $1 triggered"
+          }
+          [ "$HOUR" = "14" ] && [ "$DOW" = "1" ] && post ops-finance
+          [ "$HOUR" = "15" ] && [ "$DOW" = "1" ] && post growth
+          [ "$HOUR" = "15" ] && [ "$DOW" -le "5" ] && post social-media
+          [ "$HOUR" = "13" ] && [ "$DOM" = "01" ] && post seo
+          exit 0
