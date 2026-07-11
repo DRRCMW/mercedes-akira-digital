@@ -538,6 +538,8 @@ BANNED (never use any of these):
 - Uniform 8-16px border-radius on every element; glassmorphism/frosted panels; floating blob shapes
 - Placeholder-gray boxes with no art direction; lorem ipsum; generic stock phrases ("Welcome to", "We are committed to excellence", "Look no further", "Elevate your")
 - The same section rhythm repeated: centered heading → paragraph → grid of cards, over and over
+- The three current AI default looks (unless the client explicitly asks): (1) warm cream background near #F4F1EA + high-contrast serif + terracotta/clay accent near #D97757; (2) near-black page with a single acid-green or vermilion accent; (3) broadsheet layout of hairline rules, zero border-radius, dense newspaper columns. These are defaults, not choices — if your plan matches one, redesign it for THIS client
+- Copy tells: seller-speak ("Elevate", "Unleash", "seamless", "cutting-edge"), clever over specific, passive CTAs. Every headline must name something real: the trade, the city, the outcome, a number
 
 REQUIRED CRAFT (what real designers do):
 - A type scale with real contrast: display moments at clamp(3rem,8vw,7rem), tight leading (0.95-1.05) and slight negative tracking on big serifs/grotesques; body at 1rem-1.125rem with 1.6-1.7 leading
@@ -1018,6 +1020,9 @@ Produce a creative brief AND design system for this client's new website. Respon
  "copyAngles": ["3-5 conversion angles specific to this industry and city"],
  "palette": {"bg":"#hex","surface":"#hex","primary":"#hex","accent":"#hex (CTA only)","text":"#hex","muted":"#hex"},
  "fonts": {"display":"Google Font name","body":"Google Font name"},
+ "defaultTrap": "one sentence: the generic site every AI would produce for this industry (name its palette, hero, and layout)",
+ "differentiators": ["3 concrete ways THIS design breaks from that default — specific, visual, checkable"],
+ "signature": "ONE named signature element this site will be remembered by, with a concrete implementation note (e.g. oversized ghost house-number numerals that bleed off the hero edge)",
  "designDirection": "2-3 sentences: the visual concept and one signature element that makes this site memorable and distinctly high-end for this trade",
  "seo": {"title":"≤60 chars, business + service + city","description":"≤155 chars meta description"},
  "schemaType": "the most specific schema.org type (e.g. Plumber, Attorney, Dentist, HVACBusiness, Electrician, RoofingContractor, LocalBusiness)"
@@ -1041,6 +1046,8 @@ ${JSON.stringify(c,null,2)}
 
 APPROVED CREATIVE BRIEF & DESIGN SYSTEM (follow exactly — palette, fonts, headline, direction):
 ${JSON.stringify(brief,null,2)}
+
+NON-NEGOTIABLE: the brief's "signature" element must be prominently and literally implemented on the page — a design director will fail this build if it is missing or watered down. The brief's "differentiators" must all be visible in the final design.
 
 PACKAGE SCOPE:
 ${PKG_SPEC[c.pkg]}
@@ -1074,7 +1081,7 @@ Remember: output ONLY the raw HTML document, starting with <!DOCTYPE html>.`;
     const auditPrompt = `You are Akira Digital's compliance QA lead. Audit this generated client website (industry: ${c.industry}). Check ONLY against this list and return ONLY a JSON array, no markdown:
 [{"item":"short name","status":"pass|warn|fail","note":"one short sentence"}]
 
-Checklist: privacy policy present & real; terms of service present & real; cookie consent banner; industry-specific legal disclaimers correct for ${c.industry}; license/credential display (if provided: ${c.license||'none provided'}); WCAG AA basics (skip link, labels, alt text, focus styles, contrast, heading order); SEO meta (title, description, OG tags, JSON-LD schema present & valid type); lead form with placeholder endpoint clearly flagged for swap; click-to-call tel: links; mobile call bar; single-file / no external JS libs; NO AI design tells (fail if: purple-blue gradients, emoji icons, Inter/Poppins display font, generic centered hero with two pill buttons, three identical feature cards, gradient headline text).
+Checklist: privacy policy present & real; terms of service present & real; cookie consent banner; industry-specific legal disclaimers correct for ${c.industry}; license/credential display (if provided: ${c.license||'none provided'}); WCAG AA basics (skip link, labels, alt text, focus styles, contrast, heading order); SEO meta (title, description, OG tags, JSON-LD schema present & valid type); lead form with placeholder endpoint clearly flagged for swap; click-to-call tel: links; mobile call bar; single-file / no external JS libs; NO AI design tells (fail if: purple-blue gradients, emoji icons, Inter/Poppins display font, generic centered hero with two pill buttons, three identical feature cards, gradient headline text, cream+serif+terracotta default look, repeated identical section rhythm); signature element present (fail if the brief's signature element ${brief && brief.signature ? JSON.stringify(brief.signature) : ''} is not visibly implemented).
 
 WEBSITE HTML (may be truncated):
 ${siteHTML.slice(0, 120000)}`;
@@ -1083,6 +1090,30 @@ ${siteHTML.slice(0, 120000)}`;
     catch(e){ audit=[{item:'Audit',status:'warn',note:'Audit response could not be parsed — review manually.'}]; }
     renderAudit(audit);
     setStage(4,'done', audit.filter(a=>a.status==='pass').length+'/'+audit.length+' checks passed');
+
+    /* STAGE 4.5 — design critique + auto-upgrade (elite loop) */
+    try{
+      setStage(4,'active','design critique…');
+      log('stage 4.5 — design director critique');
+      const critPrompt = `You are a ruthless design director reviewing a client website before it ships. The approved brief (signature element + differentiators) was:\n${JSON.stringify({signature:brief.signature||brief.designDirection, differentiators:brief.differentiators||[], palette:brief.palette, fonts:brief.fonts},null,1)}\n\nGrade this website. Fail anything that reads as an AI default: template hero, repeated section rhythm, missing signature element, characterless typography, decoration that encodes nothing, seller-speak copy. Respond ONLY JSON, no markdown: {"grade":"elite|good|generic","fixes":["specific, implementable design upgrade",...]} (max 6 fixes, empty array if elite).\n\nWEBSITE HTML (may be truncated):\n${siteHTML.slice(0,110000)}`;
+      const crit = parseJSONLoose(await callClaude(critPrompt, 1500));
+      if(crit && crit.grade && crit.grade !== 'elite' && Array.isArray(crit.fixes) && crit.fixes.length){
+        log('critique: '+crit.grade.toUpperCase()+' — auto-applying '+crit.fixes.length+' design upgrades');
+        setStage(4,'active','upgrading design ('+crit.fixes.length+' fixes)…');
+        const upPrompt = `You are Akira Digital's senior designer. Current client website:\n\n${siteHTML}\n\nApply ALL of these design upgrades precisely. Keep all copy, compliance features (privacy/terms, disclaimers, schema, forms, accessibility) and structure that is not named intact:\n- ${crit.fixes.join('\n- ')}\n${photoManifest()}\nIf image tokens like {{PHOTO_n}} appear, keep using tokens. Output ONLY the complete raw HTML starting with <!DOCTYPE html>.`;
+        const frame2 = $('previewFrame'); let lp2 = 0;
+        const raw2 = await streamClaude(upPrompt, 42000, (partial)=>{
+          const kb=(partial.length/1024).toFixed(1);
+          setStage(4,'active','upgrading · '+kb+' KB…');
+          const now=Date.now(); if(now-lp2>1200){ lp2=now; frame2.srcdoc = expandPhotos(stripFences(partial)); }
+        });
+        const upgraded = stripFences(raw2);
+        if(upgraded && upgraded.length > siteHTML.length*0.6){ siteHTML = upgraded; renderPreview(siteHTML); log('design upgraded — '+(siteHTML.length/1024).toFixed(1)+' KB'); }
+        setStage(4,'done','critique: '+crit.grade+' → upgraded');
+      } else if(crit && crit.grade){
+        log('critique: '+crit.grade.toUpperCase()+' — no changes needed');
+      }
+    }catch(ce){ log('design critique skipped — '+ce.message, true); }
 
     const secs = Math.round((Date.now()-t0)/1000);
     log('build complete in '+secs+'s — review, revise, download. Client-ready.');
