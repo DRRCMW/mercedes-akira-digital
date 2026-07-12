@@ -317,6 +317,10 @@ You think like a closer. You write like a human. You perform like a machine.`,
 
       // Update pipeline
       const pIdx = pipeline.findIndex(p => p.name === lead.name && p.address === lead.address);
+      // Personalized Cal.com booking link — carries the lead's ID so a booking auto-matches in /api/book
+      const bookingLink = `https://cal.com/akira-digital?metadata[leadId]=${lead.uid || lead.place_id || ''}`;
+      const withCTA = (t) => (t && !String(t).includes('cal.com/akira-digital')) ? `${t}\n\nBook a quick 15-min call here: ${bookingLink}` : t;
+      const withSMS = (t) => (t && !String(t).includes('cal.com')) ? `${t} Book: cal.com/akira-digital` : t;
       if (pIdx !== -1) {
         if (!pipeline[pIdx].touchpoints) pipeline[pIdx].touchpoints = [];
         pipeline[pIdx].touchpoints.push({
@@ -333,14 +337,14 @@ You think like a closer. You write like a human. You perform like a machine.`,
         pipeline[pIdx].mercedesPackage = {
           // Preserve original cold email and subject if this is a follow-up
           subject:           isFollowUp ? (existingPkg.subject || parsed.subject || '') : (parsed.subject || ''),
-          coldEmail:         isFollowUp ? (existingPkg.coldEmail || parsed.coldEmail || '') : (parsed.coldEmail || ''),
+          coldEmail:         withCTA(isFollowUp ? (existingPkg.coldEmail || parsed.coldEmail || '') : (parsed.coldEmail || '')),
           // Always update follow-ups with latest versions
-          followUp3:         parsed.followUp3 || existingPkg.followUp3 || '',
-          followUp7:         parsed.followUp7 || existingPkg.followUp7 || '',
-          followUp14:        parsed.followUp14 || existingPkg.followUp14 || '',
-          breakup:           parsed.breakup || existingPkg.breakup || '',
-          linkedin:          parsed.linkedin || existingPkg.linkedin || '',
-          sms:               parsed.sms || existingPkg.sms || '',
+          followUp3:         withCTA(parsed.followUp3 || existingPkg.followUp3 || ''),
+          followUp7:         withCTA(parsed.followUp7 || existingPkg.followUp7 || ''),
+          followUp14:        withCTA(parsed.followUp14 || existingPkg.followUp14 || ''),
+          breakup:           withCTA(parsed.breakup || existingPkg.breakup || ''),
+          linkedin:          withCTA(parsed.linkedin || existingPkg.linkedin || ''),
+          sms:               withSMS(parsed.sms || existingPkg.sms || ''),
           callScript:        parsed.callScript || existingPkg.callScript || '',
           angle:             isFollowUp ? (existingPkg.angle || parsed.angle || '') : (parsed.angle || ''),
           recommendedPackage: parsed.recommendedPackage || existingPkg.recommendedPackage || 'Starter',
@@ -375,13 +379,13 @@ You think like a closer. You write like a human. You perform like a machine.`,
         closePct: parsed.closePct || 0,
         recommendedPackage: parsed.recommendedPackage || 'Starter',
         subject: parsed.subject || '',
-        coldEmail: parsed.coldEmail || '',
-        followUp3: parsed.followUp3 || '',
-        followUp7: parsed.followUp7 || '',
-        followUp14: parsed.followUp14 || '',
-        breakup: parsed.breakup || '',
-        linkedin: parsed.linkedin || '',
-        sms: parsed.sms || '',
+        coldEmail: withCTA(parsed.coldEmail || ''),
+        followUp3: withCTA(parsed.followUp3 || ''),
+        followUp7: withCTA(parsed.followUp7 || ''),
+        followUp14: withCTA(parsed.followUp14 || ''),
+        breakup: withCTA(parsed.breakup || ''),
+        linkedin: withCTA(parsed.linkedin || ''),
+        sms: withSMS(parsed.sms || ''),
         callScript: parsed.callScript || '',
         objections: objArr,
         proposalHook: parsed.proposalHook || '',
