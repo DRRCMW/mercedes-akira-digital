@@ -10634,6 +10634,55 @@ function triggerWebhookAgent(agentId, btn) {
   });
 }
 
+/* ══ PULL REPORT — fetches real Notion data and renders branded one-pager ══ */
+async function pullAgentReport(agentId) {
+  var NOTIONDB = {
+    'mercedes':'9bf24d82460c4f6ca3d9c0442ce3501b',
+    'web-builder':'9bf24d82460c4f6ca3d9c0442ce3501b',
+    'client-success':'9bf24d82460c4f6ca3d9c0442ce3501b',
+    'ops-finance':'00c970b57dde4018ba07ada002f85fc4',
+    'growth':'9bf24d82460c4f6ca3d9c0442ce3501b',
+    'seo':'9bf24d82460c4f6ca3d9c0442ce3501b',
+    'social-media':'9bf24d82460c4f6ca3d9c0442ce3501b'
+  };
+  var AGENT_LABEL={'mercedes':'Sales Agent — Mercedes','web-builder':'Web Builder Agent','client-success':'Client Success Agent','ops-finance':'Ops & Finance Agent','growth':'Growth Agent','seo':'SEO Agent','social-media':'Social Media Agent'};
+  var AGENT_COLOR={'mercedes':'#f0b429','web-builder':'#3b9edd','client-success':'#22c55e','ops-finance':'#c9941a','growth':'#8b5cf6','seo':'#ef4444','social-media':'#ec4899'};
+  var FILTER_FROM={'mercedes':'Sales Agent','web-builder':'Web Builder','client-success':'Client Success','ops-finance':null,'growth':'Growth Agent','seo':'SEO Agent','social-media':'Social Media'};
+  var dbId=NOTIONDB[agentId]||'9bf24d82460c4f6ca3d9c0442ce3501b';
+  var tok=localStorage.getItem('akira_notion_token')||'';
+  var color=AGENT_COLOR[agentId]||'#f0b429';
+  var label=AGENT_LABEL[agentId]||agentId;
+  var filterFrom=FILTER_FROM[agentId];
+  var overlay=document.getElementById('reportOverlay');
+  if(!overlay){overlay=document.createElement('div');overlay.id='reportOverlay';overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;overflow-y:auto;padding:20px;box-sizing:border-box;';document.body.appendChild(overlay);}
+  overlay.innerHTML='<div style="text-align:center;padding:80px;color:#fff;font-size:16px;">⏳ Pulling report from Notion…</div>';
+  overlay.style.display='block';
+  function propText(props,key){var p=props&&props[key];if(!p)return '';if(p.type==='title'&&p.title)return p.title.map(function(t){return t.plain_text||'';}).join('');if(p.type==='rich_text'&&p.rich_text)return p.rich_text.map(function(t){return t.plain_text||'';}).join('');if(p.type==='select'&&p.select)return p.select.name||'';if(p.type==='number')return p.number!=null?String(p.number):'';if(p.type==='date'&&p.date)return p.date.start||'';return '';}
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  try {
+    var endpoint='https://api.notion.com/v1/databases/'+dbId+'/query';
+    var filterBody={page_size:10,sorts:[{timestamp:'created_time',direction:'descending'}]};
+    if(filterFrom)filterBody.filter={property:'From Agent',select:{equals:filterFrom}};
+    var url='/api/notion?url='+encodeURIComponent(endpoint);
+    var hdr={'Content-Type':'application/json','x-notion-token':tok,'Referer':location.origin};
+    var resp=await fetch(url,{method:'POST',headers:hdr,body:JSON.stringify(filterBody)});
+    var data=await resp.json();
+    var results=data.results||[];
+    if(!results.length&&filterFrom){var r2=await fetch(url,{method:'POST',headers:hdr,body:JSON.stringify({page_size:8,sorts:[{timestamp:'created_time',direction:'descending'}]})});var d2=await r2.json();results=d2.results||[];}
+    var pipelineStats='';
+    if(agentId==='mercedes'){
+      try{var pr=await fetch('/api/export?key='+(localStorage.getItem('akira_key')||'Mercedes2707'));var pd=await pr.json();var pipe=pd.data;for(var i=0;i<3&&typeof pipe==='string';i++)pipe=JSON.parse(pipe);if(Array.isArray(pipe)){var stages={};pipe.forEach(function(l){stages[l.stage||'?']=(stages[l.stage||'?']||0)+1;});var hot=pipe.filter(function(l){return(l.leadScore==='hot'||l.score>=70);}).length;pipelineStats='<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:14px;margin:12px 0;"><div style="font-size:12px;color:#aaa;font-weight:700;letter-spacing:.08em;margin-bottom:8px;">LIVE PIPELINE</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">'+Object.entries(stages).map(function(e){return'<div style="text-align:center;"><div style="font-size:20px;font-weight:800;color:'+color+';">'+e[1]+'</div><div style="font-size:11px;color:#aaa;">'+e[0]+'</div></div>';}).join('')+'<div style="text-align:center;"><div style="font-size:20px;font-weight:800;color:#22c55e;">'+hot+'</div><div style="font-size:11px;color:#aaa;">hot leads</div></div></div></div>';}}catch(e){}
+    }
+    var entriesHTML='';
+    if(agentId==='ops-finance'){results.forEach(function(r){var p=r.properties||{};entriesHTML+='<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:14px;margin:10px 0;"><div style="font-weight:700;font-size:15px;color:'+color+';margin-bottom:8px;">'+(propText(p,'Week Of')||'Report')+'</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;font-size:13px;">'+['Active Projects','At Risk Projects','New Revenue','Care Plan MRR','New Leads','Launched This Week'].map(function(k){var v=propText(p,k);if(!v&&v!=='0')return'';return'<div><span style="color:#aaa;">'+k+':</span> <strong style="color:#fff;">'+(k.includes('Revenue')||k.includes('MRR')?'$':'')+esc(v)+'</strong></div>';}).join('')+'</div></div>';});}
+    else{results.forEach(function(r){var p=r.properties||{};var msg=propText(p,'Message')||'';var client=propText(p,'Client Name')||'';var type=propText(p,'Type')||'';var stage=propText(p,'Project Stage')||'';var ts=r.created_time?new Date(r.created_time).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}):'';entriesHTML+='<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:14px;margin:10px 0;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><div style="display:flex;gap:6px;flex-wrap:wrap;">'+(client?'<span style="background:'+color+'22;color:'+color+';border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;">'+esc(client)+'</span>':'')+(type?'<span style="background:rgba(255,255,255,.06);color:#aaa;border-radius:6px;padding:2px 8px;font-size:11px;">'+esc(type)+'</span>':'')+(stage?'<span style="background:rgba(255,255,255,.04);color:#aaa;border-radius:6px;padding:2px 8px;font-size:11px;">'+esc(stage)+'</span>':'')+'</div><span style="font-size:11px;color:#666;">'+ts+'</span></div><div style="font-size:13px;color:#d1d5db;white-space:pre-wrap;line-height:1.55;">'+esc(msg.slice(0,600))+(msg.length>600?'…':'')+'</div></div>';});}
+    if(!entriesHTML)entriesHTML='<div style="color:#aaa;text-align:center;padding:30px;">No entries yet. Run the agent first.</div>';
+    var logoImg=document.querySelector('.logo-box img');var logoSrc=logoImg?logoImg.src:'';
+    var now=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    overlay.innerHTML='<div style="max-width:700px;margin:0 auto;font-family:system-ui,sans-serif;">'+'<div style="text-align:right;margin-bottom:12px;"><button onclick=\'document.getElementById("reportOverlay").style.display="none"\' style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:8px 18px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">✕ Close</button>'+'<button onclick="window.print()" style="background:'+color+';border:none;color:#000;padding:8px 18px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;margin-left:8px;">🖨 Print / Save PDF</button></div>'+'<div style="background:#0d1117;border:1px solid rgba(255,255,255,.1);border-radius:16px;overflow:hidden;">'+'<div style="background:linear-gradient(135deg,'+color+'22,'+color+'08);border-bottom:2px solid '+color+'40;padding:24px 28px;">'+'<div style="display:flex;justify-content:space-between;align-items:center;">'+'<div style="display:flex;align-items:center;gap:14px;">'+(logoSrc?'<img src="'+logoSrc+'" style="width:44px;height:44px;border-radius:8px;border:1px solid rgba(255,255,255,.15);">':'')+'<div><div style="font-size:11px;font-weight:800;letter-spacing:.12em;color:'+color+';text-transform:uppercase;">AKIRA DIGITAL</div>'+'<div style="font-size:20px;font-weight:800;color:#fff;margin-top:2px;">'+label+' Report</div></div></div>'+'<div style="text-align:right;"><div style="font-size:11px;color:#666;">Generated</div><div style="font-size:12px;color:#aaa;font-weight:600;">'+now+'</div></div></div></div>'+'<div style="padding:20px 28px;">'+pipelineStats+entriesHTML+'</div>'+'<div style="background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.06);padding:14px 28px;display:flex;justify-content:space-between;align-items:center;">'+'<div style="font-size:11px;color:#555;">AKIRA DIGITAL · akiradigital.net · Powered by Mercedes AI</div>'+'<div style="width:8px;height:8px;border-radius:50%;background:#22c55e;" title="System online"></div></div></div></div>';
+  }catch(err){overlay.innerHTML='<div style="text-align:center;padding:60px;color:#ef4444;">⚠️ Error: '+esc(err.message)+'<br><br><button onclick=\'document.getElementById("reportOverlay").style.display="none"\' style="background:#fff;color:#000;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;margin-top:10px;">Close</button></div>';}
+}
+
 function runAgentNow(makeId, agentName) {
   var agent = AGENT_TABLE_DATA.find(function(a){ return a.makeUrl && a.makeUrl.includes(makeId); });
   if (agent && agent.webhookUrl) { triggerWebhookAgent(agent.id, null); }
@@ -13105,7 +13154,8 @@ window.addEventListener('load', function() {
       '</div>' +
       '<div class="dv-actions">' + runBtn +
         '<button class="dv-btn" onclick="window.open(\'' + (a.makeUrl || '#') + '\',\'_blank\')">Open Make.com</button>' +
-        '<button class="dv-btn" onclick="window.open(\'' + (a.notionUrl || '#') + '\',\'_blank\')">View Output in Notion</button>' +
+        '<button class="dv-btn" style="background:rgba(240,180,41,.18);color:#f0b429;border-color:rgba(240,180,41,.4);" onclick="pullAgentReport(\'' + id + '\')">📄 Pull Report</button>' +
+        '<button class="dv-btn" onclick="window.open(\'' + (a.notionUrl || '#') + '\',\'_blank\')">View in Notion</button>' +
         '<button class="dv-btn" onclick="showAgentControl()">← All Agents</button>' +
       '</div>' +
       '<div class="dv-panel"><div class="dv-panel-title">What this agent does</div><p>' + escHtml(a.desc || '') + '</p></div>' +
