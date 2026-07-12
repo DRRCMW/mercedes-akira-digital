@@ -9169,7 +9169,7 @@ function notionTest(token) {
             </div>
             <div id="cloudLog" style="font-size:10px;color:rgba(255,255,255,.3);line-height:1.6;min-height:20px;max-height:80px;overflow-y:auto;scrollbar-width:thin;"></div>
             <div style="margin-top:.5rem;padding:.4rem .6rem;background:rgba(255,255,255,.03);border-radius:5px;font-size:10px;color:rgba(255,255,255,.25);line-height:1.6;">
-              ☁️ When connected, Mercedes runs autonomously every 15 min via GitHub Actions — no tab needed. New packages appear after clicking "Pull Queue".
+              ☁️ Mercedes runs autonomously every hour, Mon–Fri 6 AM–3 PM PT, via the Make Scheduler — no tab needed. New packages appear after clicking "Pull Queue".
             </div>
           </div>
 
@@ -10486,10 +10486,10 @@ var AGENTS = [
     id: 'mercedes', name: 'Mercedes', subtitle: 'Sales Agent',
     icon: '🤖', color: '#f0b429', bg: 'rgba(240,180,41,.12)',
     accent: '#f0b429',
-    desc: "Robyn's AI revenue agent. Runs every 15 min Mon–Fri. Scans new leads, scores them Hot/Warm/Cold, triggers automated follow-up cadences on Days 3/7/14, writes objection rebuttals, and logs all activity to Notion. Every lead in your pipeline is actively worked.",
-    schedule: 'Every 15 min (GitHub Actions)',
-    makeId: null,
-    makeUrl: 'https://github.com/DRRCMW/mercedes-akira-digital/actions',
+    desc: "Robyn's AI revenue agent. Runs hourly Mon–Fri, 6 AM–3 PM PT via the Make Scheduler, working 3 leads per run. Scores leads Hot/Warm/Cold, writes the full outreach package (cold email, Day 3/7/14 follow-ups, breakup, LinkedIn, SMS) with a Cal.com booking link in every message, texts hot leads instantly via Twilio, auto-replies to inbound texts with the booking link, sends SMS booking confirmations, and logs every action to the command center and Notion.",
+    schedule: 'Hourly · Mon–Fri · 6 AM–3 PM PT (Make Scheduler)',
+    makeId: '5639157',
+    makeUrl: 'https://us2.make.com/2153645/scenarios/5639157/edit',
     notionUrl: 'https://www.notion.so/a3d2c021b2cc4aed983b10886908824a',
     status: 'active',
     runs: 37
@@ -10503,7 +10503,7 @@ var AGENTS = [
     makeId: '4786356',
     makeUrl: 'https://us2.make.com/2153645/scenarios/4786356/edit',
     notionUrl: 'https://www.notion.so/45a529f23db74df29e6287dc0843f0d7',
-    status: 'active',
+    status: 'standby (activate in Make)',
     runs: 0
   },
   {
@@ -10515,7 +10515,7 @@ var AGENTS = [
     makeId: '4786320',
     makeUrl: 'https://us2.make.com/2153645/scenarios/4786320/edit',
     notionUrl: 'https://www.notion.so/9bf24d82460c4f6ca3d9c0442ce3501b',
-    status: 'active',
+    status: 'standby (activate in Make)',
     runs: 0
   },
   {
@@ -10527,7 +10527,7 @@ var AGENTS = [
     makeId: '4786137',
     makeUrl: 'https://us2.make.com/2153645/scenarios/4786137/edit',
     notionUrl: 'https://www.notion.so/c9bf66bb80ea48bba6408a858ee99b13',
-    status: 'active',
+    status: 'standby (activate in Make)',
     runs: 8
   },
   {
@@ -10539,7 +10539,7 @@ var AGENTS = [
     makeId: '4786443',
     makeUrl: 'https://us2.make.com/2153645/scenarios/4786443/edit',
     notionUrl: 'https://www.notion.so/45a529f23db74df29e6287dc0843f0d7',
-    status: 'active',
+    status: 'standby (activate in Make)',
     runs: 0
   },
   {
@@ -10551,7 +10551,7 @@ var AGENTS = [
     makeId: '4786482',
     makeUrl: 'https://us2.make.com/2153645/scenarios/4786482/edit',
     notionUrl: 'https://www.notion.so/33c64950aee3806e8e46e383a01266f3',
-    status: 'active',
+    status: 'standby (activate in Make)',
     runs: 0
   },
   {
@@ -10565,7 +10565,7 @@ var AGENTS = [
 
 // ── AGENT CONFIG ──
 var AGENT_TABLE_DATA = [
-  { id:'mercedes', name:'Mercedes', subtitle:'Sales Agent', icon:'✦', color:'#a78bfa', bg:'linear-gradient(135deg,rgba(139,92,246,.25),rgba(59,158,221,.15))', schedule:'Every 15 min · GitHub Actions', makeUrl:'https://github.com/DRRCMW/mercedes-akira-digital/actions', notionUrl:'https://www.notion.so/a3d2c021b2cc4aed983b10886908824a', webhookUrl:null, viewFn:"showAgent()", type:'github' },
+  { id:'mercedes', name:'Mercedes', subtitle:'Sales Agent', icon:'✦', color:'#a78bfa', bg:'linear-gradient(135deg,rgba(139,92,246,.25),rgba(59,158,221,.15))', schedule:'Hourly · Mon–Fri · 6 AM–3 PM PT', makeUrl:'https://us2.make.com/2153645/scenarios/5639157/edit', notionUrl:'https://www.notion.so/a3d2c021b2cc4aed983b10886908824a', webhookUrl:null, viewFn:"showAgent()", type:'github' },
   { id:'web-builder', name:'Web Builder', subtitle:'Agent 02', icon:'🏗️', color:'#3b9edd', bg:'rgba(59,158,221,.15)', schedule:'Instant webhook on new client', makeUrl:'https://us2.make.com/2153645/scenarios/4786356/edit', notionUrl:'https://www.notion.so/45a529f23db74df29e6287dc0843f0d7', webhookUrl:'/api/run-agent', viewFn:"openEmbeddedAgent('/akira-forge.html','AKIRA FORGE — Web Builder','⚒️')", type:'webhook' },
   { id:'client-success', name:'Client Success', subtitle:'Agent 03', icon:'💌', color:'#22c55e', bg:'rgba(34,197,94,.15)', schedule:'Instant · fires after Web Builder', makeUrl:'https://us2.make.com/2153645/scenarios/4786320/edit', notionUrl:'https://www.notion.so/9bf24d82460c4f6ca3d9c0442ce3501b', webhookUrl:'/api/run-agent', viewFn:"showDedicatedAgent('client-success')", type:'webhook' },
   { id:'ops-finance', name:'Ops & Finance', subtitle:'Agent 05', icon:'📊', color:'#c9941a', bg:'rgba(201,148,26,.12)', schedule:'Every Monday · 7:00 AM', makeUrl:'https://us2.make.com/2153645/scenarios/4786137/edit', notionUrl:'https://www.notion.so/c9bf66bb80ea48bba6408a858ee99b13', webhookUrl:'/api/run-agent', viewFn:"showDedicatedAgent('ops-finance')", type:'scheduled' },
@@ -10591,7 +10591,7 @@ function showAgentControl() {
 function renderAgentTable() {
   var table = document.getElementById('agentRunnerTable');
   if (!table) return;
-  var TL = { webhook:'⚡ Webhook', scheduled:'🕐 Scheduled', github:'⚙️ GitHub' };
+  var TL = { webhook:'⚡ Webhook', scheduled:'🕐 Scheduled', github:'🕐 Hourly Auto' };
   var TC = { webhook:'#22c55e', scheduled:'#f59e0b', github:'#a78bfa' };
   table.innerHTML = AGENT_TABLE_DATA.map(function(a, idx) {
     var last = idx === AGENT_TABLE_DATA.length - 1;
@@ -10748,7 +10748,7 @@ function fetchLatestWeeklyReport() {
   .then(function(data) {
     var results = (data && data.results) || [];
     if (!results.length) {
-      el.innerHTML = '<span style="color:var(--gray);">No weekly reports generated yet. Ops Agent runs every Monday at 7am.</span>';
+      el.innerHTML = '<span style="color:var(--gray);">No weekly reports yet. Ops Agent is on standby; once activated in Make it runs Mondays at 7am.</span>';
       return;
     }
     var r = results[0];
