@@ -406,10 +406,8 @@ You think like a closer. You write like a human. You perform like a machine.`,
       const leadPhone = lead.phone || '';
 
       // Send SMS on Day 7 warm follow-up OR initial contact for hot leads
-      const shouldSendSms = SMS_WEBHOOK && leadPhone && smsText && (
-        followUpStage === 'day7_stat' ||
-        (!isFollowUp && leadScore === 'hot')
-      );
+      // SMS sending disabled — Mercedes builds the script, Robyn sends manually
+      const shouldSendSms = false;
 
       if (shouldSendSms) {
         try {
