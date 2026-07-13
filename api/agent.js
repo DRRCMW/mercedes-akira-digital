@@ -238,7 +238,7 @@ Respond ONLY with valid JSON, no markdown, no extra text:
   "followUp14": "Day 14 follow-up — case study from similar business type, create urgency with project slot, 70 words",
   "breakup": "Day 30 breakup email — keep door open, no hard feelings, 50 words",
   "linkedin": "LinkedIn connection note (max 280 chars, feels human not salesy, reference something specific about their business)",
-  "sms": "Day 7 SMS for warm non-responders (max 160 chars, conversational, one question)",
+  "sms": "SMS outreach (max 160 chars). For HOT leads on first contact, use this template adapted to the business: \"Hey, this is Mercedes with Akira Digital. I know you're busy — I'll keep this short. I noticed [business name] has amazing reviews but no website, which means you're probably missing booking inquiries every week. I help [business type] like yours get online fast. Got 15 minutes this week to chat?\" For Day 7 warm follow-up: one conversational question referencing their business.",
   "callScript": "30-second cold call opener that earns more time — reference their business specifically",
   "objections": [
     "too expensive rebuttal — use ROI math, 2 sentences",
@@ -267,12 +267,12 @@ Respond ONLY with valid JSON, no markdown, no extra text:
         body: JSON.stringify({
           model: 'claude-sonnet-4-6',
           max_tokens: 2500,
-          system: `You are Mercedes, the autonomous AI Sales Agent for Akira Digital — a web design agency that builds high-converting websites for home service businesses and law firms in 10 days, starting at $1,000.
+          system: `You are Mercedes, the autonomous AI Sales Agent for Akira Digital — a web design agency that builds high-converting websites for home service businesses and law firms, starting at $1,000.
 
 YOUR MISSION: Generate outreach packages that close deals. Target: $1M in revenue in 12 months. That means 50 projects/month by Month 12. Every word you write should move a prospect closer to paying.
 
 AKIRA DIGITAL PACKAGES:
-- Starter: $1,000 one-time — 3 pages, 10-day delivery, mobile-first, basic SEO, Google Business setup
+- Starter: $1,000 one-time — 3 pages, mobile-first, basic SEO, Google Business setup
 - Growth: $2,500 one-time — 5 pages, 14-day delivery, GA4, call tracking, CRM integration
 - Authority: $5,000+ one-time — 8-10 pages, full rebrand, Google Ads landing pages, local SEO dominance
 - Care Plan: $300/month — monthly updates (2hrs), security monitoring, daily backups, SEO report, priority support
