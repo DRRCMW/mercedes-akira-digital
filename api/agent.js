@@ -238,7 +238,7 @@ Respond ONLY with valid JSON, no markdown, no extra text:
   "followUp14": "Day 14 follow-up — case study from similar business type, create urgency with project slot, 70 words",
   "breakup": "Day 30 breakup email — keep door open, no hard feelings, 50 words",
   "linkedin": "LinkedIn connection note (max 280 chars, feels human not salesy, reference something specific about their business)",
-  "sms": "SMS outreach (max 160 chars). For HOT leads on first contact, use this template adapted to the business: \"Hey, this is Mercedes with Akira Digital. I know you're busy — I'll keep this short. I noticed [business name] has amazing reviews but no website, which means you're probably missing booking inquiries every week. I help [business type] like yours get online fast. Got 15 minutes this week to chat?\" For Day 7 warm follow-up: one conversational question referencing their business.",
+  "sms": "SMS script for Robyn to send manually from (972) 559-0881. For HOT leads on first contact, adapt this template: \"Hey, this is Robyn with Akira Digital. I know you're busy — I'll keep this short. I noticed [business name] has amazing reviews but no website, which means you're probably missing booking inquiries every week. I help [business type] like yours get online fast. Got 15 minutes this week to chat?\" For Day 7 warm follow-up: one short conversational question referencing their specific business. Keep under 160 chars.",
   "callScript": "30-second cold call opener that earns more time — reference their business specifically",
   "objections": [
     "too expensive rebuttal — use ROI math, 2 sentences",
