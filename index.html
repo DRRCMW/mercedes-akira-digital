@@ -135,6 +135,19 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
   #embeddedAgentFrame{width:100%!important;max-width:100vw!important;}
 }
 @media(max-width:768px){
+  #agentView [style*="grid-template-columns:repeat(5,1fr)"]{grid-template-columns:repeat(3,1fr)!important;gap:.4rem!important;}
+  #agentView [style*="grid-template-columns:1fr 320px"]{grid-template-columns:1fr!important;}
+  #agentView [style*="grid-template-columns:repeat(4,1fr)"]{grid-template-columns:repeat(2,1fr)!important;}
+  #agentView [style*="padding:1.75rem 2.5rem"]{padding:1rem .85rem 1rem!important;}
+  #agentView [style*="padding:1.5rem 2.5rem 3rem"]{padding:1rem .85rem 2rem!important;}
+  #agentView [style*="flex-shrink:0;flex-wrap:wrap"]{width:100%!important;}
+  #agentView [style*="min-width:200px"]{min-width:0!important;width:100%!important;}
+}
+@media(max-width:480px){
+  #agentView [style*="grid-template-columns:repeat(5,1fr)"]{grid-template-columns:repeat(3,1fr)!important;}
+  #agentView [style*="grid-template-columns:repeat(4,1fr)"]{grid-template-columns:repeat(2,1fr)!important;}
+}
+@media(max-width:768px){
   .metrics-row{grid-template-columns:repeat(2,1fr)!important;gap:.6rem!important;}
   .metric{padding:.85rem .75rem!important;}
   .metric-val{font-size:1.5rem!important;}
