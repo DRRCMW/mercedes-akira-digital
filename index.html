@@ -45,6 +45,53 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 
 /* ── SIDEBAR ── */
 .sidebar{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;position:relative;min-height:0;height:100vh;}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1998;backdrop-filter:blur(2px);}
+.sb-overlay.open{display:block;}
+.ham-btn{display:none;width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid var(--border);cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
+.ham-btn:hover{background:rgba(255,255,255,.1);}
+.ham-bar{display:block;width:16px;height:2px;background:var(--light);border-radius:2px;margin:2.5px auto;transition:all .25s;}
+@media(max-width:768px){
+  .app{grid-template-columns:1fr!important;}
+  .sidebar{position:fixed!important;left:-280px;top:0;bottom:0;width:260px;z-index:1999;height:100vh!important;transition:left .25s cubic-bezier(.4,0,.2,1);box-shadow:none;}
+  .sidebar.sb-open{left:0!important;box-shadow:4px 0 30px rgba(0,0,0,.5);}
+  .main{grid-column:1!important;}
+  .ham-btn{display:flex;}
+  .topbar{padding:.6rem 1rem;}
+  .tb-hint{display:none;}
+  .flow-track{padding:.4rem .75rem;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .fs{padding:.25rem .5rem;font-size:11px;}
+  .fs-n{width:16px;height:16px;font-size:8px;}
+  .frame-area{overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .wlc-hero{padding:1.25rem 1rem 1rem;}
+  .wlc-metrics{grid-template-columns:1fr 1fr!important;}
+  .metric{padding:.85rem .85rem .75rem;}
+  .metric-val{font-size:1.4rem!important;}
+  .wlc-cards{padding:1rem!important;grid-template-columns:1fr!important;}
+  .welcome-card{padding:1rem!important;}
+  .grid{grid-template-columns:1fr!important;}
+  .full{grid-column:1!important;}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)!important;}
+  .lead-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .pb-hero{padding:1.25rem 1rem 1rem!important;}
+  .cf-view{padding:1rem 1rem 2rem!important;}
+  .agent-card{padding:1rem!important;}
+  .dv-actions{flex-wrap:wrap;gap:6px!important;}
+  .dv-btn{font-size:11px!important;padding:8px 12px!important;}
+  .modal-overlay{padding:.5rem!important;align-items:flex-end!important;}
+  .modal-inner{border-radius:16px 16px 0 0!important;max-height:92vh!important;overflow-y:auto!important;}
+  input,select,textarea{font-size:16px!important;}
+  .stats-row{grid-template-columns:1fr 1fr 1fr!important;gap:.3rem!important;padding:.5rem .75rem!important;}
+  .st-val{font-size:1rem!important;}
+}
+@media(max-width:480px){
+  .wlc-metrics{grid-template-columns:1fr!important;}
+  .kpi-grid{grid-template-columns:1fr 1fr!important;}
+  .topbar{padding:.5rem .75rem;}
+  .tb-title{font-size:.8rem!important;}
+  .dv-actions{flex-direction:column!important;}
+  .dv-btn{width:100%!important;text-align:center!important;justify-content:center!important;}
+  .fs{padding:.2rem .4rem;font-size:10px;}
+}
 
 
 .sb-head{padding:1.25rem 1.25rem 1rem;border-bottom:1px solid var(--border);flex-shrink:0;}
@@ -646,6 +693,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 <div class="main">
   <!-- TOP BAR -->
   <div class="topbar">
+    <button class="ham-btn" id="hamBtn" onclick="toggleSidebar()" aria-label="Menu"><span class="ham-bar"></span><span class="ham-bar"></span><span class="ham-bar"></span></button>
     <div class="tb-left">
       <div class="tb-icon" id="tbIcon" style="background:var(--gold3);color:var(--gold);font-family:'Syne',sans-serif;font-size:.7rem;font-weight:800;">AD</div>
       <div>
@@ -13299,5 +13347,12 @@ window.addEventListener('load', function() {
 })();
 </script>
 
-<script>window.addEventListener('load',function(){try{if(typeof renderAgentQueue==='function')renderAgentQueue();}catch(e){}});</script></body>
+<script>window.addEventListener('load',function(){try{if(typeof renderAgentQueue==='function')renderAgentQueue();}catch(e){}});</script><div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
+<script>
+function toggleSidebar(){var sb=document.querySelector('.sidebar'),ov=document.getElementById('sbOverlay');if(!sb||!ov)return;if(sb.classList.contains('sb-open')){sb.classList.remove('sb-open');ov.classList.remove('open');}else{sb.classList.add('sb-open');ov.classList.add('open');}}
+function closeSidebar(){var sb=document.querySelector('.sidebar'),ov=document.getElementById('sbOverlay');if(sb)sb.classList.remove('sb-open');if(ov)ov.classList.remove('open');}
+document.addEventListener('click',function(e){if(window.innerWidth<=768){var n=e.target.closest('.nav-item,.nav-home');if(n)setTimeout(closeSidebar,120);}});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeSidebar();});
+</script>
+</body>
 </html>
