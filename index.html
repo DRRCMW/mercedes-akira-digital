@@ -133,6 +133,29 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
   .dv-panel{min-width:0!important;padding:.75rem!important;}
   .dv-panel p,.dv-panel li,.dv-panel ol{font-size:13px!important;line-height:1.55!important;overflow-wrap:break-word!important;word-break:break-word!important;max-width:100%!important;}
   #embeddedAgentFrame{width:100%!important;max-width:100vw!important;}
+}
+@media(max-width:768px){
+  .metrics-row{grid-template-columns:repeat(2,1fr)!important;gap:.6rem!important;}
+  .metric{padding:.85rem .75rem!important;}
+  .metric-val{font-size:1.5rem!important;}
+  .pipe-stats{grid-template-columns:repeat(3,1fr)!important;gap:5px!important;}
+  .ps{padding:.5rem .6rem!important;}
+  .cf-stage{grid-template-columns:1fr!important;gap:.5rem!important;padding:.65rem .75rem!important;}
+  .cf-stages{gap:.4rem!important;}
+  .dash-row{grid-template-columns:1fr!important;}
+  .dash-row.three{grid-template-columns:1fr!important;}
+  .comm-row{grid-template-columns:repeat(2,1fr)!important;gap:.4rem!important;}
+  .comm-box{padding:.65rem!important;}
+  .seo-connect-grid{grid-template-columns:1fr!important;}
+  .rv-grid{grid-template-columns:1fr!important;}
+  .tb-tag{font-size:9px!important;padding:2px 6px!important;max-width:80px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+  .tb-right{gap:.3rem!important;}
+  .tb-title{font-size:.85rem!important;}
+}
+@media(max-width:480px){
+  .metrics-row{grid-template-columns:repeat(2,1fr)!important;}
+  .pipe-stats{grid-template-columns:repeat(2,1fr)!important;}
+  .comm-row{grid-template-columns:repeat(2,1fr)!important;}
 }:1.25rem 1.25rem 1rem;border-bottom:1px solid var(--border);flex-shrink:0;}
 .logo-row{display:flex;align-items:center;gap:.6rem;margin-bottom:.3rem;}
 
@@ -9036,7 +9059,7 @@ function notionTest(token) {
     <!-- Setup Guide -->
     <div style="background:rgba(201,148,26,.08);border:1px solid rgba(201,148,26,.25);border-radius:10px;padding:16px;">
       <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px;">📋 Connect Your SEO Tools (one-time setup)</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px;color:var(--text-primary);">
+      <div class="seo-connect-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px;color:var(--text-primary);">
         <div>
           <div style="font-weight:600;margin-bottom:4px;">1. Google Search Console</div>
           <div style="color:var(--muted);line-height:1.5;">Go to search.google.com/search-console → Add property → akiradigital.net → Verify via HTML tag. Paste the verification tag into your site's &lt;head&gt;.</div>
