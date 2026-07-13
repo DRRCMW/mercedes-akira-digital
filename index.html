@@ -3364,474 +3364,203 @@ function requestGenerateAll() {
 <html lang=&quot;en&quot;>
 <head>
 <meta charset=&quot;UTF-8&quot;>
-<meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;>
+<meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0, maximum-scale=1.0&quot;>
 <title>Akira Digital — Website Audit Tool</title>
-<link href=&quot;https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap&quot; rel=&quot;stylesheet&quot;>
+<link href=&quot;https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap&quot; rel=&quot;stylesheet&quot;>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --bg:#080b10;--bg2:#0d1219;--bg3:#141a24;--bg4:#182030;
-  --gold:#c9941a;--gold2:#f0b429;--gold3:rgba(201,148,26,.12);
-  --amber:#f59e0b;--amber2:rgba(245,158,11,.12);
-  --blue:#3b9edd;--blue2:rgba(59,158,221,.12);
-  --green:#22c55e;--green2:rgba(34,197,94,.12);
-  --red:#ef4444;--red2:rgba(239,68,68,.12);
-  --purple:#8b5cf6;--purple2:rgba(139,92,246,.12);
-  --white:#fff;--gray:#64748b;--light:#94a3b8;--lighter:#cbd5e1;
-  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);
-  --r:10px;
-}
-html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--white);overflow:hidden;}
-.app{display:grid;grid-template-columns:240px 1fr;height:100vh;}
-
-/* ── SIDEBAR ── */
-.sidebar{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:1.25rem;gap:1rem;overflow-y:auto;}
-.logo{font-family:'Syne',sans-serif;font-size:.9rem;font-weight:800;color:var(--white);letter-spacing:.02em;margin-bottom:.25rem;}
-.logo span{color:var(--gold);}
-.logo-sub{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray);}
-.tool-badge{display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .65rem;background:var(--amber2);border:1px solid rgba(245,158,11,.25);border-radius:99px;font-size:10px;font-weight:600;color:var(--amber);margin-top:.5rem;}
-.sidebar-tip{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:.85rem 1rem;font-size:11px;color:var(--light);line-height:1.65;}
-.sidebar-tip strong{color:var(--gold);display:block;margin-bottom:.35rem;font-size:10px;text-transform:uppercase;letter-spacing:.05em;}
-.step-list{display:flex;flex-direction:column;gap:.5rem;margin-top:.75rem;}
-.step{display:flex;align-items:flex-start;gap:.5rem;font-size:11px;color:var(--light);line-height:1.5;}
-.step-n{background:var(--amber);color:#000;border-radius:50%;width:16px;height:16px;min-width:16px;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px;}
-.key-status{display:flex;align-items:center;gap:.4rem;padding:.4rem .65rem;border-radius:99px;font-size:10px;font-weight:600;margin-top:auto;}
-.key-status.ok{background:var(--green2);color:var(--green);border:1px solid rgba(34,197,94,.2);}
-.key-status.bad{background:var(--red2);color:var(--red);border:1px solid rgba(239,68,68,.2);}
-
-/* ── MAIN ── */
-.main{display:flex;flex-direction:column;overflow:hidden;}
-.toolbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:.75rem 1.5rem;display:flex;align-items:center;gap:.75rem;}
+:root{--bg:#080b10;--bg2:#0d1219;--bg3:#141a24;--gold:#c9941a;--amber:#f59e0b;--amber2:rgba(245,158,11,.12);--blue:#3b9edd;--blue2:rgba(59,158,221,.12);--green:#22c55e;--green2:rgba(34,197,94,.12);--red:#ef4444;--red2:rgba(239,68,68,.12);--white:#fff;--gray:#64748b;--light:#94a3b8;--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);}
+html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--white);overflow-x:hidden;}
+.toolbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:.75rem 1rem;display:flex;align-items:center;gap:.65rem;flex-wrap:wrap;}
+.tool-badge{display:inline-flex;align-items:center;padding:.25rem .65rem;background:var(--amber2);border:1px solid rgba(245,158,11,.25);border-radius:99px;font-size:10px;font-weight:700;color:var(--amber);white-space:nowrap;}
 .toolbar-title{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:800;color:var(--white);}
-.toolbar-sub{font-size:11px;color:var(--gray);}
-.content{flex:1;overflow-y:auto;padding:1.5rem;}
-
-/* ── URL INPUT AREA ── */
-.url-card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:1.5rem;margin-bottom:1.25rem;}
-.url-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--amber);margin-bottom:.65rem;display:flex;align-items:center;gap:.4rem;}
-.url-row{display:flex;gap:.65rem;align-items:stretch;}
-.url-input{flex:1;background:var(--bg);border:1.5px solid var(--border2);border-radius:8px;padding:.75rem 1rem;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--white);outline:none;transition:border-color .2s;}
-.url-input::placeholder{color:var(--gray);}
-.url-input:focus{border-color:var(--amber);}
-.btn-audit{padding:.75rem 1.5rem;background:var(--amber);color:#000;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-size:.8rem;font-weight:800;cursor:pointer;transition:all .2s;white-space:nowrap;letter-spacing:.02em;}
-.btn-audit:hover{background:var(--gold2);transform:translateY(-1px);}
-.btn-audit:disabled{background:var(--bg4);color:var(--gray);cursor:not-allowed;transform:none;}
-.niche-row{display:flex;gap:.65rem;margin-top:.75rem;}
-.niche-input{flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:.6rem 1rem;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--white);outline:none;transition:border-color .2s;}
-.niche-input::placeholder{color:var(--gray);}
-.niche-input:focus{border-color:var(--amber);}
-.niche-label{font-size:11px;color:var(--gray);margin-top:.5rem;}
-
-/* ── STATUS BAR ── */
-.status-bar{padding:.65rem 1.5rem;background:var(--bg3);border-bottom:1px solid var(--border);font-size:12px;color:var(--light);display:flex;align-items:center;gap:.5rem;min-height:40px;}
-.status-bar.working{color:var(--amber);}
-.status-bar.done{color:var(--green);}
-.status-bar.err{color:var(--red);}
-.spinner{width:14px;height:14px;border:2px solid rgba(245,158,11,.3);border-top-color:var(--amber);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
-@keyframes spin{to{transform:rotate(360deg);}}
-
-/* ── RESULTS ── */
-.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem;}
-@media(max-width:900px){.results-grid{grid-template-columns:1fr;}}
-.result-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:1.1rem 1.25rem;}
-.rc-header{display:flex;align-items:center;gap:.5rem;margin-bottom:.85rem;}
-.rc-icon{font-size:1.1rem;}
-.rc-title{font-family:'Syne',sans-serif;font-size:.8rem;font-weight:700;color:var(--white);letter-spacing:.02em;}
-.rc-badge{margin-left:auto;padding:.2rem .55rem;border-radius:99px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
+.toolbar-sub{font-size:11px;color:var(--gray);flex:1;min-width:0;}
+.status-pill{padding:.25rem .7rem;border-radius:99px;font-size:10px;font-weight:600;white-space:nowrap;}
+.status-pill.working{background:var(--blue2);color:var(--blue);}
+.status-pill.done{background:var(--green2);color:var(--green);}
+.status-pill.err{background:var(--red2);color:var(--red);}
+.main{padding:1rem;max-width:700px;margin:0 auto;}
+.input-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1.25rem;margin-bottom:1rem;}
+.input-card-title{font-family:'Syne',sans-serif;font-size:.9rem;font-weight:800;margin-bottom:.85rem;display:flex;align-items:center;gap:.4rem;}
+.field{margin-bottom:.75rem;}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem;}
+.field input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:.6rem .85rem;font-size:16px;color:var(--white);font-family:'DM Sans',sans-serif;outline:none;}
+.field input::placeholder{color:var(--gray);}
+.field input:focus{border-color:var(--amber);box-shadow:0 0 0 2px rgba(245,158,11,.12);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;}
+.audit-btn{width:100%;padding:.85rem;background:linear-gradient(135deg,var(--amber),var(--gold));color:#000;font-family:'Syne',sans-serif;font-size:.95rem;font-weight:800;border:none;border-radius:10px;cursor:pointer;margin-top:.25rem;transition:opacity .15s;}
+.audit-btn:disabled{opacity:.45;cursor:not-allowed;}
+.key-warn{background:var(--red2);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:.55rem .85rem;font-size:11px;color:var(--red);margin-bottom:.75rem;display:none;}
+.key-ok{background:var(--green2);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:.55rem .85rem;font-size:11px;color:var(--green);margin-bottom:.75rem;display:none;}
+.tips-row{display:flex;gap:.5rem;margin-bottom:1rem;overflow-x:auto;padding-bottom:.25rem;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.tips-row::-webkit-scrollbar{display:none;}
+.tip-chip{flex-shrink:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:.45rem .75rem;font-size:11px;color:var(--light);line-height:1.4;}
+.tip-chip b{color:var(--gold);display:block;font-size:9px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.1rem;}
+.empty{text-align:center;padding:3rem 1rem;color:var(--gray);}
+.empty-icon{font-size:2.5rem;margin-bottom:.75rem;}
+.empty-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--light);margin-bottom:.4rem;}
+.empty-sub{font-size:12px;color:var(--gray);line-height:1.6;max-width:280px;margin:0 auto;}
+.score-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1.1rem 1.25rem;display:flex;align-items:center;gap:1rem;margin-bottom:.85rem;}
+.score-ring{position:relative;flex-shrink:0;}
+.ring-bg{fill:none;stroke:var(--bg3);stroke-width:5;}
+.ring-fill{fill:none;stroke-width:5;stroke-linecap:round;transform-origin:center;transform:rotate(-90deg);transition:stroke-dashoffset .6s ease;}
+.score-number{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:800;}
+.score-info{flex:1;min-width:0;}
+.score-title{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:800;word-break:break-word;}
+.score-sub{font-size:11px;color:var(--light);margin-top:.3rem;line-height:1.5;}
+.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-bottom:.85rem;}
+.result-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:.85rem .9rem;}
+.rc-header{display:flex;align-items:center;gap:.4rem;margin-bottom:.6rem;}
+.rc-title{font-family:'Syne',sans-serif;font-size:.8rem;font-weight:700;flex:1;}
+.rc-badge{font-size:9px;font-weight:700;padding:.2rem .55rem;border-radius:99px;}
 .badge-red{background:var(--red2);color:var(--red);}
 .badge-amber{background:var(--amber2);color:var(--amber);}
 .badge-green{background:var(--green2);color:var(--green);}
-.rc-body{font-size:12px;color:var(--light);line-height:1.7;}
-.issue-item{display:flex;align-items:flex-start;gap:.5rem;padding:.4rem 0;border-bottom:1px solid var(--border);}
-.issue-item:last-child{border-bottom:none;}
-.issue-dot{width:6px;height:6px;border-radius:50%;background:var(--red);margin-top:.35rem;flex-shrink:0;}
+.rc-body{display:flex;flex-direction:column;gap:.4rem;}
+.issue-item{display:flex;align-items:flex-start;gap:.5rem;font-size:11px;color:var(--light);line-height:1.5;}
+.issue-dot{width:7px;height:7px;border-radius:50%;background:var(--red);flex-shrink:0;margin-top:4px;}
 .issue-dot.warn{background:var(--amber);}
 .issue-dot.ok{background:var(--green);}
-
-/* ── TALKING POINTS ── */
-.talking-card{background:var(--bg2);border:1.5px solid rgba(201,148,26,.25);border-radius:var(--r);padding:1.25rem 1.5rem;margin-bottom:1.25rem;}
-.tc-header{display:flex;align-items:center;gap:.65rem;margin-bottom:1rem;}
-.tc-title{font-family:'Syne',sans-serif;font-size:.9rem;font-weight:800;color:var(--gold);letter-spacing:.02em;}
-.tp-item{display:flex;align-items:flex-start;gap:.75rem;padding:.65rem 0;border-bottom:1px solid var(--border);}
-.tp-item:last-child{border-bottom:none;}
-.tp-num{background:var(--gold3);border:1px solid rgba(201,148,26,.3);color:var(--gold);border-radius:50%;width:22px;height:22px;min-width:22px;font-family:'Syne',sans-serif;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;}
-.tp-text{font-size:13px;color:var(--lighter);line-height:1.6;}
-.tp-label{font-size:10px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:.2rem;}
-
-/* ── OPENER SCRIPT ── */
-.script-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem 1.5rem;margin-bottom:1.25rem;position:relative;}
-.script-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--amber);font-weight:700;margin-bottom:.65rem;}
-.script-text{font-size:13px;color:var(--lighter);line-height:1.75;white-space:pre-wrap;}
-.copy-btn{position:absolute;top:1rem;right:1rem;background:var(--bg4);border:1px solid var(--border2);color:var(--light);border-radius:6px;padding:.35rem .75rem;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;}
-.copy-btn:hover{background:var(--bg2);color:var(--white);}
-
-/* ── SCORE RING ── */
-.score-wrap{display:flex;align-items:center;gap:1.5rem;padding:1rem 1.5rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:1.25rem;}
-.score-ring{width:72px;height:72px;position:relative;flex-shrink:0;}
-.score-ring svg{transform:rotate(-90deg);}
-.score-ring .ring-bg{fill:none;stroke:var(--bg4);stroke-width:6;}
-.score-ring .ring-fill{fill:none;stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset .8s ease;}
-.score-number{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;}
-.score-info{flex:1;}
-.score-title{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:800;color:var(--white);margin-bottom:.25rem;}
-.score-sub{font-size:12px;color:var(--gray);line-height:1.5;}
-.score-sub b{color:var(--amber);}
-
-/* ── EMPTY STATE ── */
-.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem;text-align:center;gap:.85rem;color:var(--gray);}
-.empty-icon{font-size:3rem;opacity:.4;}
-.empty-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--light);}
-.empty-sub{font-size:12px;line-height:1.7;max-width:340px;}
+.talking-card{background:var(--bg2);border:1px solid rgba(245,158,11,.2);border-radius:14px;padding:1.1rem 1.25rem;margin-bottom:.85rem;}
+.tc-header{display:flex;align-items:center;gap:.5rem;margin-bottom:.85rem;}
+.tc-title{font-family:'Syne',sans-serif;font-size:.9rem;font-weight:800;}
+.tp-item{display:flex;gap:.75rem;margin-bottom:.7rem;padding-bottom:.7rem;border-bottom:1px solid var(--border);}
+.tp-item:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none;}
+.tp-num{background:var(--amber);color:#000;border-radius:50%;width:20px;height:20px;min-width:20px;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+.tp-text{font-size:12px;color:var(--light);line-height:1.55;flex:1;min-width:0;}
+.tp-label{display:block;font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.2rem;}
+.script-card{background:var(--bg3);border:1px solid rgba(34,197,94,.2);border-radius:12px;padding:1rem 1.1rem;margin-bottom:.85rem;position:relative;}
+.script-label{font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6rem;}
+.script-text{font-size:12px;color:var(--light);line-height:1.7;white-space:pre-wrap;word-break:break-word;}
+.copy-btn{position:absolute;top:.75rem;right:.85rem;background:var(--green2);border:1px solid rgba(34,197,94,.25);color:var(--green);font-size:10px;font-weight:700;padding:.2rem .55rem;border-radius:6px;cursor:pointer;}
+@media(max-width:480px){
+  .toolbar-sub{display:none;}
+  .main{padding:.75rem;}
+  .input-card{padding:1rem;}
+  .row2{grid-template-columns:1fr;}
+  .results-grid{grid-template-columns:1fr;}
+  .score-wrap{flex-direction:column;text-align:center;}
+  .tp-item{flex-direction:column;gap:.4rem;}
+  .tp-num{margin:0 auto;}
+}
 </style>
 </head>
 <body>
-<div class=&quot;app&quot;>
-
-  <!-- SIDEBAR -->
-  <aside class=&quot;sidebar&quot;>
-    <div>
-      <div class=&quot;logo&quot;>Akira <span>Digital</span></div>
-      <div class=&quot;logo-sub&quot;>Website Audit Tool</div>
-      <div class=&quot;tool-badge&quot;>🔎 Step 2 — Prepare</div>
-    </div>
-
-    <div class=&quot;sidebar-tip&quot;>
-      <strong>⚡ How to use this</strong>
-      Paste any prospect's website URL (or Google Maps link) and their business type. AI will find every problem and write your exact cold call opener.
-    </div>
-
-    <div class=&quot;step-list&quot;>
-      <div class=&quot;step&quot;><div class=&quot;step-n&quot;>1</div><span>Find prospect in Prospect Finder → copy their website or Google Maps URL</span></div>
-      <div class=&quot;step&quot;><div class=&quot;step-n&quot;>2</div><span>Paste URL below + type their business niche</span></div>
-      <div class=&quot;step&quot;><div class=&quot;step-n&quot;>3</div><span>Click Audit — AI generates site issues + your call opener</span></div>
-      <div class=&quot;step&quot;><div class=&quot;step-n&quot;>4</div><span>Copy the opener and call them within 5 minutes</span></div>
-    </div>
-
-    <div class=&quot;sidebar-tip&quot; style=&quot;margin-top:auto;&quot;>
-      <strong>💡 Pro tip</strong>
-      Always be specific. &quot;I noticed your site doesn't load on mobile&quot; closes deals. &quot;I build websites&quot; doesn't.
-    </div>
-
-    <div class=&quot;key-status bad&quot; id=&quot;keyStatusBadge&quot;>
-      <span>●</span><span id=&quot;keyStatusText&quot;>API key not set</span>
-    </div>
-  </aside>
-
-  <!-- MAIN -->
-  <div class=&quot;main&quot;>
-    <div class=&quot;toolbar&quot;>
-      <div>
-        <div class=&quot;toolbar-title&quot;>🔎 Website Audit</div>
-        <div class=&quot;toolbar-sub&quot;>Run this BEFORE every cold call — specific problems close deals</div>
-      </div>
-    </div>
-
-    <!-- URL INPUT CARD -->
-    <div style=&quot;padding:1.25rem 1.5rem 0;&quot;>
-      <div class=&quot;url-card&quot;>
-        <div class=&quot;url-label&quot;>🌐 Website to Audit</div>
-        <div class=&quot;url-row&quot;>
-          <input class=&quot;url-input&quot; id=&quot;urlInput&quot; type=&quot;url&quot; placeholder=&quot;https://theirsite.com  —  or paste a Google Maps URL&quot; />
-          <button class=&quot;btn-audit&quot; id=&quot;auditBtn&quot; onclick=&quot;runAudit()&quot;>Audit Site →</button>
-        </div>
-        <div class=&quot;niche-row&quot;>
-          <input class=&quot;niche-input&quot; id=&quot;nicheInput&quot; placeholder=&quot;Business type (e.g. Plumber, HVAC, Roofer, Dentist…)&quot; />
-          <input class=&quot;niche-input&quot; id=&quot;cityInput&quot; placeholder=&quot;City / market (e.g. Los Angeles, CA)&quot; style=&quot;max-width:220px;&quot; />
-        </div>
-        <div class=&quot;niche-label&quot;>Business type + city = more targeted talking points. Optional but recommended.</div>
-      </div>
-    </div>
-
-    <!-- STATUS BAR -->
-    <div class=&quot;status-bar&quot; id=&quot;statusBar&quot;>Ready — paste a URL and click Audit Site</div>
-
-    <!-- SCROLLABLE RESULTS -->
-    <div class=&quot;content&quot; id=&quot;resultsArea&quot;>
-      <div class=&quot;empty&quot; id=&quot;emptyState&quot;>
-        <div class=&quot;empty-icon&quot;>🔎</div>
-        <div class=&quot;empty-title&quot;>No audit run yet</div>
-        <div class=&quot;empty-sub&quot;>Paste a prospect's website URL above and click <strong>Audit Site</strong>. The AI will find specific problems and write your exact cold call opener in about 15 seconds.</div>
-      </div>
-    </div>
-  </div>
+<div class=&quot;toolbar&quot;>
+  <span class=&quot;tool-badge&quot;>🔎 Step 2</span>
+  <div><div class=&quot;toolbar-title&quot;>Website Audit</div><div class=&quot;toolbar-sub&quot;>Run before every cold call. Paste their URL → get specific talking points.</div></div>
+  <div id=&quot;statusPill&quot; style=&quot;display:none;&quot;></div>
 </div>
-
-<!-- AKIRA COMMAND CENTER BRIDGE -->
+<div class=&quot;main&quot;>
+  <div class=&quot;key-warn&quot; id=&quot;keyWarn&quot;>⚠ API key not set — open Settings in the command center first.</div>
+  <div class=&quot;key-ok&quot; id=&quot;keyOk&quot;>✓ API key connected — ready to audit.</div>
+  <div class=&quot;input-card&quot;>
+    <div class=&quot;input-card-title&quot;>🔎 Enter Website Details</div>
+    <div class=&quot;field&quot;><label>Website URL *</label><input type=&quot;url&quot; id=&quot;urlInput&quot; placeholder=&quot;https://theirbusiness.com&quot; autocomplete=&quot;off&quot; autocorrect=&quot;off&quot; autocapitalize=&quot;off&quot; spellcheck=&quot;false&quot;></div>
+    <div class=&quot;row2&quot;>
+      <div class=&quot;field&quot;><label>Business Type</label><input type=&quot;text&quot; id=&quot;nicheInput&quot; placeholder=&quot;e.g. Plumber, HVAC&quot; autocomplete=&quot;off&quot;></div>
+      <div class=&quot;field&quot;><label>City</label><input type=&quot;text&quot; id=&quot;cityInput&quot; placeholder=&quot;e.g. Los Angeles&quot; autocomplete=&quot;off&quot;></div>
+    </div>
+    <button class=&quot;audit-btn&quot; id=&quot;auditBtn&quot; onclick=&quot;runAudit()&quot;>▶ Run Audit</button>
+  </div>
+  <div class=&quot;tips-row&quot;>
+    <div class=&quot;tip-chip&quot;><b>Tip 1</b>Even OK-looking sites have hidden mobile/SEO issues.</div>
+    <div class=&quot;tip-chip&quot;><b>Tip 2</b>Use the cold call opener word for word — it closes deals.</div>
+    <div class=&quot;tip-chip&quot;><b>Tip 3</b>No site? Enter their Google listing URL.</div>
+    <div class=&quot;tip-chip&quot;><b>Tip 4</b>Critical issues = easier sell. Screenshot the score.</div>
+  </div>
+  <div id=&quot;emptyState&quot; class=&quot;empty&quot;><div class=&quot;empty-icon&quot;>🔎</div><div class=&quot;empty-title&quot;>Paste a URL above to begin</div><div class=&quot;empty-sub&quot;>The AI fetches the site, scores it, finds every issue, and writes your exact cold call opener in ~15 seconds.</div></div>
+  <div id=&quot;resultsArea&quot;></div>
+</div>
 <script>
-(function(){
-  var inFrame = window.parent !== window;
+var aKey='';
+window.addEventListener('message',function(e){if(e.data&&e.data.type==='akira-key'){aKey=e.data.key||'';checkKey();}});
+window.onload=function(){aKey=localStorage.getItem('akira_akey')||'';try{window.parent.postMessage({type:'request-key'},'*');}catch(e){}checkKey();};
+function checkKey(){var ok=aKey&&aKey.startsWith('sk-ant');document.getElementById('keyWarn').style.display=ok?'none':'block';document.getElementById('keyOk').style.display=ok?'block':'none';}
+function setStatus(msg,type){var p=document.getElementById('statusPill');p.style.display=msg?'block':'none';p.className='status-pill '+(type||'');p.textContent=msg;}
+async function runAudit(){
+  var url=document.getElementById('urlInput').value.trim();
+  var ufp=url.split('?')[0].split('#')[0];if(ufp.length<20)ufp=url;
+  var niche=document.getElementById('nicheInput').value.trim();
+  var city=document.getElementById('cityInput').value.trim();
+  aKey=localStorage.getItem('akira_akey')||aKey||'';
+  if(!url){setStatus('⚠ Paste a URL first','err');return;}
+  if(!aKey||!aKey.startsWith('sk-ant')){setStatus('⚠ API key not set — open Settings first','err');document.getElementById('keyWarn').style.display='block';return;}
+  document.getElementById('auditBtn').disabled=true;
+  document.getElementById('emptyState').style.display='none';
+  document.getElementById('resultsArea').innerHTML='';
+  setStatus('Fetching site content…','working');
+  var sc='';
+  try{var rr=await fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(url),{signal:AbortSignal.timeout(8000)});if(rr.ok){var h=await rr.text();sc=h.replace(/<script[sS]*?</script>/gi,'').replace(/<style[sS]*?</style>/gi,'').replace(/<[^>]+>/g,' ').replace(/s+/g,' ').substring(0,3000);}}catch(ex){}
+  setStatus('AI analyzing website…','working');
+  var nc=niche?'Business type: '+niche+(city?' in '+city:'')+'.':'';
+  var sx=sc?'Website text preview:
+"""
+'+sc+'
+"""':'Could not fetch site — analyze URL pattern only.';
+  var prompt=`You are a website auditor helping a sales rep at Akira Digital close deals with local businesses.
 
-  // ── Dark theme (already dark by default in this tool) ──
-  // Hide API sections if any appear
-  if (inFrame) {
-    var s = document.createElement('style');
-    s.textContent = '.api-section,.key-card-wrap{display:none!important;}';
-    document.head.appendChild(s);
-  }
+URL: ${ufp}
+${nc}
 
-  // ── Patch localStorage to push data upstream ──
-  var _set = localStorage.setItem.bind(localStorage);
-  localStorage.setItem = function(k, v) {
-    _set(k, v);
-    if (!inFrame) return;
-    try {
-      if (k === 'akira_pipeline') window.parent.postMessage({type:'akira_pipe',    data:JSON.parse(v)}, '*');
-      if (k === 'akira_clients')  window.parent.postMessage({type:'akira_clients', data:JSON.parse(v)}, '*');
-      if (k === 'akira_leads')    window.parent.postMessage({type:'akira_leads',   data:JSON.parse(v)}, '*');
-    } catch(ex){}
-  };
+${sx}
 
-  // ── Receive keys from parent ──
-  window.addEventListener('message', function(e) {
-    if (!e.data || typeof e.data !== 'object') return;
-    var d = e.data;
-    if (d.type === 'akira_keys') {
-      if (d.akey) _set('akira_akey', d.akey);
-      if (d.gkey) _set('akira_gkey', d.gkey);
-      updateKeyBadge();
-    }
-    if (d.type === 'setKey' && d.key && d.value) { _set(d.key, d.value); updateKeyBadge(); }
-    if (d.type === 'akira_request_data') {
-      try { window.parent.postMessage({type:'akira_pipe', data:JSON.parse(localStorage.getItem('akira_pipeline')||'[]')}, '*'); } catch(ex){}
-    }
-  });
-})();
-
-// ── AUDIT TOOL LOGIC ──
-var aKey = localStorage.getItem('akira_akey') || '';
-
-function updateKeyBadge() {
-  aKey = localStorage.getItem('akira_akey') || '';
-  var badge = document.getElementById('keyStatusBadge');
-  var txt   = document.getElementById('keyStatusText');
-  if (aKey && aKey.startsWith('sk-ant')) {
-    badge.className = 'key-status ok';
-    txt.textContent = 'AI connected';
-  } else {
-    badge.className = 'key-status bad';
-    txt.textContent = 'Set API key in Settings';
-  }
-}
-updateKeyBadge();
-
-function setStatus(msg, type) {
-  var bar = document.getElementById('statusBar');
-  bar.className = 'status-bar' + (type ? ' ' + type : '');
-  if (type === 'working') {
-    bar.innerHTML = '<div class=&quot;spinner&quot;></div>' + msg;
-  } else {
-    bar.textContent = msg;
-  }
-}
-
-async function runAudit() {
-  var url   = document.getElementById('urlInput').value.trim();
-  // Clean URL for prompt - remove tracking params that confuse AI
-  var urlForPrompt = url.split('?')[0].split('#')[0]; // strip query string
-  if (urlForPrompt.length < 20) urlForPrompt = url; // keep if too short after strip
-  var niche = document.getElementById('nicheInput').value.trim();
-  var city  = document.getElementById('cityInput').value.trim();
-  aKey      = localStorage.getItem('akira_akey') || '';
-
-  if (!url) { setStatus('⚠ Paste a website URL first', 'err'); document.getElementById('urlInput').focus(); return; }
-  if (!aKey || !aKey.startsWith('sk-ant')) {
-    setStatus('⚠ API key not set — open Settings in the command center and save your Anthropic key', 'err');
-    return;
-  }
-
-  document.getElementById('auditBtn').disabled = true;
-  document.getElementById('emptyState').style.display = 'none';
-  document.getElementById('resultsArea').innerHTML = '';
-  setStatus('Fetching site content…', 'working');
-
-  // Try to fetch the site HTML
-  var siteContent = '';
-  try {
-    var resp = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url), {signal: AbortSignal.timeout(8000)});
-    if (resp.ok) {
-      var html = await resp.text();
-      // Strip scripts/styles and get text
-      siteContent = html
-        .replace(/<script[\s\S]*?<\/script>/gi,'')
-        .replace(/<style[\s\S]*?<\/style>/gi,'')
-        .replace(/<[^>]+>/g,' ')
-        .replace(/\s+/g,' ')
-        .substring(0, 3000);
-    }
-  } catch(ex){ siteContent = ''; }
-
-  setStatus('AI analyzing website issues…', 'working');
-
-  var nicheCtx = niche ? 'Business type: ' + niche + (city ? ' in ' + city : '') + '.' : '';
-  var siteCtx  = siteContent ? 'Website text preview:\n&quot;&quot;&quot;\n' + siteContent + '\n&quot;&quot;&quot;' : 'Could not fetch site content — analyze based on URL pattern only.';
-
-  var prompt = `You are a professional website auditor helping a sales rep at Akira Digital close a deal with this local business.
-
-URL: ${urlForPrompt}
-${nicheCtx}
-
-${siteCtx}
-
-Audit this website and return ONLY a JSON object (no markdown, no explanation) in this exact structure:
+Audit this website and return ONLY a JSON object (no markdown) in this exact structure:
 {
-  &quot;businessName&quot;: &quot;<inferred business name>&quot;,
-  &quot;overallScore&quot;: <number 0-100>,
-  &quot;scoreLabel&quot;: &quot;<Poor|Needs Work|Decent|Good>&quot;,
-  &quot;mobileIssues&quot;: [{&quot;issue&quot;:&quot;<specific issue>&quot;,&quot;severity&quot;:&quot;critical|warning|ok&quot;}],
-  &quot;seoIssues&quot;:    [{&quot;issue&quot;:&quot;<specific issue>&quot;,&quot;severity&quot;:&quot;critical|warning|ok&quot;}],
-  &quot;speedIssues&quot;:  [{&quot;issue&quot;:&quot;<specific issue>&quot;,&quot;severity&quot;:&quot;critical|warning|ok&quot;}],
-  &quot;designIssues&quot;: [{&quot;issue&quot;:&quot;<specific issue>&quot;,&quot;severity&quot;:&quot;critical|warning|ok&quot;}],
-  &quot;talkingPoints&quot;: [
-    {&quot;label&quot;:&quot;Opening hook&quot;,&quot;point&quot;:&quot;<exact word-for-word opener to use on the call — specific to THIS site's problems>&quot;},
-    {&quot;label&quot;:&quot;Problem #1&quot;,&quot;point&quot;:&quot;<specific problem framed as lost revenue>&quot;},
-    {&quot;label&quot;:&quot;Problem #2&quot;,&quot;point&quot;:&quot;<specific problem framed as lost revenue>&quot;},
-    {&quot;label&quot;:&quot;The close&quot;,&quot;point&quot;:&quot;<how to transition to pitching Akira Digital>&quot;}
+  "businessName": "<inferred name>",
+  "overallScore": <0-100>,
+  "scoreLabel": "<Poor|Needs Work|Decent|Good>",
+  "mobileIssues": [{"issue":"<specific>","severity":"critical|warning|ok"}],
+  "seoIssues": [{"issue":"<specific>","severity":"critical|warning|ok"}],
+  "speedIssues": [{"issue":"<specific>","severity":"critical|warning|ok"}],
+  "designIssues": [{"issue":"<specific>","severity":"critical|warning|ok"}],
+  "talkingPoints": [
+    {"label":"Opening hook","point":"<word-for-word opener specific to THIS site>"},
+    {"label":"Problem #1","point":"<problem as lost revenue>"},
+    {"label":"Problem #2","point":"<problem as lost revenue>"},
+    {"label":"The close","point":"<transition to pitching Akira>"}
   ],
-  &quot;coldCallOpener&quot;: &quot;<complete 2-3 sentence cold call script opener — natural, specific, not generic>&quot;
+  "coldCallOpener": "<complete 2-3 sentence natural opener>"
 }
-
-Be specific. Don't say 'your site is slow' — say 'your site takes 8+ seconds to load on mobile'. Every issue should feel personal to their business.`;
-
-  try {
-    var r = await fetch('/api/anthropic', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': aKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1200,
-        messages: [{role:'user', content: prompt}]
-      })
-    });
-
-    if (r.status === 401) throw new Error('API key is invalid or expired. Get a new one at console.anthropic.com');
-    if (!r.ok) throw new Error('API error ' + r.status);
-
-    var data = await r.json();
-    var raw  = (data.content||[]).map(function(b){ return b.text||''; }).join('');
-    raw = raw.replace(/```json/g,'').replace(/```/g,'').trim();
-    var jsonStart = raw.indexOf('{');
-    var jsonEnd = raw.lastIndexOf('}');
-    if (jsonStart !== -1 && jsonEnd > jsonStart) {
-      raw = raw.slice(jsonStart, jsonEnd + 1);
-    }
-    var audit = JSON.parse(raw);
-
-    renderResults(audit, url);
-    setStatus('✓ Audit complete for ' + (audit.businessName || url), 'done');
-  } catch(ex) {
-    setStatus('✗ ' + ex.message, 'err');
-    document.getElementById('resultsArea').innerHTML = '<div class=&quot;empty&quot;><div class=&quot;empty-icon&quot;>⚠️</div><div class=&quot;empty-title&quot;>Audit failed</div><div class=&quot;empty-sub&quot;>' + ex.message + '</div></div>';
-  }
-
-  document.getElementById('auditBtn').disabled = false;
+Be specific — say 'takes 8+ seconds on mobile' not 'your site is slow'.`;
+  try{
+    var r=await fetch('/api/anthropic',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':aKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1200,messages:[{role:'user',content:prompt}]})});
+    if(r.status===401)throw new Error('API key invalid');
+    if(!r.ok)throw new Error('API error '+r.status);
+    var d=await r.json();var raw=(d.content||[]).map(b=>b.text||'').join('');
+    raw=raw.replace(/```json/g,'').replace(/```/g,'').trim();
+    var js=raw.indexOf('{'),je=raw.lastIndexOf('}');
+    if(js!==-1&&je>js)raw=raw.slice(js,je+1);
+    renderResults(JSON.parse(raw),url);
+    setStatus('✓ Audit complete','done');
+  }catch(ex){setStatus('✗ '+ex.message,'err');document.getElementById('resultsArea').innerHTML='<div class=&quot;empty&quot;><div class=&quot;empty-icon&quot;>⚠️</div><div class=&quot;empty-title&quot;>Audit failed</div><div class=&quot;empty-sub&quot;>'+escHtml(ex.message)+'</div></div>';}
+  document.getElementById('auditBtn').disabled=false;
 }
-
-function renderResults(a, url) {
-  // Score colour
-  var scoreColor = a.overallScore >= 70 ? 'var(--green)' : a.overallScore >= 45 ? 'var(--amber)' : 'var(--red)';
-  var circumference = 2 * Math.PI * 28; // r=28
-  var offset = circumference * (1 - a.overallScore / 100);
-
-  var html = '';
-
-  // ── Score bar ──
-  html += `<div class=&quot;score-wrap&quot;>
-    <div class=&quot;score-ring&quot;>
-      <svg viewBox=&quot;0 0 64 64&quot; width=&quot;72&quot; height=&quot;72&quot;>
-        <circle class=&quot;ring-bg&quot; cx=&quot;32&quot; cy=&quot;32&quot; r=&quot;28&quot;/>
-        <circle class=&quot;ring-fill&quot; cx=&quot;32&quot; cy=&quot;32&quot; r=&quot;28&quot;
-          stroke=&quot;${scoreColor}&quot;
-          stroke-dasharray=&quot;${circumference}&quot;
-          stroke-dashoffset=&quot;${offset}&quot;/>
-      </svg>
-      <div class=&quot;score-number&quot; style=&quot;color:${scoreColor}&quot;>${a.overallScore}</div>
-    </div>
-    <div class=&quot;score-info&quot;>
-      <div class=&quot;score-title&quot;>${escHtml(a.businessName || url)}</div>
-      <div class=&quot;score-sub&quot;>Overall site score: <b>${escHtml(a.scoreLabel || '')}</b> — ${a.overallScore < 50 ? 'Hot prospect. Multiple fixable problems = easy sell.' : a.overallScore < 70 ? 'Warm prospect. Has a site but it has issues worth fixing.' : 'Decent site — focus on speed or SEO angles.'}</div>
-    </div>
-  </div>`;
-
-  // ── Issue categories ──
-  html += '<div class=&quot;results-grid&quot;>';
-  var cats = [
-    {key:'mobileIssues',  icon:'📱', title:'Mobile'},
-    {key:'seoIssues',     icon:'🔍', title:'SEO'},
-    {key:'speedIssues',   icon:'⚡', title:'Speed'},
-    {key:'designIssues',  icon:'🎨', title:'Design'},
-  ];
-  cats.forEach(function(cat){
-    var issues = a[cat.key] || [];
-    var hasCrit = issues.some(function(i){ return i.severity==='critical'; });
-    var badgeCls = hasCrit ? 'badge-red' : issues.length ? 'badge-amber' : 'badge-green';
-    var badgeTxt = hasCrit ? 'Critical' : issues.length ? 'Issues' : 'OK';
-    html += `<div class=&quot;result-card&quot;>
-      <div class=&quot;rc-header&quot;>
-        <span class=&quot;rc-icon&quot;>${cat.icon}</span>
-        <span class=&quot;rc-title&quot;>${cat.title}</span>
-        <span class=&quot;rc-badge ${badgeCls}&quot;>${badgeTxt}</span>
-      </div>
-      <div class=&quot;rc-body&quot;>`;
-    if (!issues.length) {
-      html += '<div style=&quot;color:var(--gray);font-size:12px;&quot;>No major issues detected.</div>';
-    } else {
-      issues.forEach(function(item){
-        var dotCls = item.severity==='critical' ? 'issue-dot' : item.severity==='ok' ? 'issue-dot ok' : 'issue-dot warn';
-        html += `<div class=&quot;issue-item&quot;><div class=&quot;${dotCls}&quot;></div><span>${escHtml(item.issue)}</span></div>`;
-      });
-    }
-    html += '</div></div>';
+function renderResults(a,url){
+  var sc=a.overallScore>=70?'var(--green)':a.overallScore>=45?'var(--amber)':'var(--red)';
+  var cf=2*Math.PI*28,off=cf*(1-a.overallScore/100);
+  var h='<div class=&quot;score-wrap&quot;><div class=&quot;score-ring&quot;><svg viewBox=&quot;0 0 64 64&quot; width=&quot;72&quot; height=&quot;72&quot;><circle class=&quot;ring-bg&quot; cx=&quot;32&quot; cy=&quot;32&quot; r=&quot;28&quot;/><circle class=&quot;ring-fill&quot; cx=&quot;32&quot; cy=&quot;32&quot; r=&quot;28&quot; stroke=&quot;'+sc+'&quot; stroke-dasharray=&quot;'+cf+'&quot; stroke-dashoffset=&quot;'+off+'&quot;/></svg><div class=&quot;score-number&quot; style=&quot;color:'+sc+'&quot;>'+a.overallScore+'</div></div><div class=&quot;score-info&quot;><div class=&quot;score-title&quot;>'+escHtml(a.businessName||url)+'</div><div class=&quot;score-sub&quot;>Score: <b>'+escHtml(a.scoreLabel||'')+'</b> — '+(a.overallScore<50?'Hot prospect. Easy sell.':a.overallScore<70?'Warm — has issues worth fixing.':'Decent site — focus on speed/SEO.')+'</div></div></div>';
+  h+='<div class=&quot;results-grid&quot;>';
+  [{key:'mobileIssues',icon:'📱',title:'Mobile'},{key:'seoIssues',icon:'🔍',title:'SEO'},{key:'speedIssues',icon:'⚡',title:'Speed'},{key:'designIssues',icon:'🎨',title:'Design'}].forEach(function(cat){
+    var is=a[cat.key]||[];var hc=is.some(i=>i.severity==='critical');
+    h+='<div class=&quot;result-card&quot;><div class=&quot;rc-header&quot;><span>'+cat.icon+'</span><span class=&quot;rc-title&quot;>'+cat.title+'</span><span class=&quot;rc-badge '+(hc?'badge-red':is.length?'badge-amber':'badge-green')+'&quot;>'+(hc?'Critical':is.length?'Issues':'OK')+'</span></div><div class=&quot;rc-body&quot;>';
+    if(!is.length)h+='<div style=&quot;color:var(--gray);font-size:12px;&quot;>No major issues.</div>';
+    else is.forEach(item=>{h+='<div class=&quot;issue-item&quot;><div class=&quot;issue-dot'+(item.severity==='critical'?'':item.severity==='ok'?' ok':' warn')+'&quot;></div><span>'+escHtml(item.issue)+'</span></div>';});
+    h+='</div></div>';
   });
-  html += '</div>';
-
-  // ── Talking points ──
-  html += `<div class=&quot;talking-card&quot;>
-    <div class=&quot;tc-header&quot;><span style=&quot;font-size:1.1rem&quot;>🎯</span><span class=&quot;tc-title&quot;>Sales Talking Points</span></div>`;
-  (a.talkingPoints||[]).forEach(function(tp, i){
-    html += `<div class=&quot;tp-item&quot;>
-      <div class=&quot;tp-num&quot;>${i+1}</div>
-      <div class=&quot;tp-text&quot;><span class=&quot;tp-label&quot;>${escHtml(tp.label||'')}</span>${escHtml(tp.point||'')}</div>
-    </div>`;
-  });
-  html += '</div>';
-
-  // ── Cold call opener ──
-  if (a.coldCallOpener) {
-    var opener = a.coldCallOpener;
-    html += `<div class=&quot;script-card&quot;>
-      <div class=&quot;script-label&quot;>📞 Cold Call Opener — Copy & Use Verbatim</div>
-      <button class=&quot;copy-btn&quot; onclick=&quot;copyText(this, '${opener.replace(/'/g,&quot;\\'&quot;).replace(/\n/g,' ')}')&quot;>Copy</button>
-      <div class=&quot;script-text&quot; id=&quot;openerText&quot;>${escHtml(opener)}</div>
-    </div>`;
-  }
-
-  document.getElementById('resultsArea').innerHTML = html;
+  h+='</div>';
+  h+='<div class=&quot;talking-card&quot;><div class=&quot;tc-header&quot;><span>🎯</span><span class=&quot;tc-title&quot;>Sales Talking Points</span></div>';
+  (a.talkingPoints||[]).forEach((tp,i)=>{h+='<div class=&quot;tp-item&quot;><div class=&quot;tp-num&quot;>'+(i+1)+'</div><div class=&quot;tp-text&quot;><span class=&quot;tp-label&quot;>'+escHtml(tp.label||'')+'</span>'+escHtml(tp.point||'')+'</div></div>';});
+  h+='</div>';
+  if(a.coldCallOpener){var o=a.coldCallOpener.replace(/\/g,'\\').replace(/'/g,"\'").replace(/
+/g,' ');h+='<div class=&quot;script-card&quot;><div class=&quot;script-label&quot;>📞 Cold Call Opener — Copy &amp; Use Verbatim</div><button class=&quot;copy-btn&quot; onclick=&quot;copyText(this,\''+o+'\')&quot;>Copy</button><div class=&quot;script-text&quot;>'+escHtml(a.coldCallOpener)+'</div></div>';}
+  document.getElementById('resultsArea').innerHTML=h;
 }
-
-function escHtml(s) {
-  return String(s).replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>').replace(/&quot;/g,'&quot;');
-}
-
-function copyText(btn, text) {
-  navigator.clipboard.writeText(text).then(function(){
-    btn.textContent = '✓ Copied!';
-    setTimeout(function(){ btn.textContent = 'Copy'; }, 2000);
-  });
-}
-
-// Also allow Enter key to trigger audit
-document.getElementById('urlInput').addEventListener('keydown', function(e){
-  if (e.key === 'Enter') runAudit();
-});
+function copyText(btn,text){navigator.clipboard.writeText(text).then(()=>{btn.textContent='✓ Copied';setTimeout(()=>{btn.textContent='Copy';},2000);}).catch(()=>{var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);btn.textContent='✓ Copied';setTimeout(()=>{btn.textContent='Copy';},2000);});}
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 </script>
 </body>
-</html>
-" title="Website Audit"></iframe>
+</html>" title="Website Audit"></iframe>
     <iframe id="frame-2" class="tool-frame" srcdoc="<!DOCTYPE html>
 <html lang=&quot;en&quot;>
 <head>
