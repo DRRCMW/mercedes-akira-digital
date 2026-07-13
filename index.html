@@ -5461,7 +5461,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);m
       <div class=&quot;ph-price&quot;>$5,000+</div>
     </button>
   </div>
-  <div class=&quot;hint-box&quot; id=&quot;hintBox&quot;><strong>Phase 1 strategy:</strong> Lead with speed and simplicity. You deliver in 10 days, others take 6 weeks. Price is $1,000 — less than one missed job.</div>
+  <div class=&quot;hint-box&quot; id=&quot;hintBox&quot;><strong>Phase 1 strategy:</strong> Lead with quality and simplicity. You build professional websites for local businesses at $1,000 — less than one missed job.</div>
 </div>
 <div class=&quot;main&quot;>
   <div class=&quot;page-title&quot;>New Client Proposal</div>
@@ -5574,14 +5574,14 @@ var pipeProspects = [];
 var selectedPipeIdx = -1;
 
 var phaseHints = [
-  '<strong>Phase 1 strategy:</strong> Lead with speed and simplicity. You deliver in 10 days, others take 6 weeks. Price is $1,000 — less than one missed job.',
+  '<strong>Phase 1 strategy:</strong> Lead with quality and simplicity. You build professional websites for local businesses at $1,000 — less than one missed job.',
   '<strong>Phase 2 strategy:</strong> You have testimonials now. Lead with results. Price confidently — you\'re selling lead generation systems.',
   '<strong>Phase 3 strategy:</strong> You are selling ROI, not websites. One extra booked job/week pays for the site in a month.'
 ];
 
 var phaseData = [
-  {price:'$1,000', terms:'100% upfront — paid in full before work begins.', timeline:'10 business days', pkg:'Starter Website — $1,000 (3 pages, mobile responsive, contact form, Google Business setup, basic SEO, 2 revision rounds, 30-day support)'},
-  {price:'$2,500', terms:'100% upfront — paid in full before work begins.', timeline:'14 business days', pkg:'Growth Website — $2,500 (everything in Starter + 5 custom pages, lead capture system, Google Analytics 4, call tracking, speed optimization, 60-day support)'},
+  {price:'$1,000', terms:'100% upfront — paid in full before work begins.', timeline:'Timeline discussed with client', pkg:'Starter Website — $1,000 (3 pages, mobile responsive, contact form, Google Business setup, basic SEO, 2 revision rounds, 30-day support)'},
+  {price:'$2,500', terms:'100% upfront — paid in full before work begins.', timeline:'Timeline discussed with client', pkg:'Growth Website — $2,500 (everything in Starter + 5 custom pages, lead capture system, Google Analytics 4, call tracking, speed optimization, 60-day support)'},
   {price:'$5,000+', terms:'100% upfront — paid in full. Custom quote based on scope.', timeline:'3 weeks', pkg:'Authority Package — $5,000+ (everything in Growth + 8-10 custom pages, full brand refresh, Google Ads pages, competitor analysis, local SEO dominance, 90-day support)'}
 ];
 
@@ -5716,12 +5716,12 @@ async function generate() {
     +'- Authority Package $5,000+: everything in Growth + 8-10 custom pages, full brand refresh, Google Ads pages, competitor analysis, local SEO dominance, 90-day support.\n'
     +'- Care Plan $300/mo: monthly updates (2 hrs), security monitoring, daily backups, SEO health report, priority support, uptime monitoring, 30-day cancel notice.\n\n'
     +'AKIRA DIGITAL COMPETITIVE ADVANTAGES:\n'\
-    +'- Speed: We deliver in 10 business days. Most agencies take 6-8 weeks.\n'\
+    +'- Speed: We work efficiently and communicate throughout the build.\n'\
     +'- Price: $1,000 flat. No contracts, no surprises, no monthly fees unless they choose the Care Plan.\n'\
     +'- Specialization: We only work with local service businesses. We know exactly what makes their customers call.\n\n'\
     +'Write a complete professional proposal in markdown with these exact sections:\n\n'\
     +'## [Business Name] — Your New Website\n'\
-    +'**Live in 10 Business Days | Prepared by Akira Digital**\n\n'\
+    +'**Prepared by Akira Digital**\n\n'\
     +'## Executive Summary\n'\
     +'(2-3 sentences specific to their pain point and business type — what they told us, why they need this now)\n\n'\
     +'## The Problem\n'\
@@ -5733,19 +5733,19 @@ async function generate() {
     +'## Investment\n'\
     +'- **Package:** [exact package and price]\n'\
     +'- **Payment:** [exact terms — 100% upfront]\n'\
-    +'- **Timeline: 10 business days** from intake form completion\n'\
-    +'- *Most web agencies take 6-8 weeks. We build in 10 days because we specialize in one thing: local service business websites.*\n\n'\
+    +'- **Timeline:** To be confirmed with client at project start\n'\
+    +'- *We specialize in local service business websites — that focus means cleaner, faster builds.*\n\n'\
     +'## Why Akira Digital\n'\
-    +'1. **10-Day Build — Guaranteed.** Your site goes live in 10 business days. Not 6 weeks, not 8 weeks — 10 business days. Every extra day without a website is revenue going to a competitor who has one.\n'\
+    +'1. **Speed.** We work efficiently — no dragging things out for months. You see progress quickly.\n'\
     +'2. **We specialize in [their business type].** We do not build websites for everyone. We focus on local service businesses — plumbers, cleaners, contractors, salons. We know what makes [their type of customer] call.\n'\
     +'3. **One flat price. No surprises.** $[price] covers everything listed above. No contracts, no hidden fees, no monthly obligations unless you want our Care Plan.\n\n'\
     +'## Next Steps\n'\
-    +'1. **Approve and pay** — Send [price] to lock your spot. We only take 3 new projects per week to protect the 10-day guarantee.\n'\
+    +'1. **Approve and pay** — Send [price] to secure your project slot.\n'\
     +'2. **Complete your intake form** — 10 minutes. Gives us everything we need to build exactly what you want.\n'\
-    +'3. **We build, you approve, we launch** — Work starts within 24 hours of payment + intake. Live in 10 business days.\n\n'\
+    +'3. **We build, you approve, we launch** — Work starts within 24 hours of payment + intake. We deliver a professional result.\n\n'\
     +'---\n'\
     +'*Questions? Reply here or call/text Robyn directly. Same-day response guaranteed.*\n\n'\
-    +'TONE INSTRUCTIONS: Professional, confident, direct, warm. Lead with the 10-day speed everywhere — it is the single biggest differentiator. Make it feel exciting. Be specific to their city and exact business type. No filler sentences. Every line earns its place.';
+    +'TONE INSTRUCTIONS: Professional, confident, direct, warm. Be specific to their city and exact business type. No filler sentences. Every line earns its place. Focus on what they are losing without a website and how Akira Digital solves it.';
 
   try {
     var resp = await fetch('/api/anthropic', {
