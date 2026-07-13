@@ -60,7 +60,7 @@ export default async function handler(req, res) {
   // Instant TwiML auto-reply (Twilio delivers it â no extra send needed)
   res.setHeader('Content-Type', 'text/xml');
   if (isStop) return res.status(200).send('<?xml version="1.0" encoding="UTF-8"?><Response></Response>');
-  const msg = `Thanks for replying! This is Mercedes with Akira Digital. Robyn would love to connect — grab a free 15-min slot here: cal.com/akira-digital or text back a good time and she'll call you directly.`;
+  const msg = `Thanks for replying! This is Mercedes with Akira Digital. Robyn would love to connect — grab a free 15-min slot here: cal.com/akira-digital or call/text her directly at (972) 559-0881.`;
   return res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?><Response><Message>${msg}</Message></Response>`);
 }
 
