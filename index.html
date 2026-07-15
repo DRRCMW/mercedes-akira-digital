@@ -696,7 +696,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
     </div>
 
     <!-- AI Agents -->
-    <div class="nav-section">
+    <div id="akxAgentsSection" class="nav-section">
       <div class="nav-lbl">⑤ AI Agents</div>
       <div class="nav-item" id="nav-agent" onclick="showAgent()">
         <div class="ni-icon" style="background:linear-gradient(135deg,rgba(139,92,246,.25),rgba(59,158,221,.15));color:#8b5cf6;border:1px solid rgba(139,92,246,.3);">✦</div>
@@ -13278,13 +13278,29 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeSidebar
     buildChrome();
     applyRole();
     startUnreadPoll();
+    if(state.role!=='owner'){ setInterval(guardHelperView, 1500); }
   }
 
   function applyRole(){
     if(state.role!=='owner'){
+      document.body.setAttribute('data-role','helper');
       document.querySelectorAll('[onclick*="openSettings"]').forEach(function(el){ el.style.display='none'; });
       var tb=$('akxTeamFab'); if(tb) tb.style.display='none';
+      // hide the whole AI Agents sidebar section from the sales team
+      var ag=document.getElementById('akxAgentsSection'); if(ag) ag.style.display='none';
+      // hide any other agent launchers/cards anywhere in the app
+      var fns=['showAgent','showAgentControl','showDedicatedAgent','openEmbeddedAgent','showSeoView','showGoalSettings'];
+      fns.forEach(function(fn){
+        document.querySelectorAll('[onclick*="'+fn+'"]').forEach(function(el){
+          var box = el.closest('.nav-item') || el.closest('.tool-card') || el.closest('.card') || el.closest('.agent-card') || el;
+          if(box) box.style.display='none';
+        });
+      });
     }
+  }
+  // Re-apply hiding if the app re-renders sections after navigation
+  function guardHelperView(){
+    if(state.role && state.role!=='owner'){ try{ applyRole(); }catch(e){} }
   }
 
   // ---------- chrome: badge + floating buttons + panels ----------
