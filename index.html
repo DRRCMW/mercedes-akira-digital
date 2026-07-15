@@ -560,6 +560,19 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 <style>@keyframes smPulse{0%,100%{opacity:.6}50%{opacity:1}}</style>
 </head>
 <body>
+<!-- AKIRA TEAM GATE (added) -->
+<div id="akxGate" style="position:fixed;inset:0;z-index:2147483000;background:#0a0a0a;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',system-ui,sans-serif;">
+  <div style="width:340px;max-width:88vw;background:#141414;border:1px solid #262626;border-radius:16px;padding:28px 26px;box-shadow:0 24px 70px rgba(0,0,0,.65);">
+    <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:.08em;font-size:30px;color:#c9941a;line-height:1;">AKIRA DIGITAL</div>
+    <div id="akxSub" style="color:#8a8a8a;font-size:11px;margin:4px 0 20px;letter-spacing:.14em;text-transform:uppercase;">Command Center — Team Sign In</div>
+    <input id="akxUser" placeholder="Username" autocomplete="username" style="width:100%;box-sizing:border-box;background:#0a0a0a;border:1px solid #2e2e2e;border-radius:9px;padding:11px 13px;color:#fff;font-size:14px;outline:none;margin-bottom:10px;">
+    <input id="akxPass" type="password" placeholder="Password" autocomplete="current-password" style="width:100%;box-sizing:border-box;background:#0a0a0a;border:1px solid #2e2e2e;border-radius:9px;padding:11px 13px;color:#fff;font-size:14px;outline:none;">
+    <div id="akxErr" style="color:#ef5350;font-size:12px;min-height:16px;margin:8px 2px 4px;"></div>
+    <button id="akxLoginBtn" style="width:100%;background:#c9941a;color:#0a0a0a;border:none;border-radius:9px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.02em;">Sign in</button>
+    <div style="color:#5a5a5a;font-size:10.5px;margin-top:14px;text-align:center;line-height:1.5;">Ask Robyn for your username &amp; password.<br>Everything you need is already set up inside.</div>
+  </div>
+</div>
+
 <div class="app">
 
 <!-- ══════════════ SIDEBAR ══════════════ -->
@@ -10586,7 +10599,7 @@ function showAgentToast(msg, color) {
   setTimeout(function(){ t.style.opacity = '0'; }, 3000);
 }
 
-var NOTION_TOKEN = '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';
+var NOTION_TOKEN = localStorage.getItem('akira_notion_token') || '';
 var AGENT_MSGS_DB = '9bf24d82460c4f6ca3d9c0442ce3501b';
 var WEEKLY_REPORTS_DB = 'c9bf66bb80ea48bba6408a858ee99b13';
 
@@ -13188,5 +13201,278 @@ function closeSidebar(){var sb=document.querySelector('.sidebar'),ov=document.ge
 document.addEventListener('click',function(e){if(window.innerWidth<=768){var n=e.target.closest('.nav-item,.nav-home');if(n)setTimeout(closeSidebar,120);}});
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeSidebar();});
 </script>
+<!-- AKIRA TEAM LAYER (added): login, chat, team management, add-candidate -->
+<script>
+(function(){
+  var state={token:localStorage.getItem('akira_session_token')||'',user:'',role:''};
+  var SETUP_MODE=false;
+  var chat={open:false,lastTs:0,seenTs:Number(localStorage.getItem('akira_chat_seen')||0),unread:0,timer:null};
+  function $(id){return document.getElementById(id);}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function api(path, method, body){
+    var opts={method:method||'GET',headers:{'Content-Type':'application/json'}};
+    if(body) opts.body=JSON.stringify(body);
+    return fetch(path,opts).then(function(r){return r.json().then(function(j){return {status:r.status,json:j};}).catch(function(){return {status:r.status,json:{}};});});
+  }
+  function cloudSecret(){ try{return localStorage.getItem('mercedes_cloud_secret')||'Mercedes2707';}catch(e){return 'Mercedes2707';} }
+  function toast(msg,color){
+    var t=document.createElement('div');
+    t.textContent=msg;
+    t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:2147483400;background:'+(color||'#1f1f1f')+';color:#fff;padding:11px 18px;border-radius:10px;font-family:DM Sans,sans-serif;font-size:13px;box-shadow:0 8px 30px rgba(0,0,0,.5);';
+    document.body.appendChild(t); setTimeout(function(){t.remove();},2600);
+  }
+
+  // ---------- gate ----------
+  function showGate(){var g=$('akxGate'); if(g) g.style.display='flex';}
+  function hideGate(){var g=$('akxGate'); if(g) g.style.display='none';}
+  function setErr(m){var e=$('akxErr'); if(e) e.textContent=m||'';}
+  function doLogin(){
+    var u=($('akxUser')||{}).value, p=($('akxPass')||{}).value;
+    if(!u||!p){setErr('Enter username and password.');return;}
+    setErr(SETUP_MODE?'Creating your account…':'Signing in…');
+    var payload=SETUP_MODE?{action:'setup-owner',username:u,password:p}:{action:'login',username:u,password:p};
+    api('/api/auth','POST',payload).then(function(r){
+      if(r.status===200 && r.json.ok){
+        state.token=r.json.token; state.user=r.json.username; state.role=r.json.role;
+        localStorage.setItem('akira_session_token',state.token);
+        var disp=r.json.username.charAt(0).toUpperCase()+r.json.username.slice(1);
+        try{localStorage.setItem('akira_user_name',disp);}catch(e){}
+        setErr(''); onLoggedIn();
+      } else { setErr(r.json.error||'Sign in failed.'); }
+    }).catch(function(){setErr('Network error. Try again.');});
+  }
+
+  // ---------- init ----------
+  function enterSetup(hint){
+    SETUP_MODE=true;
+    var sub=$('akxSub'); if(sub) sub.textContent='First-time setup — create your owner login';
+    var b=$('akxLoginBtn'); if(b) b.textContent='Create owner account';
+    var u=$('akxUser'); if(u && hint && !u.value){ u.value=hint.charAt(0).toUpperCase()+hint.slice(1); }
+    setErr('');
+    showGate();
+  }
+  function checkStatusThen(next){
+    api('/api/auth?action=status','GET').then(function(r){
+      if(r.status===200 && r.json.ok && !r.json.hasUsers){ enterSetup(r.json.ownerHint||''); }
+      else { next(); }
+    }).catch(function(){ next(); });
+  }
+  function init(){
+    try{ var k=localStorage.getItem('akira_akey'); if(!k) localStorage.setItem('akira_akey','server-proxy'); }catch(e){}
+    var b=$('akxLoginBtn'); if(b) b.onclick=doLogin;
+    var pass=$('akxPass'); if(pass) pass.addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+    var usr=$('akxUser'); if(usr) usr.addEventListener('keydown',function(e){if(e.key==='Enter'){ if(($('akxPass')||{}).value) doLogin(); else ($('akxPass')||{}).focus&&$('akxPass').focus(); }});
+    checkStatusThen(function(){ resumeInit(); });
+  }
+  function resumeInit(){
+    if(state.token){
+      api('/api/auth?action=me&token='+encodeURIComponent(state.token),'GET').then(function(r){
+        if(r.status===200 && r.json.ok){ state.user=r.json.username; state.role=r.json.role; onLoggedIn(); }
+        else { localStorage.removeItem('akira_session_token'); state.token=''; showGate(); }
+      }).catch(function(){ showGate(); });
+    } else { showGate(); }
+  }
+
+  function onLoggedIn(){
+    hideGate();
+    buildChrome();
+    applyRole();
+    startUnreadPoll();
+  }
+
+  function applyRole(){
+    if(state.role!=='owner'){
+      document.querySelectorAll('[onclick*="openSettings"]').forEach(function(el){ el.style.display='none'; });
+      var tb=$('akxTeamFab'); if(tb) tb.style.display='none';
+    }
+  }
+
+  // ---------- chrome: badge + floating buttons + panels ----------
+  function buildChrome(){
+    if($('akxChrome')) return;
+    var disp=state.user.charAt(0).toUpperCase()+state.user.slice(1);
+    var wrap=document.createElement('div'); wrap.id='akxChrome';
+    wrap.innerHTML=
+      '<div id="akxBadge" style="position:fixed;top:12px;right:14px;z-index:2147482000;display:flex;align-items:center;gap:9px;background:rgba(20,20,20,.92);border:1px solid #2a2a2a;border-radius:999px;padding:6px 8px 6px 13px;font-family:DM Sans,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.4);">'
+      +  '<span style="width:8px;height:8px;border-radius:50%;background:#37d67a;"></span>'
+      +  '<span style="color:#eee;font-size:12.5px;font-weight:600;">'+esc(disp)+'</span>'
+      +  '<span style="color:#c9941a;font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;border:1px solid rgba(201,148,26,.35);border-radius:6px;padding:1px 6px;">'+esc(state.role)+'</span>'
+      +  '<button id="akxLogout" title="Sign out" style="background:#242424;border:1px solid #333;color:#aaa;border-radius:999px;padding:4px 10px;font-size:11px;cursor:pointer;">Sign out</button>'
+      +'</div>'
+      +'<div id="akxFabs" style="position:fixed;bottom:20px;right:18px;z-index:2147482000;display:flex;flex-direction:column;gap:10px;align-items:flex-end;font-family:DM Sans,sans-serif;">'
+      +  '<button id="akxTeamFab" title="Manage team" style="'+fabStyle('#8b5cf6')+'">👥</button>'
+      +  '<button id="akxAddFab" title="Add candidate" style="'+fabStyle('#37d67a')+'">＋</button>'
+      +  '<button id="akxChatFab" title="Team chat" style="'+fabStyle('#c9941a')+'position:relative;">💬<span id="akxUnread" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef5350;color:#fff;font-size:10px;min-width:17px;height:17px;border-radius:9px;line-height:17px;text-align:center;padding:0 3px;"></span></button>'
+      +'</div>';
+    document.body.appendChild(wrap);
+    buildChatPanel(); buildTeamPanel(); buildAddModal();
+    $('akxLogout').onclick=logout;
+    $('akxChatFab').onclick=toggleChat;
+    $('akxAddFab').onclick=function(){ $('akxAddModal').style.display='flex'; };
+    $('akxTeamFab').onclick=openTeam;
+  }
+  function fabStyle(c){return 'width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;font-size:20px;color:#0a0a0a;background:'+c+';box-shadow:0 6px 22px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;';}
+
+  // ---------- chat ----------
+  function buildChatPanel(){
+    var p=document.createElement('div'); p.id='akxChatPanel';
+    p.style.cssText='position:fixed;bottom:84px;right:18px;width:340px;max-width:92vw;height:440px;max-height:70vh;z-index:2147482100;background:#131313;border:1px solid #2a2a2a;border-radius:14px;display:none;flex-direction:column;overflow:hidden;font-family:DM Sans,sans-serif;box-shadow:0 18px 50px rgba(0,0,0,.6);';
+    p.innerHTML=
+      '<div style="padding:12px 14px;border-bottom:1px solid #242424;display:flex;justify-content:space-between;align-items:center;">'
+      +  '<span style="color:#fff;font-weight:700;font-size:14px;">💬 Team Chat</span>'
+      +  '<span id="akxChatClose" style="color:#888;cursor:pointer;font-size:18px;line-height:1;">×</span></div>'
+      +'<div id="akxMsgs" style="flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:9px;"></div>'
+      +'<div style="padding:10px;border-top:1px solid #242424;display:flex;gap:8px;">'
+      +  '<input id="akxChatInput" placeholder="Message the team…" style="flex:1;background:#0a0a0a;border:1px solid #2e2e2e;border-radius:9px;padding:9px 11px;color:#fff;font-size:13px;outline:none;">'
+      +  '<button id="akxChatSend" style="background:#c9941a;border:none;color:#0a0a0a;border-radius:9px;padding:0 14px;font-weight:700;cursor:pointer;">Send</button></div>';
+    document.body.appendChild(p);
+    $('akxChatClose').onclick=toggleChat;
+    $('akxChatSend').onclick=sendChat;
+    $('akxChatInput').addEventListener('keydown',function(e){if(e.key==='Enter')sendChat();});
+  }
+  function toggleChat(){
+    chat.open=!chat.open;
+    $('akxChatPanel').style.display=chat.open?'flex':'none';
+    if(chat.open){ pollChat(); if(chat.timer) clearInterval(chat.timer); chat.timer=setInterval(pollChat,4000); markSeen(); $('akxChatInput').focus(); }
+    else if(chat.timer){ clearInterval(chat.timer); chat.timer=null; }
+  }
+  function pollChat(){
+    api('/api/chat?token='+encodeURIComponent(state.token),'GET').then(function(r){
+      if(r.status===200 && r.json.ok){ renderMsgs(r.json.messages||[]); }
+    });
+  }
+  function renderMsgs(msgs){
+    var box=$('akxMsgs'); if(!box) return;
+    var atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<40;
+    box.innerHTML=msgs.map(function(m){
+      var mine=m.user===state.user;
+      var when=new Date(m.ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      return '<div style="align-self:'+(mine?'flex-end':'flex-start')+';max-width:80%;">'
+        +'<div style="font-size:10px;color:#777;margin:0 4px 2px;">'+esc(mine?'You':(m.user.charAt(0).toUpperCase()+m.user.slice(1)))+' · '+when+'</div>'
+        +'<div style="background:'+(mine?'#c9941a':'#242424')+';color:'+(mine?'#0a0a0a':'#eee')+';padding:8px 11px;border-radius:11px;font-size:13px;line-height:1.35;word-wrap:break-word;">'+esc(m.text)+'</div></div>';
+    }).join('');
+    if(msgs.length){ chat.lastTs=msgs[msgs.length-1].ts; }
+    if(atBottom) box.scrollTop=box.scrollHeight;
+    if(chat.open) markSeen();
+  }
+  function sendChat(){
+    var inp=$('akxChatInput'); var text=(inp.value||'').trim(); if(!text) return;
+    inp.value='';
+    api('/api/chat','POST',{token:state.token,text:text}).then(function(r){
+      if(r.status===200 && r.json.ok){ pollChat(); } else { toast(r.json.error||'Could not send','#7a2323'); }
+    });
+  }
+  function markSeen(){ chat.seenTs=chat.lastTs||Date.now(); try{localStorage.setItem('akira_chat_seen',chat.seenTs);}catch(e){} chat.unread=0; updateUnread(); }
+  function updateUnread(){ var b=$('akxUnread'); if(!b) return; if(chat.unread>0){ b.style.display='block'; b.textContent=chat.unread>9?'9+':chat.unread; } else b.style.display='none'; }
+  function startUnreadPoll(){
+    setInterval(function(){
+      if(chat.open) return;
+      api('/api/chat?token='+encodeURIComponent(state.token)+'&since='+encodeURIComponent(chat.seenTs||0),'GET').then(function(r){
+        if(r.status===200 && r.json.ok){ var m=(r.json.messages||[]).filter(function(x){return x.user!==state.user;}); chat.unread=m.length; updateUnread(); }
+      });
+    },15000);
+  }
+
+  // ---------- team management (owner) ----------
+  function buildTeamPanel(){
+    var p=document.createElement('div'); p.id='akxTeamPanel';
+    p.style.cssText='position:fixed;inset:0;z-index:2147482300;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;font-family:DM Sans,sans-serif;';
+    p.innerHTML=
+      '<div style="width:460px;max-width:94vw;max-height:86vh;overflow:auto;background:#141414;border:1px solid #2a2a2a;border-radius:14px;padding:22px;">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><div style="font-family:Bebas Neue,sans-serif;font-size:22px;letter-spacing:.05em;color:#fff;">👥 TEAM MEMBERS</div><span id="akxTeamClose" style="color:#888;cursor:pointer;font-size:22px;">×</span></div>'
+      +'<div style="color:#888;font-size:12px;margin-bottom:14px;">Add helpers and set their passwords. Share the username &amp; password with them — they sign in from anywhere and everything just works.</div>'
+      +'<div id="akxUserList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px;"></div>'
+      +'<div style="border-top:1px solid #242424;padding-top:14px;"><div style="color:#c9941a;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:9px;">Add a helper</div>'
+      +'<input id="akxNewUser" placeholder="Username (e.g. maria)" style="width:100%;box-sizing:border-box;background:#0a0a0a;border:1px solid #2e2e2e;border-radius:9px;padding:10px 12px;color:#fff;font-size:13px;outline:none;margin-bottom:8px;">'
+      +'<input id="akxNewPass" placeholder="Password" style="width:100%;box-sizing:border-box;background:#0a0a0a;border:1px solid #2e2e2e;border-radius:9px;padding:10px 12px;color:#fff;font-size:13px;outline:none;margin-bottom:8px;">'
+      +'<button id="akxAddUser" style="width:100%;background:#37d67a;border:none;color:#0a0a0a;border-radius:9px;padding:11px;font-weight:700;cursor:pointer;">Add helper</button>'
+      +'<div id="akxTeamMsg" style="color:#ef5350;font-size:12px;min-height:16px;margin-top:8px;"></div></div></div>';
+    document.body.appendChild(p);
+    $('akxTeamClose').onclick=function(){ p.style.display='none'; };
+    $('akxAddUser').onclick=addUser;
+  }
+  function openTeam(){ $('akxTeamPanel').style.display='flex'; loadUsers(); }
+  function loadUsers(){
+    api('/api/auth','POST',{action:'list-users',token:state.token}).then(function(r){
+      var list=$('akxUserList'); if(!list) return;
+      if(!(r.status===200&&r.json.ok)){ list.innerHTML='<div style="color:#ef5350;font-size:12px;">'+esc(r.json.error||'Could not load')+'</div>'; return; }
+      list.innerHTML=(r.json.users||[]).map(function(u){
+        var isOwner=u.role==='owner';
+        return '<div style="display:flex;align-items:center;justify-content:space-between;background:#1b1b1b;border:1px solid #262626;border-radius:9px;padding:9px 12px;">'
+          +'<div><span style="color:#fff;font-size:13px;font-weight:600;">'+esc(u.username)+'</span> <span style="color:'+(isOwner?'#c9941a':'#37d67a')+';font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;margin-left:6px;">'+esc(u.role)+'</span></div>'
+          +'<div style="display:flex;gap:6px;">'
+          +'<button data-u="'+esc(u.username)+'" class="akxReset" style="background:#242424;border:1px solid #333;color:#bbb;border-radius:7px;padding:4px 9px;font-size:11px;cursor:pointer;">Reset password</button>'
+          +(isOwner?'':'<button data-u="'+esc(u.username)+'" class="akxRemove" style="background:#2a1414;border:1px solid #4a2020;color:#ef7676;border-radius:7px;padding:4px 9px;font-size:11px;cursor:pointer;">Remove</button>')
+          +'</div></div>';
+      }).join('');
+      list.querySelectorAll('.akxReset').forEach(function(b){ b.onclick=function(){ resetPass(b.getAttribute('data-u')); }; });
+      list.querySelectorAll('.akxRemove').forEach(function(b){ b.onclick=function(){ removeUser(b.getAttribute('data-u')); }; });
+    });
+  }
+  function addUser(){
+    var u=($('akxNewUser')||{}).value, p=($('akxNewPass')||{}).value, msg=$('akxTeamMsg');
+    if(!u||!p){ msg.textContent='Enter a username and password.'; return; }
+    msg.style.color='#888'; msg.textContent='Adding…';
+    api('/api/auth','POST',{action:'add-user',token:state.token,username:u,password:p,role:'helper'}).then(function(r){
+      if(r.status===200&&r.json.ok){ msg.style.color='#37d67a'; msg.textContent='Added '+r.json.username+'. Share their login now.'; $('akxNewUser').value=''; $('akxNewPass').value=''; loadUsers(); }
+      else { msg.style.color='#ef5350'; msg.textContent=r.json.error||'Could not add.'; }
+    });
+  }
+  function resetPass(u){
+    var np=prompt('New password for "'+u+'":'); if(!np) return;
+    api('/api/auth','POST',{action:'set-password',token:state.token,username:u,password:np}).then(function(r){
+      if(r.status===200&&r.json.ok){ toast('Password updated for '+u,'#1f5c37'); } else { toast(r.json.error||'Failed','#7a2323'); }
+    });
+  }
+  function removeUser(u){
+    if(!confirm('Remove helper "'+u+'"? They will no longer be able to sign in.')) return;
+    api('/api/auth','POST',{action:'remove-user',token:state.token,username:u}).then(function(r){
+      if(r.status===200&&r.json.ok){ toast('Removed '+u,'#1f1f1f'); loadUsers(); } else { toast(r.json.error||'Failed','#7a2323'); }
+    });
+  }
+
+  // ---------- add candidate ----------
+  function buildAddModal(){
+    var m=document.createElement('div'); m.id='akxAddModal';
+    m.style.cssText='position:fixed;inset:0;z-index:2147482300;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;font-family:DM Sans,sans-serif;';
+    m.innerHTML=
+      '<div style="width:400px;max-width:94vw;background:#141414;border:1px solid #2a2a2a;border-radius:14px;padding:22px;">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div style="font-family:Bebas Neue,sans-serif;font-size:22px;letter-spacing:.05em;color:#fff;">＋ ADD CANDIDATE</div><span id="akxAddClose" style="color:#888;cursor:pointer;font-size:22px;">×</span></div>'
+      +'<div style="color:#888;font-size:12px;margin-bottom:14px;">Adds straight to the shared pipeline — Robyn and the whole team see it.</div>'
+      +fld('akxcName','Business name *')+fld('akxcPhone','Phone')+fld('akxcCity','City')+fld('akxcNiche','Niche (e.g. Plumber)')+fld('akxcNote','Note (optional)')
+      +'<button id="akxAddSubmit" style="width:100%;background:#37d67a;border:none;color:#0a0a0a;border-radius:9px;padding:12px;font-weight:700;cursor:pointer;margin-top:4px;">Add to pipeline</button>'
+      +'<div id="akxAddMsg" style="color:#ef5350;font-size:12px;min-height:16px;margin-top:8px;"></div></div>';
+    document.body.appendChild(m);
+    $('akxAddClose').onclick=function(){ m.style.display='none'; };
+    $('akxAddSubmit').onclick=submitAdd;
+  }
+  function fld(id,ph){ return '<input id="'+id+'" placeholder="'+ph+'" style="width:100%;box-sizing:border-box;background:#0a0a0a;border:1px solid #2e2e2e;border-radius:9px;padding:10px 12px;color:#fff;font-size:13px;outline:none;margin-bottom:8px;">'; }
+  function submitAdd(){
+    var name=($('akxcName')||{}).value.trim(); var msg=$('akxAddMsg');
+    if(!name){ msg.style.color='#ef5350'; msg.textContent='Business name is required.'; return; }
+    var lead={ name:name, phone:($('akxcPhone')||{}).value.trim(), city:($('akxcCity')||{}).value.trim()||'', state:'', niche:($('akxcNiche')||{}).value.trim()||'Other', reason:($('akxcNote')||{}).value.trim()||'', tier:'Hot', score:90, stage:'new', angle:'Manual add', addedBy:state.user };
+    msg.style.color='#888'; msg.textContent='Adding…';
+    fetch('/api/pipeline',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:state.token,lead:lead})})
+      .then(function(r){return r.json();}).then(function(j){
+        if(j&&j.ok){
+          msg.style.color='#37d67a'; msg.textContent='Added “'+name+'” to the shared pipeline ('+j.total+' total).';
+          try{ var pl=JSON.parse(localStorage.getItem('akira_pipeline')||'[]'); pl.push(lead); localStorage.setItem('akira_pipeline',JSON.stringify(pl)); if(typeof updateStats==='function') updateStats(); }catch(e){}
+          ['akxcName','akxcPhone','akxcCity','akxcNiche','akxcNote'].forEach(function(i){ if($(i))$(i).value=''; });
+        } else { msg.style.color='#ef5350'; msg.textContent=(j&&j.error)||'Could not add.'; }
+      }).catch(function(){ msg.style.color='#ef5350'; msg.textContent='Network error.'; });
+  }
+
+  // ---------- logout ----------
+  function logout(){
+    api('/api/auth','POST',{action:'logout',token:state.token});
+    localStorage.removeItem('akira_session_token');
+    location.reload();
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init);
+  else init();
+})();
+</script>
+
 </body>
 </html>
