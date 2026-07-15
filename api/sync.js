@@ -1,4 +1,4 @@
-    const NT = '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';
+    const NT = (process.env.NOTION_TOKEN || '');
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -57,7 +57,7 @@ export default async function handler(req, res) {
   if (action === 'get-log') { const log = await rGet('akira_log') || []; return res.status(200).json({ log }); }
 
   if (action === 'notion-pull') {
-    const NT = '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';
+    const NT = (process.env.NOTION_TOKEN || '');
     const DB = 'a3d2c021b2cc4aed983b10886908824a';
     try {
       const all = []; let cursor = null; let page = 0;
@@ -147,6 +147,23 @@ export default async function handler(req, res) {
     } catch (e) {
       return res.status(500).json({ error: e.message });
     }
+  }
+
+  // append a single manually-added candidate to the shared pipeline (no clobber)
+  if (action === 'add-candidate' && req.method === 'POST') {
+    const lead = (req.body && req.body.lead) || null;
+    if (!lead || !lead.name) return res.status(400).json({ error: 'lead.name required' });
+    const pipeline = await rGet('akira_pipeline') || [];
+    lead.uid = lead.uid || Date.now();
+    lead.place_id = lead.place_id || ('manual-' + lead.uid);
+    lead.stage = lead.stage || 'new';
+    lead.addedAt = lead.addedAt || new Date().toISOString();
+    lead.touchpoints = lead.touchpoints || [];
+    lead.addedBy = lead.addedBy || 'team';
+    if (!pipeline.some(function(x){ return x.place_id === lead.place_id; })) pipeline.push(lead);
+    await rSet('akira_pipeline', pipeline);
+    await rSet('akira_last_run', new Date().toISOString());
+    return res.status(200).json({ ok: true, total: pipeline.length, added: lead.name });
   }
 
 return res.status(400).json({ error: 'Unknown action', action });
